@@ -6,6 +6,8 @@
 | [feasibility-assessment.md](./feasibility-assessment.md) | HTTP/CLI 服务化可行性结论 |
 | [upstream-architecture-zh.md](./upstream-architecture-zh.md) | 上游桌面版架构与调用链（中文） |
 | [notes/memory-index.md](./notes/memory-index.md) | 团队工作笔记索引 |
+| [notes/agent-session-2026-06-04.md](./notes/agent-session-2026-06-04.md) | Agent 会话摘要（2026-06-04） |
+| [notes/AGENT_TRANSCRIPTS.md](./notes/AGENT_TRANSCRIPTS.md) | 为何不提交原始 JSONL、如何本地备份 |
 | [../README-OVERLAY.md](../README-OVERLAY.md) | Overlay 开发与 submodule 工作流 |
 | [../overlay/embedding/](../overlay/embedding/) | Embedding 探索与实验脚本 |
 

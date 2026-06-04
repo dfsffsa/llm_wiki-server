@@ -28,3 +28,8 @@ Thumbs.db
 
 # Docker volumes (local)
 docker/data/
+
+# Cursor agent raw transcripts (keep summaries in docs/notes/ only)
+**/.cursor/
+**/agent-transcripts/
+*.jsonl
