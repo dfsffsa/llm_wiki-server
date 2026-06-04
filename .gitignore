@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+upstream/node_modules/
+
+# Build
+dist/
+upstream/dist/
+upstream/dist-ssr/
+overlay/server/target/
+**/*.tsbuildinfo
+
+# Rust
+upstream/src-tauri/target/
+
+# Secrets & local experiments
+.env
+.env.*
+overlay/embedding/test_embedding.py
+*.local.json
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Docker volumes (local)
+docker/data/

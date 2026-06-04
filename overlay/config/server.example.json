@@ -1,0 +1,24 @@
+{
+  "apiConfig": {
+    "enabled": true,
+    "allowUnauthenticated": false,
+    "token": "change-me-in-production",
+    "mcpEnabled": false
+  },
+  "embeddingConfig": {
+    "enabled": true,
+    "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings",
+    "apiKey": "${DASHSCOPE_API_KEY}",
+    "model": "text-embedding-v4",
+    "outputDimensionality": 2048,
+    "maxChunkChars": 1000,
+    "overlapChunkChars": 200
+  },
+  "llmConfig": {
+    "provider": "custom",
+    "apiKey": "${LLM_API_KEY}",
+    "model": "your-model",
+    "customEndpoint": "https://api.example.com/v1/chat/completions",
+    "maxContextSize": 204800
+  }
+}

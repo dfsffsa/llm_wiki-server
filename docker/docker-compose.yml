@@ -1,0 +1,23 @@
+# LLM Wiki Server — Docker Compose (Phase 1+)
+#
+# Usage:
+#   export LLM_WIKI_PROJECT=/path/to/your-wiki-project
+#   export LLM_WIKI_API_TOKEN=your-secret-token
+#   docker compose -f docker/docker-compose.yml up --build
+
+services:
+  llm-wiki-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "${LLM_WIKI_PORT:-8080}:8080"
+    environment:
+      LLM_WIKI_BIND: "0.0.0.0:8080"
+      LLM_WIKI_PROJECT: "/data/wiki"
+      LLM_WIKI_API_TOKEN: "${LLM_WIKI_API_TOKEN:-change-me}"
+      LLM_WIKI_CONFIG: "/etc/llm-wiki/config.json"
+    volumes:
+      - "${LLM_WIKI_PROJECT:?Set LLM_WIKI_PROJECT to your wiki project directory}:/data/wiki:rw"
+      - "../overlay/config/server.example.json:/etc/llm-wiki/config.json:ro"
+    restart: unless-stopped

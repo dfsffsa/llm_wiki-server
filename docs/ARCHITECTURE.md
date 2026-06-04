@@ -1,0 +1,170 @@
+# LLM Wiki Server — 架构与改造方案
+
+> 最后更新：2026-06-04  
+> 基于本地仓库审计（`llm_wiki` v0.4.16）与 [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) 上游对照。
+
+## 1. 目标
+
+| 目标 | 说明 |
+|------|------|
+| **HTTP 服务** | 去掉 Tauri 桌面壳，浏览器访问 Wiki UI |
+| **CLI 运维** | 入库、解析、搜索、重建索引由命令行完成 |
+| **叠加上游** | 定制代码与官方代码分离，便于跟踪 upstream 发布 |
+
+## 2. 仓库结构（本集成仓库）
+
+```
+llm_wiki-server/                 # 集成仓库（dfsffsa/llm_wiki-server）
+├── upstream/                    # git submodule → nashsu/llm_wiki（只读，不定制 commit）
+├── overlay/                     # 100% 定制代码
+│   ├── server/                  # Headless HTTP 服务（Rust，Phase 1）
+│   ├── cli/                     # CLI：Rust + Node/TS（Phase 3）
+│   ├── web/                     # HttpBackend、Vite 构建适配（Phase 2）
+│   ├── embedding/               # Embedding 探索与实验脚本
+│   └── config/                  # 服务端配置样例
+├── scripts/
+│   ├── sync-upstream.sh         # 升级 upstream submodule
+│   └── build-all.sh             # 构建 UI + server
+├── docker/
+│   ├── Dockerfile
+│   └── docker-compose.yml
+├── docs/
+│   └── ARCHITECTURE.md          # 本文档
+├── README.md
+└── README-OVERLAY.md
+```
+
+### Git 原则
+
+| 规则 | 说明 |
+|------|------|
+| **upstream/ 零定制** | 仅通过 submodule 指针记录版本；不在此目录提交业务改动 |
+| **overlay/ 全定制** | server、CLI、Docker、embedding 实验均在此 |
+| **按 tag 升级** | 不追 upstream 每个 commit；跟随 `v0.4.x` 等 Release |
+| **必须改 upstream 时** | 使用 `overlay/patches/` + `scripts/apply-patches.sh`（当前 Phase 0–1 可零 patch） |
+
+### 分支模型
+
+| 分支 | 用途 |
+|------|------|
+| `main` | 可发布集成线（submodule SHA + overlay） |
+| `overlay/server` | HTTP 服务开发 |
+| `overlay/cli` | CLI 开发 |
+| `overlay/web` | Web 只读适配 |
+
+## 3. 上游架构（只读理解）
+
+```
+React WebView (TS)                    Rust (src-tauri)
+├── ingest.ts (LLM 两步入库)    ──►   fs / preprocess / 图片提取
+├── chat RAG / graph-relevance  ──►   search_project / vectorstore
+└── llm-client streamChat       ──►   api_server :19828 (tiny_http)
+```
+
+### 本地 Tauri Commands（lib.rs 注册）
+
+| 模块 | 职责 | Server/CLI 复用 |
+|------|------|-----------------|
+| `fs.rs` | 文件读写、PDF/Office 预处理 | 高 |
+| `search.rs` | 关键词 + LanceDB 混合检索（RRF） | 高（HTTP 已暴露） |
+| `vectorstore.rs` | LanceDB 向量索引 | 高 |
+| `file_sync.rs` | 源目录监听 | CLI/cron |
+| `project.rs` | 项目创建/打开 | 中 |
+| `extract_images.rs` | PDF/Office 图片 | 高 |
+| 桌面专用 | tray、dialog、clip | 丢弃 |
+
+### 现有 HTTP API（`127.0.0.1:19828`）
+
+| 方法 | 路径 | 状态 |
+|------|------|------|
+| GET | `/api/v1/health` | 已有 |
+| GET | `/api/v1/projects` | 已有 |
+| GET | `/api/v1/projects/{id}/files` | 已有 |
+| GET | `/api/v1/projects/{id}/files/content` | 已有 |
+| POST | `/api/v1/projects/{id}/search` | 已有（混合检索） |
+| GET | `/api/v1/projects/{id}/graph` | 已有 |
+| POST | `/api/v1/projects/{id}/sources/rescan` | 已有 |
+| POST | `/api/v1/projects/{id}/chat` | **501**（仍在 WebView） |
+
+**缺口：** 无静态 UI 托管；配置绑定 Tauri `app_data_dir`；仅 `127.0.0.1`。
+
+### 前端耦合热点
+
+| 层级 | 文件 | 改造策略 |
+|------|------|----------|
+| 封装层 | `src/commands/fs.ts`, `file-sync.ts` | `overlay/web` 提供 HttpBackend 替换 |
+| 直连 invoke | `embedding.ts`, `search.ts`, `App.tsx` 等 11 处 | Phase 2 逐步改走 BackendClient |
+| 入库 | `src/lib/ingest.ts`（~2500 行） | Phase 3 Node CLI + 去 Zustand 依赖注入 |
+| 图谱 UI | `graph-view.tsx` | 优先用 API `/graph` |
+
+## 4. 分阶段实施
+
+### Phase 0：Git 与仓库结构 ✅（本仓库）
+
+- [x] 集成仓库 `llm_wiki-server`
+- [x] `upstream` submodule
+- [x] `overlay/` 骨架
+- [x] `scripts/sync-upstream.sh`
+- [ ] 首次 bump 到 upstream `v0.4.20`（验证通过后）
+
+### Phase 1：Headless Server（2–3 周）
+
+- [ ] `overlay/server/`：脱离 `AppHandle` 的 HTTP 服务
+- [ ] 环境变量：`LLM_WIKI_PROJECT`、`LLM_WIKI_API_TOKEN`、`LLM_WIKI_BIND`、`LLM_WIKI_CONFIG`
+- [ ] 托管 `upstream/dist` 静态资源
+- [ ] Docker Compose
+- **不改 upstream/**
+
+### Phase 2：Web 只读（2–3 周）
+
+- [ ] `overlay/web/backend-client.ts`
+- [ ] `VITE_BACKEND=http npm run build`（在 upstream 目录）
+- [ ] 图谱/搜索走 HTTP API
+
+### Phase 3：CLI（3–4 周）
+
+```bash
+llm-wiki search "query" --project /data/wiki
+llm-wiki preprocess doc.pdf --out raw/sources/
+llm-wiki reindex --vectors --project /data/wiki
+llm-wiki ingest doc.pdf --project /data/wiki --config overlay/config/llm.json
+```
+
+### Phase 4：上游同步
+
+```bash
+./scripts/sync-upstream.sh v0.4.20
+```
+
+## 5. 职责划分
+
+| 组件 | 职责 |
+|------|------|
+| **Web UI** | 浏览 wiki、图谱、搜索、只读预览 |
+| **HTTP Server** | 静态 UI + 扩展 REST API |
+| **CLI** | ingest、parse、reindex、rescan |
+| **upstream** | 官方桌面应用 + 核心 Rust/TS 逻辑 |
+
+## 6. 配置（服务端 vs 桌面）
+
+| 桌面 | 服务端（overlay） |
+|------|-------------------|
+| Tauri Store `app-state.json` | `LLM_WIKI_CONFIG` 指向 JSON 文件 |
+| Settings UI | `overlay/config/server.example.json` |
+| 每项目 `.llm-wiki/` | 挂载 volume：`/data/wiki` |
+
+## 7. Embedding 定制
+
+探索文档与实验脚本位于 `overlay/embedding/`。向量数据仍在项目目录 `.llm-wiki/lancedb/`（upstream 约定不变）。
+
+定制 endpoint/model（如 DashScope `text-embedding-v4`）通过服务端配置文件注入，避免 fork `upstream/src/lib/embedding.ts`。
+
+## 8. 许可证
+
+上游与集成发行均基于 **GPL v3.0**。分发 Docker 镜像或二进制时需遵守 GPL（提供源码、保留许可证）。
+
+## 9. 兼容版本表
+
+| 集成仓库 commit | upstream 版本 | 说明 |
+|-----------------|---------------|------|
+| 初始 | v0.4.16 | 与 dfsffsa/llm_wiki 基线一致 |
