@@ -1,7 +1,8 @@
 # LLM Wiki Server — 架构与改造方案
 
 > 最后更新：2026-06-04  
-> 基于本地仓库审计（`llm_wiki` v0.4.16）与 [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) 上游对照。
+> 基于 upstream submodule **v0.4.16** 与 [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) 对照。  
+> 更多背景文档见 [docs/README.md](./README.md)。
 
 ## 1. 目标
 

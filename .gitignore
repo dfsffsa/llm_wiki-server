@@ -16,6 +16,8 @@ upstream/src-tauri/target/
 .env
 .env.*
 overlay/embedding/test_embedding.py
+**/test_embedding.py
+!overlay/embedding/test_embedding.example.py
 *.local.json
 
 # IDE / OS

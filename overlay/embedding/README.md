@@ -6,8 +6,10 @@
 
 | 文件 | 说明 |
 |------|------|
-| `EXPLORATION.md` | 上游 embedding 架构笔记（从 llm_wiki 迁移） |
-| `test_embedding.example.py` | DashScope 测试模板（用环境变量，勿提交密钥） |
+| `EXPLORATION.md` | Embedding 配置、LanceDB 路径、混合搜索机制 |
+| `test_embedding.example.py` | DashScope 测试模板（用环境变量） |
+
+本地曾有的 `test_embedding.py`（含明文 API Key）**未迁入本仓库**；请使用 `test_embedding.example.py` 并设置 `DASHSCOPE_API_KEY`。若旧密钥曾写入本地文件，建议在云平台轮换。
 
 ## 运行测试
 

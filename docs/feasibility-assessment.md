@@ -1,0 +1,53 @@
+# HTTP 服务化可行性评估
+
+> 从 Agent 会话迁移（2026-06-04），基于本地代码审计与 [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) v0.4.16。
+
+## 结论
+
+**可行。** 推荐路径：Rust core 复用 + Web 只读展示 + CLI 负责写入/索引 + submodule/overlay 叠在上游之上。
+
+| 维度 | 评估 |
+|------|------|
+| 技术可行性 | 高 |
+| 与上游共存 | 高（upstream submodule + overlay/） |
+| 工程量 | 中等偏上（约 2–3 个月分阶段） |
+| 最大风险 | ingest 在 TypeScript + Zustand；api_server 绑 Tauri AppHandle |
+| 最大机会 | 已有 `:19828` API、混合搜索、LanceDB 在 Rust |
+
+## 已有 HTTP API（upstream `api_server.rs`）
+
+| 方法 | 路径 | overlay 备注 |
+|------|------|-------------|
+| GET | `/api/v1/health` | 可直接用 |
+| GET | `/api/v1/projects` | 可直接用 |
+| GET | `.../files`, `.../files/content` | Web 只读 |
+| POST | `.../search` | CLI/Agent 可调用 |
+| GET | `.../graph` | 图谱 UI |
+| POST | `.../sources/rescan` | CLI |
+| POST | `.../chat` | **501**，仍在 WebView |
+
+## Tauri 命令与 overlay 复用
+
+| 模块 | Server/CLI |
+|------|------------|
+| `fs.rs`, `search.rs`, `vectorstore.rs` | 高 |
+| `ingest.ts`（TS） | CLI 需 headless 包装 |
+| tray, dialog, clip | 丢弃 |
+
+## 前端耦合（改造时）
+
+- `src/commands/`：2 个文件，适合 `HttpBackend` 替换
+- **40+ 文件** import `@/commands/`
+- **11 文件** 直接 `invoke`
+- `ingest.ts` ~2500 行，绑 Zustand
+
+## 分阶段（见 ARCHITECTURE.md）
+
+1. Phase 0：本集成仓库 ✅  
+2. Phase 1：headless server  
+3. Phase 2：Web 只读  
+4. Phase 3：CLI  
+
+## 许可证
+
+上游 GPL v3.0；overlay 分发需遵守 GPL。
