@@ -1,12 +1,9 @@
-# Upstream patches
+# Overlay patches
 
-仅在无法通过 overlay 扩展解决时，才在此存放对 `upstream/` 的最小 patch。
+Patches apply to `upstream/` submodule at build time via `./scripts/apply-patches.sh`.
 
-应用方式（待 `scripts/apply-patches.sh` 实现）：
+| Patch | Purpose |
+|-------|---------|
+| `0002-http-ui-bootstrap.patch` | HTTP mode (v0.4.20+): App.tsx auto-open server project, vite HTTP aliases, `bootstrapHttpProject` stub in `fs.ts` |
 
-```bash
-cd upstream
-git apply ../overlay/patches/0001-example.patch
-```
-
-**当前策略：Phase 0–1 零 patch**，headless 逻辑全部在 `overlay/server/`。
+Do not commit changes inside `upstream/` — only bump the submodule pointer after upstream releases.

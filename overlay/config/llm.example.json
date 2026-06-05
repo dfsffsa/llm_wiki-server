@@ -1,0 +1,30 @@
+{
+  "llmConfig": {
+    "provider": "custom",
+    "apiKey": "${LLM_API_KEY}",
+    "model": "your-model",
+    "customEndpoint": "https://api.example.com/v1/chat/completions",
+    "maxContextSize": 128000
+  },
+  "embeddingConfig": {
+    "enabled": true,
+    "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings",
+    "apiKey": "${DASHSCOPE_API_KEY}",
+    "model": "text-embedding-v4",
+    "outputDimensionality": 2048,
+    "maxChunkChars": 1000,
+    "overlapChunkChars": 200
+  },
+  "multimodalConfig": {
+    "enabled": false,
+    "useMainLlm": true,
+    "provider": "custom",
+    "apiKey": "",
+    "model": "",
+    "ollamaUrl": "http://localhost:11434",
+    "customEndpoint": "",
+    "azureApiVersion": "2024-10-21",
+    "apiMode": "chat_completions",
+    "concurrency": 4
+  }
+}

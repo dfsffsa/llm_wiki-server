@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Unified llm-wiki CLI wrapper (Rust binary + Node helpers).
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+BIN="${ROOT}/overlay/cli/rust/target/release/llm-wiki"
+
+if [[ ! -x "${BIN}" ]]; then
+  echo "error: llm-wiki binary not found. Run: ./scripts/build-cli.sh" >&2
+  exit 1
+fi
+
+export LLM_WIKI_REPO="${ROOT}"
+exec "${BIN}" "$@"

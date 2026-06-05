@@ -7,6 +7,9 @@ dist/
 upstream/dist/
 upstream/dist-ssr/
 overlay/server/target/
+overlay/cli/rust/target/
+overlay/crates/**/target/
+.tools/
 **/*.tsbuildinfo
 
 # Rust

@@ -1,8 +1,20 @@
-//! LLM Wiki headless server — Phase 1 placeholder.
+//! LLM Wiki headless HTTP server (overlay Phase 1).
 //!
-//! Planned: static UI from `upstream/dist` + HTTP API (extend upstream api_server).
+//! Serves upstream static UI + REST API compatible with upstream `api_server`.
+
+mod api;
+mod config;
+mod server;
+mod state;
+mod static_files;
+
+use std::sync::Arc;
+use std::thread;
 
 use clap::Parser;
+
+use crate::config::ServerConfig;
+use crate::server as http_server;
 
 #[derive(Parser, Debug)]
 #[command(name = "llm-wiki-server", about = "Headless LLM Wiki HTTP server (overlay)")]
@@ -11,7 +23,7 @@ struct Args {
     #[arg(long, env = "LLM_WIKI_PROJECT")]
     project: Option<String>,
 
-    /// API bearer token
+    /// API bearer token (overrides config file token)
     #[arg(long, env = "LLM_WIKI_API_TOKEN")]
     token: Option<String>,
 
@@ -22,16 +34,46 @@ struct Args {
     /// Server config JSON (embedding, api, etc.)
     #[arg(long, env = "LLM_WIKI_CONFIG")]
     config: Option<String>,
+
+    /// Static UI directory (default: upstream/dist if present)
+    #[arg(long, env = "LLM_WIKI_STATIC")]
+    static_dir: Option<String>,
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let args = Args::parse();
-    eprintln!("llm-wiki-server: Phase 1 skeleton");
-    eprintln!("  bind:    {}", args.bind);
-    eprintln!("  project: {:?}", args.project.as_deref().unwrap_or("(not set)"));
-    eprintln!("  config:  {:?}", args.config.as_deref().unwrap_or("(not set)"));
-    eprintln!();
-    eprintln!("See docs/ARCHITECTURE.md for implementation plan.");
-    std::process::exit(0);
+    let config = match ServerConfig::resolve(
+        args.project,
+        args.bind,
+        args.config,
+        args.static_dir,
+        args.token,
+    ) {
+        Ok(config) => config,
+        Err(err) => {
+            eprintln!("error: {err}");
+            std::process::exit(1);
+        }
+    };
+
+    let shutdown = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let shutdown_flag = Arc::clone(&shutdown);
+    thread::spawn(move || {
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("shutdown runtime");
+        rt.block_on(async {
+            if tokio::signal::ctrl_c().await.is_ok() {
+                eprintln!("\nShutting down...");
+                shutdown_flag.store(true, std::sync::atomic::Ordering::Relaxed);
+                std::process::exit(0);
+            }
+        });
+    });
+
+    if let Err(err) = http_server::run(config) {
+        eprintln!("error: {err}");
+        std::process::exit(1);
+    }
 }

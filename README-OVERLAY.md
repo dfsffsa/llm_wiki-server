@@ -28,7 +28,9 @@ git commit -m "feat(server): ..."
 
 ```bash
 ./scripts/sync-upstream.sh v0.4.20   # 或 origin/main
-git add upstream
+./scripts/apply-patches.sh
+./scripts/build-all.sh
+git add upstream overlay/patches
 git commit -m "chore: bump upstream to v0.4.20"
 ```
 
@@ -46,15 +48,55 @@ git clone --recurse-submodules git@github.com:dfsffsa/llm_wiki-server.git
 git submodule update --init --recursive
 ```
 
-## 构建（规划）
+## 构建与运行（Phase 1）
 
 ```bash
-# 构建官方 UI
+# 1. 构建 upstream UI（可选，用于静态托管）
+npm install --prefix upstream
 npm run build --prefix upstream
 
-# 构建 overlay server（Phase 1 完成后）
+# 2. 构建 headless server
 cargo build --release --manifest-path overlay/server/Cargo.toml
+
+# 3. 启动（示例）
+export LLM_WIKI_PROJECT=/path/to/your-wiki-project
+export LLM_WIKI_API_TOKEN=your-secret
+export LLM_WIKI_BIND=127.0.0.1:8080
+export LLM_WIKI_CONFIG=overlay/config/server.example.json
+export LLM_WIKI_STATIC=upstream/dist   # 可选
+
+./overlay/server/target/release/llm-wiki-server
 ```
+
+健康检查：`curl http://127.0.0.1:8080/api/v1/health?token=your-secret`
+
+Docker：
+
+```bash
+export LLM_WIKI_PROJECT=/path/to/your-wiki-project
+export LLM_WIKI_API_TOKEN=your-secret
+docker compose -f docker/docker-compose.yml up --build
+```
+
+## CLI（Phase 3）
+
+```bash
+./scripts/build-cli.sh
+
+export LLM_WIKI_PROJECT=/path/to/your-wiki-project
+./scripts/llm-wiki search "query" --project "$LLM_WIKI_PROJECT"
+./scripts/llm-wiki rescan --project "$LLM_WIKI_PROJECT" --json
+./scripts/llm-wiki preprocess note.md -o /tmp/out.txt
+
+# ingest / vector reindex need LLM config:
+cp overlay/config/llm.example.json overlay/config/llm.json
+# edit overlay/config/llm.json with API keys
+export LLM_WIKI_CONFIG=overlay/config/llm.json
+./scripts/llm-wiki reindex --vectors --project "$LLM_WIKI_PROJECT"
+./scripts/llm-wiki ingest source.pdf --project "$LLM_WIKI_PROJECT"
+```
+
+See `overlay/cli/README.md` for command reference.
 
 ## Embedding 实验
 

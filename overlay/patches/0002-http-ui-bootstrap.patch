@@ -1,0 +1,130 @@
+diff --git a/src/App.tsx b/src/App.tsx
+index 911e00d..79f0d2e 100644
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -266,13 +266,28 @@ function App() {
+         if (savedLang) {
+           await i18n.changeLanguage(savedLang)
+         }
+-        const lastProject = await getLastProject()
+-        if (lastProject) {
+-          try {
+-            const proj = await openProject(lastProject.path)
+-            await handleProjectOpened(proj)
+-          } catch {
+-            // Last project no longer valid
++        // HTTP read-only mode: project comes from the headless server
++        // (LLM_WIKI_PROJECT), not from Tauri folder picker / store.
++        if (import.meta.env.VITE_BACKEND === "http") {
++          const { bootstrapHttpProject } = await import("@/commands/fs")
++          const httpProject = await bootstrapHttpProject()
++          if (httpProject) {
++            try {
++              const proj = await openProject(httpProject.path)
++              await handleProjectOpened(proj)
++            } catch (err) {
++              console.error("Failed to open HTTP project:", err)
++            }
++          }
++        } else {
++          const lastProject = await getLastProject()
++          if (lastProject) {
++            try {
++              const proj = await openProject(lastProject.path)
++              await handleProjectOpened(proj)
++            } catch {
++              // Last project no longer valid
++            }
+           }
+         }
+       } catch {
+diff --git a/src/commands/fs.ts b/src/commands/fs.ts
+index 93ca9b4..660e4bc 100644
+--- a/src/commands/fs.ts
++++ b/src/commands/fs.ts
+@@ -128,6 +128,11 @@ export async function apiServerReloadConfig(): Promise<string> {
+   return invoke<string>("api_server_reload_config")
+ }
+ 
++/** No-op on desktop; HTTP overlay replaces this module when VITE_BACKEND=http. */
++export async function bootstrapHttpProject(): Promise<WikiProject | null> {
++  return null
++}
++
+ export async function mcpServerEntryPath(): Promise<string> {
+   return invoke<string>("mcp_server_entry_path")
+ }
+diff --git a/src/vite-env.d.ts b/src/vite-env.d.ts
+index 70c0e5f..bd1ba86 100644
+--- a/src/vite-env.d.ts
++++ b/src/vite-env.d.ts
+@@ -2,3 +2,17 @@
+ 
+ /** App version injected by Vite's `define` from package.json. */
+ declare const __APP_VERSION__: string
++
++/** True when built with overlay/web HTTP backend (VITE_BACKEND=http). */
++declare const __HTTP_BACKEND__: boolean
++
++interface ImportMetaEnv {
++  readonly VITE_BACKEND?: string
++  readonly VITE_API_BASE?: string
++  readonly VITE_API_TOKEN?: string
++  readonly VITE_WIKI_PROJECT?: string
++}
++
++interface ImportMeta {
++  readonly env: ImportMetaEnv
++}
+diff --git a/vite.config.ts b/vite.config.ts
+index 7c0d58f..339e669 100644
+--- a/vite.config.ts
++++ b/vite.config.ts
+@@ -5,6 +5,8 @@ import react from "@vitejs/plugin-react"
+ import tailwindcss from "@tailwindcss/vite"
+ 
+ const host = process.env.TAURI_DEV_HOST
++const isHttpBackend = process.env.VITE_BACKEND === "http"
++const overlayWeb = path.resolve(__dirname, "../overlay/web")
+ 
+ // Read version from package.json at config-load time so the Settings
+ // UI can show the running app version without duplicating the string.
+@@ -15,11 +17,22 @@ export default defineConfig(async () => ({
+   plugins: [react(), tailwindcss()],
+ 
+   resolve: {
+-    alias: { "@": path.resolve(__dirname, "./src") },
++    alias: {
++      "@": path.resolve(__dirname, "./src"),
++      ...(isHttpBackend
++        ? {
++            "@/commands/fs": path.join(overlayWeb, "commands/fs.ts"),
++            "@/commands/file-sync": path.join(overlayWeb, "commands/file-sync.ts"),
++            "@/lib/search": path.join(overlayWeb, "lib/search.ts"),
++            "@/lib/project-store": path.join(overlayWeb, "lib/project-store.ts"),
++          }
++        : {}),
++    },
+   },
+ 
+   define: {
+     __APP_VERSION__: JSON.stringify(pkgJson.version),
++    __HTTP_BACKEND__: JSON.stringify(isHttpBackend),
+   },
+ 
+   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
+@@ -42,6 +55,14 @@ export default defineConfig(async () => ({
+       // 3. tell vite to ignore watching `src-tauri`
+       ignored: ["**/src-tauri/**"],
+     },
++    proxy: isHttpBackend
++      ? {
++          "/api": {
++            target: process.env.VITE_DEV_API_PROXY ?? "http://127.0.0.1:8080",
++            changeOrigin: true,
++          },
++        }
++      : undefined,
+   },
+ 
+   test: {

@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../../../upstream/src/*"],
+      "@tauri-apps/api/core": ["./src/shims/tauri-core.ts"],
+      "@tauri-apps/plugin-http": ["./src/shims/tauri-http.ts"],
+      "@/lib/tauri-fetch": ["./src/shims/tauri-fetch.ts"],
+      "@/commands/fs": ["./src/shims/fs.ts"],
+      "@/commands/file-sync": ["./src/shims/file-sync.ts"],
+      "@/lib/project-store": ["./src/shims/project-store-noop.ts"]
+    },
+    "types": ["../../../upstream/src/vite-env.d.ts"]
+  },
+  "include": ["src/**/*.ts", "../../../upstream/src/**/*.ts"]
+}

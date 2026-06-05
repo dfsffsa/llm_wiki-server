@@ -1,6 +1,6 @@
 # LLM Wiki Server — 架构与改造方案
 
-> 最后更新：2026-06-04  
+> 最后更新：2026-06-05  
 > 基于 upstream submodule **v0.4.16** 与 [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) 对照。  
 > 更多背景文档见 [docs/README.md](./README.md)。
 
@@ -106,23 +106,30 @@ React WebView (TS)                    Rust (src-tauri)
 - [x] `upstream` submodule
 - [x] `overlay/` 骨架
 - [x] `scripts/sync-upstream.sh`
-- [ ] 首次 bump 到 upstream `v0.4.20`（验证通过后）
+- [x] 首次 bump 到 upstream `v0.4.20`（2026-06-05 验证通过）
 
-### Phase 1：Headless Server（2–3 周）
+### Phase 1：Headless Server（2–3 周） ✅
 
-- [ ] `overlay/server/`：脱离 `AppHandle` 的 HTTP 服务
-- [ ] 环境变量：`LLM_WIKI_PROJECT`、`LLM_WIKI_API_TOKEN`、`LLM_WIKI_BIND`、`LLM_WIKI_CONFIG`
-- [ ] 托管 `upstream/dist` 静态资源
-- [ ] Docker Compose
-- **不改 upstream/**
+- [x] `overlay/server/`：脱离 `AppHandle` 的 HTTP 服务
+- [x] 环境变量：`LLM_WIKI_PROJECT`、`LLM_WIKI_API_TOKEN`、`LLM_WIKI_BIND`、`LLM_WIKI_CONFIG`、`LLM_WIKI_STATIC`
+- [x] 托管 `upstream/dist` 静态资源
+- [x] Docker Compose
+- **Search（Phase 1）**：关键词检索；LanceDB 混合检索待 upstream 核心 crate 抽取后接入
+- **Rescan / Chat**：返回 501（Phase 3 CLI / 后续迭代）
 
 ### Phase 2：Web 只读（2–3 周）
 
-- [ ] `overlay/web/backend-client.ts`
-- [ ] `VITE_BACKEND=http npm run build`（在 upstream 目录）
-- [ ] 图谱/搜索走 HTTP API
+- [x] `overlay/web/backend-client.ts` + HTTP 命令适配（fs / search / file-sync / project-store）
+- [x] `VITE_BACKEND=http ./scripts/build-web.sh`（upstream vite 别名 + patches）
+- [x] 搜索走 HTTP API；图谱通过只读 fs 适配读取 wiki
 
-### Phase 3：CLI（3–4 周）
+### Phase 3：CLI（3–4 周） ✅
+
+- [x] `overlay/crates/llm-wiki-common/` — 关键词搜索 + rescan（server/CLI 共用）
+- [x] `overlay/cli/rust/` — `search`, `preprocess`, `rescan`, `reindex`, LanceDB `vector` 子命令
+- [x] `overlay/cli/node/` — `ingest` / `reindex --vectors`（包装 upstream TS + Tauri shims）
+- [x] `./scripts/build-cli.sh` + `./scripts/llm-wiki` 统一入口
+- [x] `overlay/config/llm.example.json` 配置样例
 
 ```bash
 llm-wiki search "query" --project /data/wiki
@@ -131,11 +138,22 @@ llm-wiki reindex --vectors --project /data/wiki
 llm-wiki ingest doc.pdf --project /data/wiki --config overlay/config/llm.json
 ```
 
-### Phase 4：上游同步
+**已知限制：** CLI 暂不支持 PDF/Office 文本提取（需桌面 pdfium 或 `--copy-fallback`）；ingest 仍依赖 upstream Zustand 路径，部分 Tauri 专用功能在 headless 下不可用。
+
+### Phase 4：上游同步 ✅
 
 ```bash
 ./scripts/sync-upstream.sh v0.4.20
+./scripts/apply-patches.sh
+./scripts/build-all.sh
 ```
+
+- [x] upstream submodule → **v0.4.20**（2026-06-05）
+- [x] 重新生成 `0002-http-ui-bootstrap.patch`（适配 v0.4.20 的 App.tsx / fs.ts 变更）
+- [x] upstream `test:mocks` 1236 tests passed
+- [x] HTTP UI / server / CLI release 构建通过
+
+后续升级：改 tag 后运行 `./scripts/sync-upstream.sh vX.Y.Z`，若 patch 冲突则按 Phase 2 方式手动合并并 `git diff > overlay/patches/0002-....patch`。
 
 ## 5. 职责划分
 
@@ -169,3 +187,4 @@ llm-wiki ingest doc.pdf --project /data/wiki --config overlay/config/llm.json
 | 集成仓库 commit | upstream 版本 | 说明 |
 |-----------------|---------------|------|
 | 初始 | v0.4.16 | 与 dfsffsa/llm_wiki 基线一致 |
+| Phase 4（2026-06-05） | **v0.4.20** | tray/startup、MCP server、主题修复；patch 已重生 |
