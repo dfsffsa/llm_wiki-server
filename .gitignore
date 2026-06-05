@@ -31,6 +31,7 @@ Thumbs.db
 
 # Docker volumes (local)
 docker/data/
+docker/.env.e2e.local
 
 # Cursor agent raw transcripts (keep summaries in docs/notes/ only)
 **/.cursor/

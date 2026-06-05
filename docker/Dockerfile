@@ -18,7 +18,9 @@ RUN ./scripts/build-web.sh
 # Stage 2: build overlay server
 FROM rust:1-bookworm AS server-builder
 WORKDIR /build
-COPY overlay/server/Cargo.toml overlay/server/Cargo.lock* overlay/server/
+COPY overlay/crates/llm-wiki-common/Cargo.toml overlay/crates/llm-wiki-common/Cargo.lock* overlay/crates/llm-wiki-common/
+COPY overlay/crates/llm-wiki-common/src overlay/crates/llm-wiki-common/src
+COPY overlay/server/Cargo.toml overlay/server/Cargo.lock overlay/server/
 COPY overlay/server/src overlay/server/src
 RUN cargo build --release --manifest-path overlay/server/Cargo.toml
 

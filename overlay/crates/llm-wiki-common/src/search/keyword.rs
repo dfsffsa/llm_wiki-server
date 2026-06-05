@@ -351,16 +351,41 @@ pub fn build_snippet(content: &str, anchor: &str) -> String {
         let trimmed = content.trim().replace('\n', " ");
         return truncate_chars(&trimmed, SNIPPET_CONTEXT * 2);
     };
-    let start = byte_idx.saturating_sub(SNIPPET_CONTEXT);
-    let end = (byte_idx + anchor.len() + SNIPPET_CONTEXT).min(content.len());
-    let mut snippet = content[start..end].replace('\n', " ");
-    if start > 0 {
+    let start_byte = floor_char_boundary(content, byte_idx.saturating_sub(SNIPPET_CONTEXT));
+    let end_byte = ceil_char_boundary(
+        content,
+        (byte_idx + anchor.len() + SNIPPET_CONTEXT).min(content.len()),
+    );
+    let mut snippet = content[start_byte..end_byte].replace('\n', " ");
+    if start_byte > 0 {
         snippet = format!("...{snippet}");
     }
-    if end < content.len() {
+    if end_byte < content.len() {
         snippet.push_str("...");
     }
     truncate_chars(&snippet, SNIPPET_CONTEXT * 2 + anchor.chars().count())
+}
+
+fn floor_char_boundary(s: &str, index: usize) -> usize {
+    if index >= s.len() {
+        return s.len();
+    }
+    let mut i = index;
+    while i > 0 && !s.is_char_boundary(i) {
+        i -= 1;
+    }
+    i
+}
+
+fn ceil_char_boundary(s: &str, index: usize) -> usize {
+    if index >= s.len() {
+        return s.len();
+    }
+    let mut i = index;
+    while i < s.len() && !s.is_char_boundary(i) {
+        i += 1;
+    }
+    i
 }
 
 fn truncate_chars(text: &str, max_chars: usize) -> String {
