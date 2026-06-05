@@ -3,6 +3,7 @@
 | 文档 | 说明 |
 |------|------|
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | **主方案**：集成仓库结构、Git 策略、分阶段计划 |
+| [UPSTREAM_SYNC.md](./UPSTREAM_SYNC.md) | **upstream submodule 同步原理与日常操作** |
 | [DEVELOPMENT_AND_TESTING.md](./DEVELOPMENT_AND_TESTING.md) | **开发进度、构建/测试脚本、FAQ**（含 Chat vs HTTP 说明） |
 | [COMPARISON_LLM_KNOWLEDGE_BASE.md](./COMPARISON_LLM_KNOWLEDGE_BASE.md) | 与 `llm-knowledge-base` 对照：可借鉴的理念与落地建议 |
 | [feasibility-assessment.md](./feasibility-assessment.md) | HTTP/CLI 服务化可行性结论 |

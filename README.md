@@ -25,6 +25,7 @@ npm install --prefix upstream
 |------|------|
 | [docs/README.md](docs/README.md) | 文档索引 |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 完整架构、分阶段计划、耦合分析 |
+| [docs/UPSTREAM_SYNC.md](docs/UPSTREAM_SYNC.md) | upstream 与官方 repo 同步原理与操作 |
 | [docs/feasibility-assessment.md](docs/feasibility-assessment.md) | 服务化可行性评估 |
 | [docs/upstream-architecture-zh.md](docs/upstream-architecture-zh.md) | 上游桌面版架构说明（中文） |
 | [README-OVERLAY.md](README-OVERLAY.md) | Overlay 开发指南、Git 工作流 |

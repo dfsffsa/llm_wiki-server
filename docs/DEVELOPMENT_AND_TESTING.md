@@ -307,3 +307,4 @@ RUST_BACKTRACE=1 ./overlay/server/target/release/llm-wiki-server
 | [overlay/web/README.md](../overlay/web/README.md) | HTTP 只读 UI 适配 |
 | [overlay/patches/README.md](../overlay/patches/README.md) | Patch 说明 |
 | [COMPARISON_LLM_KNOWLEDGE_BASE.md](./COMPARISON_LLM_KNOWLEDGE_BASE.md) | 与 llm-knowledge-base 对照与借鉴建议 |
+| [UPSTREAM_SYNC.md](./UPSTREAM_SYNC.md) | upstream submodule 同步原理与日常操作 |

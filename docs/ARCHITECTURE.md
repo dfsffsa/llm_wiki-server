@@ -42,7 +42,7 @@ llm_wiki-server/                 # 集成仓库（dfsffsa/llm_wiki-server）
 |------|------|
 | **upstream/ 零定制** | 仅通过 submodule 指针记录版本；不在此目录提交业务改动 |
 | **overlay/ 全定制** | server、CLI、Docker、embedding 实验均在此 |
-| **按 tag 升级** | 不追 upstream 每个 commit；跟随 `v0.4.x` 等 Release |
+| **按 tag 升级** | 不追 upstream 每个 commit；跟随 `v0.4.x` 等 Release；详见 [UPSTREAM_SYNC.md](./UPSTREAM_SYNC.md) |
 | **必须改 upstream 时** | 使用 `overlay/patches/` + `scripts/apply-patches.sh`（当前 Phase 0–1 可零 patch） |
 
 ### 分支模型

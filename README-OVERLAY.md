@@ -26,7 +26,10 @@ git commit -m "feat(server): ..."
 
 ### 升级 upstream
 
+完整原理与操作见 **[docs/UPSTREAM_SYNC.md](docs/UPSTREAM_SYNC.md)**。简要步骤：
+
 ```bash
+cd upstream && git reset --hard && cd ..
 ./scripts/sync-upstream.sh v0.4.20   # 或 origin/main
 ./scripts/apply-patches.sh
 ./scripts/build-all.sh
