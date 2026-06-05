@@ -1,8 +1,9 @@
 # LLM Wiki Server — 架构与改造方案
 
 > 最后更新：2026-06-05  
-> 基于 upstream submodule **v0.4.16** 与 [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) 对照。  
-> 更多背景文档见 [docs/README.md](./README.md)。
+> 基于 upstream submodule **v0.4.20** 与 [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) 对照。  
+> 更多背景文档见 [docs/README.md](./README.md)。  
+> **开发、测试、FAQ：** [DEVELOPMENT_AND_TESTING.md](./DEVELOPMENT_AND_TESTING.md)
 
 ## 1. 目标
 
@@ -117,7 +118,7 @@ React WebView (TS)                    Rust (src-tauri)
 - **Search（Phase 1）**：关键词检索；LanceDB 混合检索待 upstream 核心 crate 抽取后接入
 - **Rescan / Chat**：返回 501（Phase 3 CLI / 后续迭代）
 
-### Phase 2：Web 只读（2–3 周）
+### Phase 2：Web 只读（2–3 周） ✅
 
 - [x] `overlay/web/backend-client.ts` + HTTP 命令适配（fs / search / file-sync / project-store）
 - [x] `VITE_BACKEND=http ./scripts/build-web.sh`（upstream vite 别名 + patches）
@@ -188,3 +189,4 @@ llm-wiki ingest doc.pdf --project /data/wiki --config overlay/config/llm.json
 |-----------------|---------------|------|
 | 初始 | v0.4.16 | 与 dfsffsa/llm_wiki 基线一致 |
 | Phase 4（2026-06-05） | **v0.4.20** | tray/startup、MCP server、主题修复；patch 已重生 |
+| `9499542` 起 | v0.4.20 | 全链路 E2E 脚本、中文 search 修复、Docker/FAQ 文档 |

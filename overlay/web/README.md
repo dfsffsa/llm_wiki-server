@@ -45,6 +45,8 @@ LLM_WIKI_PROJECT=/path/to/wiki LLM_WIKI_API_TOKEN=your-secret \
 
 写入、入库、Chat、文件同步等在 HTTP 模式下不可用。浏览 wiki、搜索、图谱可用。
 
+**大模型 Chat：** HTTP 模式不能像桌面版那样在页面上完整使用 Chat/RAG，见 [docs/DEVELOPMENT_AND_TESTING.md §6](../docs/DEVELOPMENT_AND_TESTING.md#6-常见问题与答复faq)。
+
 ## 开发
 
 ```bash

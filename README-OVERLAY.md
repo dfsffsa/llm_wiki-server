@@ -98,6 +98,22 @@ export LLM_WIKI_CONFIG=overlay/config/llm.json
 
 See `overlay/cli/README.md` for command reference.
 
+## 测试与 FAQ
+
+完整说明见 **[docs/DEVELOPMENT_AND_TESTING.md](docs/DEVELOPMENT_AND_TESTING.md)**，包括：
+
+- Phase 0–4 进度与 Git 提交记录
+- `./scripts/e2e-local.sh` / `e2e-docker.sh` / `e2e-full.sh` 用法
+- 常见问题：提交规范、Docker/WSL、CLI search、**HTTP 页 vs 桌面版 LLM Chat**
+
+快速回归：
+
+```bash
+./scripts/e2e-full.sh
+# 或仅本地 HTTP（无需 Docker）
+./scripts/e2e-local.sh
+```
+
 ## Embedding 实验
 
 见 `overlay/embedding/README.md`。勿提交含 API Key 的脚本；使用 `test_embedding.example.py` 与环境变量。

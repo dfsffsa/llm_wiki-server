@@ -51,3 +51,5 @@ export LLM_WIKI_CONFIG=overlay/config/llm.json
 | `LLM_WIKI_CONFIG` | JSON with `llmConfig`, optional `embeddingConfig` |
 | `LLM_WIKI_REPO` | Set automatically by `./scripts/llm-wiki` |
 | `LLM_WIKI_BIN` | Path to Rust binary (set by Rust when spawning Node) |
+
+See also [docs/DEVELOPMENT_AND_TESTING.md](../../docs/DEVELOPMENT_AND_TESTING.md) for build, E2E scripts, and FAQ.
