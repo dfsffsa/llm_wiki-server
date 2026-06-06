@@ -12,7 +12,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 UPSTREAM="${ROOT}/upstream"
 REF="${1:-}"
 
-if [[ ! -d "${UPSTREAM}/.git" ]]; then
+if [[ ! -d "${UPSTREAM}/.git" && ! -f "${UPSTREAM}/.git" ]]; then
   echo "error: upstream submodule not initialized. Run:"
   echo "  git submodule update --init --recursive"
   exit 1
