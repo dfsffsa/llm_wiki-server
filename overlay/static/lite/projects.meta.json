@@ -1,0 +1,24 @@
+{
+  "ParentingBooks": {
+    "title": "育儿百科",
+    "subtitle": "喂养、护理、发育与常见病",
+    "emoji": "👶",
+    "theme": "parenting",
+    "starters": [
+      "宝宝几个月添加辅食？",
+      "吐奶怎么办？",
+      "纯母乳需要补维生素D吗？"
+    ]
+  },
+  "CivilCareer": {
+    "title": "职场进阶",
+    "subtitle": "公务员职场经验与避坑指南",
+    "emoji": "💼",
+    "theme": "career",
+    "starters": [
+      "新人怎么融入单位？",
+      "和领导相处要注意什么？",
+      "哪些事是职场红线？"
+    ]
+  }
+}

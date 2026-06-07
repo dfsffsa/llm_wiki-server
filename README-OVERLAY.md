@@ -1,5 +1,7 @@
 # Overlay 开发指南
 
+> 全局文档入口：[文档指引.md](文档指引.md) · 代码结构：[docs/代码结构总览.md](docs/代码结构总览.md)
+
 ## 目录说明
 
 ```
@@ -26,7 +28,7 @@ git commit -m "feat(server): ..."
 
 ### 升级 upstream
 
-完整原理与操作见 **[docs/UPSTREAM_SYNC.md](docs/UPSTREAM_SYNC.md)**。简要步骤：
+完整原理与操作见 **[docs/上游同步.md](docs/上游同步.md)**。简要步骤：
 
 ```bash
 cd upstream && git reset --hard && cd ..
@@ -73,13 +75,15 @@ export LLM_WIKI_STATIC=upstream/dist   # 可选
 
 健康检查：`curl http://127.0.0.1:8080/api/v1/health?token=your-secret`
 
-Docker：
+Docker（**UI + Server 一体镜像**，非仅前端）：
 
 ```bash
 export LLM_WIKI_PROJECT=/path/to/your-wiki-project
 export LLM_WIKI_API_TOKEN=your-secret
 docker compose -f docker/docker-compose.yml up --build
 ```
+
+说明见 [docker/README.md](docker/README.md)（含 Chat/ingest 限制、`upstream/dist` 与本地起服对比）。
 
 ## CLI（Phase 3）
 
@@ -103,7 +107,7 @@ See `overlay/cli/README.md` for command reference.
 
 ## 测试与 FAQ
 
-完整说明见 **[docs/DEVELOPMENT_AND_TESTING.md](docs/DEVELOPMENT_AND_TESTING.md)**，包括：
+完整说明见 **[docs/开发与测试.md](docs/开发与测试.md)**，包括：
 
 - Phase 0–4 进度与 Git 提交记录
 - `./scripts/e2e-local.sh` / `e2e-docker.sh` / `e2e-full.sh` 用法

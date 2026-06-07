@@ -1,4 +1,8 @@
 {
+  "projects": [
+    { "path": "/path/to/llm_wiki_projects/ParentingBooks" },
+    { "path": "/path/to/llm_wiki_projects/CivilCareer" }
+  ],
   "apiConfig": {
     "enabled": true,
     "allowUnauthenticated": false,

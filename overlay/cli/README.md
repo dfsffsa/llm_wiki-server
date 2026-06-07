@@ -19,6 +19,7 @@ Installs `protoc` under `.tools/` when needed (LanceDB dependency). Requires Nod
 | `llm-wiki rescan --project PATH [--json]` | Rust | Scan `raw/sources` manifest (md5, size) |
 | `llm-wiki reindex --project PATH [--vectors] [--config PATH]` | Rust + Node | Count wiki pages; `--vectors` rebuilds LanceDB via upstream `embedding.ts` |
 | `llm-wiki ingest FILE --project PATH --config PATH` | Node | Wraps upstream `ingest.ts` (needs LLM API key in config) |
+| `scripts/ingest-batch.sh` | Bash | Batch all `raw/sources/*.md`; skips existing `wiki/sources/`; resumable |
 
 Hidden vector subcommands (`vector upsert-chunks`, etc.) are used by the Node shim for LanceDB; not intended for direct use.
 
@@ -35,6 +36,10 @@ export LLM_WIKI_PROJECT=/data/my-wiki
 export LLM_WIKI_CONFIG=overlay/config/llm.json
 ./scripts/llm-wiki reindex --vectors --project "$LLM_WIKI_PROJECT"
 ./scripts/llm-wiki ingest doc.pdf --project "$LLM_WIKI_PROJECT"
+
+# Batch ingest (see docs/新项目指引.md §4.3)
+export LLM_WIKI_CONFIG=overlay/config/llm.json
+./scripts/ingest-batch.sh
 ```
 
 ## Layout
@@ -52,4 +57,4 @@ export LLM_WIKI_CONFIG=overlay/config/llm.json
 | `LLM_WIKI_REPO` | Set automatically by `./scripts/llm-wiki` |
 | `LLM_WIKI_BIN` | Path to Rust binary (set by Rust when spawning Node) |
 
-See also [docs/DEVELOPMENT_AND_TESTING.md](../../docs/DEVELOPMENT_AND_TESTING.md) for build, E2E scripts, and FAQ.
+See also [docs/开发与测试.md](../../docs/开发与测试.md) for build, E2E scripts, and FAQ.

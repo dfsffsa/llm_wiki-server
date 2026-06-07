@@ -1,6 +1,8 @@
+pub(crate) mod chat;
 mod files;
 mod graph;
 mod projects;
+mod runtime;
 mod search;
 
 use std::collections::{BTreeMap, VecDeque};
@@ -97,11 +99,12 @@ pub fn handle_request(
             501,
             "Source rescan is not available in headless mode yet. Use the CLI (Phase 3) or the desktop app.",
         ),
+        (&Method::Get, ["runtime-config"]) => runtime::handle_runtime_config(state),
         (&Method::Post, ["projects", project_id, "chat"]) => {
             let _ = project_id;
             err(
                 501,
-                "Chat API is not implemented in the headless server yet.",
+                "Chat streaming must be handled via SSE responder in server.rs",
             )
         }
         _ => err(404, "Not found"),
@@ -232,7 +235,7 @@ pub fn percent_decode(input: &str) -> String {
     String::from_utf8_lossy(&out).into_owned()
 }
 
-fn is_authorized(state: &ServerState, query: &str, headers: &[(String, String)]) -> bool {
+pub(crate) fn is_authorized(state: &ServerState, query: &str, headers: &[(String, String)]) -> bool {
     if !state.api_auth_required() {
         return true;
     }

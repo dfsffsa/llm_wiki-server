@@ -1,5 +1,7 @@
 # LLM Wiki Server — Docker Compose (Phase 1+)
 #
+# 说明见 docker/README.md
+#
 # Usage:
 #   export LLM_WIKI_PROJECT=/path/to/your-wiki-project
 #   export LLM_WIKI_API_TOKEN=your-secret-token

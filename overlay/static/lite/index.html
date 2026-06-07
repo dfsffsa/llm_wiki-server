@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="选一个话题，向知识库提问" />
+    <title>知识问答</title>
+    <link rel="stylesheet" href="/lite/app.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Home: pick project -->
+      <section id="view-home" class="view active">
+        <header class="home-header">
+          <h1>知识问答</h1>
+          <p class="tagline">选一个话题，开始提问</p>
+        </header>
+        <div id="banner-offline" class="banner hidden" role="alert"></div>
+        <div id="project-grid" class="project-grid"></div>
+        <p class="home-footer">
+          <a href="/" class="link-muted">完整版界面</a>
+        </p>
+      </section>
+
+      <!-- Chat -->
+      <section id="view-chat" class="view">
+        <header class="chat-header">
+          <button type="button" id="btn-back" class="icon-btn" aria-label="返回">←</button>
+          <div class="chat-header-title">
+            <span id="chat-emoji" class="chat-emoji"></span>
+            <span id="chat-title"></span>
+          </div>
+        </header>
+
+        <div class="chat-layout">
+          <aside class="history-sidebar" aria-label="历史对话">
+            <div class="history-header">
+              <span>历史对话</span>
+              <button type="button" id="btn-new-chat" class="btn-text">＋ 新建</button>
+            </div>
+            <ul id="history-list" class="history-list"></ul>
+          </aside>
+
+          <div class="chat-main">
+            <main id="messages" class="messages" aria-live="polite"></main>
+            <div id="starters" class="starters"></div>
+            <footer class="composer">
+              <textarea
+                id="input"
+                rows="1"
+                placeholder="输入你的问题…"
+                autocomplete="off"
+              ></textarea>
+              <button type="button" id="btn-send" class="btn-send" disabled aria-label="发送">↑</button>
+            </footer>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="/lite/config.js"></script>
+    <script src="/lite/app.js" type="module"></script>
+  </body>
+</html>

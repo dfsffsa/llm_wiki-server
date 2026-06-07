@@ -115,10 +115,11 @@ Query → 读 _index + _concepts → 选定文章路径 → 加载全文 → 回
 - Learning：flashcard + FSRS `_review.md` + `gaps.md`；Socratic 问答对照 wiki 打分
 - 质量：`web-imputed` / `agent-inferred` 标记；矛盾 → `status: quarantined`
 
-### llm_wiki-server 现状
+### llm_wiki-server 现状（2026-06-06）
 
 - 桌面：`chat-panel.tsx` + `streamChat` + RAG（graph + vector）
-- HTTP UI：**Chat 不可用**（`POST /chat` → 501；只读 fs；浏览器 CORS）
+- HTTP UI：**Chat 可用** — `overlay/server` SSE 代理 + React UI / Lite `/lite/`；RAG 在浏览器侧 keyword search + 服务端 LLM
+- Rescan：HTTP 仍 501，请用 CLI `llm-wiki rescan`
 - Lint / sweep：`upstream/src/lib/lint.ts` 等
 
 ### 建议借鉴
@@ -130,14 +131,14 @@ Query → 读 _index + _concepts → 选定文章路径 → 加载全文 → 回
 | Learning layer | CivilCareer 等场景可选 Phase 5：flashcard + 复习队列 |
 | 污染隔离 | confidence 降级、quarantine 与 lint 集成 |
 
-### 推荐实现路径（server Chat）
+### 推荐实现路径（server Chat）— 已实现 MVP
 
-1. **Server Chat 代理** — 服务端持 `llmConfig`，绕浏览器 CORS  
-2. **RAG** — index 导航 + graph relevance + LanceDB（复用 upstream 逻辑）  
-3. **Citation** — 强制引用 `wiki/...md`；可选 `output/reports/`  
-4. **持久化** — 允许写 `.llm-wiki/chats/` 或 localStorage（HTTP 模式）
+1. ~~**Server Chat 代理**~~ ✅ `overlay/server/src/api/chat.rs` + `cmd-llm-stream.ts`
+2. **RAG** — 关键词 search + 可选 LanceDB 混合（待 server 侧接入）
+3. **Citation** — 强制引用 `wiki/...md`；可选 `output/reports/`
+4. **持久化** — HTTP 模式 localStorage；桌面 `.llm-wiki/chats/`
 
-详见 [DEVELOPMENT_AND_TESTING.md §Q5](./DEVELOPMENT_AND_TESTING.md#q5像桌面-llm_wiki-那样在页面上测试大模型-chat-怎么做)。
+详见 [开发与测试.md §Q5](./开发与测试.md#q5像桌面-llm_wiki-那样在页面上测试大模型-chat-怎么做)。
 
 ---
 

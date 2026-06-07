@@ -1,4 +1,6 @@
+use std::borrow::ToOwned;
 use std::collections::BTreeMap;
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -75,6 +77,13 @@ pub fn load_projects(state: &ServerState) -> Vec<ProjectEntry> {
                 });
             }
         }
+        for path in configured_project_paths(&parsed) {
+            insert_project_path(&mut by_path, &path, &current);
+        }
+    }
+
+    for path in configured_project_paths_from_env() {
+        insert_project_path(&mut by_path, &path, &current);
     }
 
     if !current.is_empty() {
@@ -90,4 +99,78 @@ pub fn load_projects(state: &ServerState) -> Vec<ProjectEntry> {
     }
 
     by_path.into_values().collect()
+}
+
+fn insert_project_path(
+    by_path: &mut BTreeMap<String, ProjectEntry>,
+    raw_path: &str,
+    current: &str,
+) {
+    let path = match canonicalize_project_path(raw_path) {
+        Some(p) => p,
+        None => return,
+    };
+    by_path.entry(path.clone()).or_insert_with(|| ProjectEntry {
+        id: read_project_id(&path).unwrap_or_else(|| path.clone()),
+        name: project_name_from_path(&path),
+        current: path == current,
+        path,
+    });
+}
+
+fn canonicalize_project_path(raw: &str) -> Option<String> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    let path = Path::new(trimmed);
+    if !path.is_dir() {
+        eprintln!("[projects] skipping missing path: {trimmed}");
+        return None;
+    }
+    let canonical = path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
+    if !canonical.join("wiki").is_dir() {
+        eprintln!(
+            "[projects] skipping path without wiki/: {}",
+            canonical.display()
+        );
+        return None;
+    }
+    Some(normalize_path(&canonical.to_string_lossy()))
+}
+
+fn configured_project_paths_from_env() -> Vec<String> {
+    std::env::var("LLM_WIKI_PROJECTS")
+        .ok()
+        .map(|raw| {
+            raw.split(',')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(ToOwned::to_owned)
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn configured_project_paths(config: &Value) -> Vec<String> {
+    let Some(items) = config.get("projects").and_then(Value::as_array) else {
+        return Vec::new();
+    };
+    let mut paths = Vec::new();
+    for item in items {
+        let path = if let Some(s) = item.as_str() {
+            s.to_string()
+        } else if let Some(obj) = item.as_object() {
+            obj.get("path")
+                .and_then(Value::as_str)
+                .map(ToOwned::to_owned)
+                .unwrap_or_default()
+        } else {
+            String::new()
+        };
+        if !path.is_empty() {
+            paths.push(path);
+        }
+    }
+    paths
 }

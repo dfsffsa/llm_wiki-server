@@ -44,6 +44,10 @@ impl ServerState {
         &self.inner.project
     }
 
+    pub fn config_path(&self) -> Option<PathBuf> {
+        self.inner.config_path.clone()
+    }
+
     pub fn invalidate_config_cache(&self) {
         if let Ok(mut cache) = self.inner.config_cache.lock() {
             *cache = None;

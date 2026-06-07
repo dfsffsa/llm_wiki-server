@@ -33,16 +33,16 @@
 - 前端：`src/commands/` 2 文件 + 40+ 处 import；11 处直接 `invoke`  
 - 分阶段：Phase 0 ✅ → Phase 1 server → Phase 2 Web → Phase 3 CLI  
 
-详见 [feasibility-assessment.md](../feasibility-assessment.md)、[ARCHITECTURE.md](../ARCHITECTURE.md)。
+详见 [可行性评估.md](../可行性评估.md)、[架构与改造方案.md](../架构与改造方案.md)。
 
 ## 产出物（已入库）
 
 | 产出 | 路径 |
 |------|------|
 | 集成仓库 | https://github.com/dfsffsa/llm_wiki-server |
-| 架构方案 | `docs/ARCHITECTURE.md` |
-| 可行性评估 | `docs/feasibility-assessment.md` |
-| 上游架构中文说明 | `docs/upstream-architecture-zh.md` |
+| 架构方案 | `docs/架构与改造方案.md` |
+| 可行性评估 | `docs/可行性评估.md` |
+| 上游架构中文说明 | `docs/上游架构说明.md` |
 | Embedding 探索 | `overlay/embedding/EXPLORATION.md` |
 | overlay 骨架 | `overlay/server`, `cli`, `web`, `docker/` |
 

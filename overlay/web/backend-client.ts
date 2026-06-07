@@ -1,5 +1,5 @@
 import type { FileNode, WikiProject } from "@/types/wiki"
-import { apiBaseUrl, apiToken } from "../env"
+import { apiBaseUrl, apiToken } from "./env"
 
 export interface ApiFileNode {
   name: string
@@ -33,6 +33,13 @@ export interface FilesResponse {
   root: string
   files: ApiFileNode[]
   truncated: boolean
+}
+
+export interface RuntimeConfigResponse {
+  ok: boolean
+  chatEnabled: boolean
+  reason?: string | null
+  llmConfig: Record<string, unknown> | null
 }
 
 export interface SearchApiResponse {
@@ -134,6 +141,24 @@ export class HttpBackendClient {
     )
     const data = await this.parse<FileContentResponse>(res)
     return data.content
+  }
+
+  async getRuntimeConfig(): Promise<RuntimeConfigResponse> {
+    const res = await fetch(this.url("/api/v1/runtime-config"), { headers: this.headers() })
+    return this.parse(res)
+  }
+
+  chatStream(
+    projectId: string,
+    messages: unknown[],
+    signal?: AbortSignal,
+  ): Promise<Response> {
+    return fetch(this.url(`/api/v1/projects/${encodeURIComponent(projectId)}/chat`), {
+      method: "POST",
+      headers: { ...this.headers(), "Content-Type": "application/json", Accept: "text/event-stream" },
+      body: JSON.stringify({ messages }),
+      signal,
+    })
   }
 
   async search(

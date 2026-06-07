@@ -1,5 +1,8 @@
 # LLM Wiki Server — multi-stage build (Phase 1+)
 #
+# 产出：llm-wiki-server 二进制 + upstream/dist 静态 UI
+# 说明见 docker/README.md
+#
 # Stage 1: build upstream UI (HTTP read-only overlay)
 FROM node:22-bookworm AS ui-builder
 WORKDIR /build

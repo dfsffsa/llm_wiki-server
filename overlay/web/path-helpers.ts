@@ -1,6 +1,6 @@
 import { getRelativePath, isAbsolutePath, joinPath, normalizePath } from "@/lib/path-utils"
-import { getBackendClient, resolveHttpProject } from "../backend-client"
-import { readOnlyMode } from "../env"
+import { getBackendClient, resolveHttpProject } from "./backend-client"
+import { readOnlyMode } from "./env"
 
 export function readOnlyError(action: string): Error {
   return new Error(`Read-only HTTP mode: ${action} is not available in the browser UI.`)

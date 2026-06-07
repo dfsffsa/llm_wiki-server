@@ -88,6 +88,15 @@ fn dispatch_request(
                 return;
             }
         };
+        let (path, _) = api::split_url(&url);
+        let path_norm = path.trim_end_matches('/');
+        let is_chat_post = method == Method::Post
+            && path_norm.contains("/projects/")
+            && path_norm.ends_with("/chat");
+        if is_chat_post {
+            api::chat::try_handle_chat_sse(&state, &url, &body, &headers, request);
+            return;
+        }
         let response = api::handle_request(&state, &method, &url, &body, &headers);
         api::respond_json(request, response.status, response.body);
         return;

@@ -102,6 +102,8 @@ index 7c0d58f..339e669 100644
 +            "@/commands/file-sync": path.join(overlayWeb, "commands/file-sync.ts"),
 +            "@/lib/search": path.join(overlayWeb, "lib/search.ts"),
 +            "@/lib/project-store": path.join(overlayWeb, "lib/project-store.ts"),
++            "@/lib/llm-client": path.join(overlayWeb, "lib/llm-client.ts"),
++            "@/lib/persist": path.join(overlayWeb, "lib/persist.ts"),
 +          }
 +        : {}),
 +    },

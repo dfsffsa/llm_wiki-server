@@ -3,7 +3,7 @@ use std::process::Command;
 
 use llm_wiki_common::project::resolve_project_dir;
 
-use crate::config::{default_config_path, load_config};
+use crate::config::{default_config_path, load_config, resolve_config_path};
 
 pub fn run(file: PathBuf, project: PathBuf, config: Option<PathBuf>) -> Result<(), String> {
     let project = resolve_project_dir(project.to_string_lossy().as_ref())?;
@@ -14,6 +14,7 @@ pub fn run(file: PathBuf, project: PathBuf, config: Option<PathBuf>) -> Result<(
     let config_path = config
         .or_else(default_config_path)
         .ok_or_else(|| "Config required for ingest (--config or LLM_WIKI_CONFIG)".to_string())?;
+    let config_path = resolve_config_path(config_path)?;
     load_config(&config_path)?;
 
     let repo_root = repo_root();

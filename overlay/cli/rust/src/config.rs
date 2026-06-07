@@ -4,10 +4,25 @@ use std::path::{Path, PathBuf};
 use serde_json::Value;
 
 pub fn load_config(path: &Path) -> Result<Value, String> {
-    let raw = fs::read_to_string(path).map_err(|e| format!("Failed to read config: {e}"))?;
+    let path = resolve_config_path(path.to_path_buf())?;
+    let raw = fs::read_to_string(&path).map_err(|e| format!("Failed to read config {}: {e}", path.display()))?;
     let mut value: Value = serde_json::from_str(&raw).map_err(|e| format!("Invalid JSON: {e}"))?;
     expand_env_placeholders(&mut value);
     Ok(value)
+}
+
+/// Resolve relative config paths against the caller's cwd, then canonicalize.
+/// Node helpers run with cwd `overlay/cli/node`, so they must receive absolute paths.
+pub fn resolve_config_path(path: PathBuf) -> Result<PathBuf, String> {
+    let path = if path.is_absolute() {
+        path
+    } else {
+        std::env::current_dir()
+            .map_err(|e| format!("Failed to get cwd: {e}"))?
+            .join(path)
+    };
+    path.canonicalize()
+        .map_err(|e| format!("Failed to read config {}: {e}", path.display()))
 }
 
 pub fn default_config_path() -> Option<PathBuf> {

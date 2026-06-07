@@ -7,17 +7,27 @@ use tiny_http::{Header, Response, StatusCode};
 const INDEX_HTML: &str = "index.html";
 
 pub fn serve_static(root: &Path, url_path: &str) -> Option<Response<std::io::Cursor<Vec<u8>>>> {
-    let path = url_path.split('?').next()?.trim_start_matches('/');
+    let path = url_path
+        .split('?')
+        .next()?
+        .trim_start_matches('/')
+        .trim_end_matches('/');
     let file_path = if path.is_empty() {
         root.join(INDEX_HTML)
     } else {
         let candidate = root.join(path);
         if candidate.is_file() {
             candidate
-        } else if !path.contains('.') {
-            root.join(INDEX_HTML)
         } else {
-            candidate
+            let dir_index = candidate.join(INDEX_HTML);
+            if dir_index.is_file() {
+                dir_index
+            } else if !path.contains('.') {
+                // SPA fallback for client-side routes (e.g. /settings), not subdirs like /lite/
+                root.join(INDEX_HTML)
+            } else {
+                candidate
+            }
         }
     };
 
@@ -60,7 +70,7 @@ pub fn read_body_limited(
 fn mime_for_path(path: &Path) -> Option<&'static str> {
     match path.extension().and_then(|s| s.to_str()) {
         Some("html") => Some("text/html; charset=utf-8"),
-        Some("js") => Some("application/javascript; charset=utf-8"),
+        Some("js") | Some("mjs") => Some("application/javascript; charset=utf-8"),
         Some("css") => Some("text/css; charset=utf-8"),
         Some("json") => Some("application/json; charset=utf-8"),
         Some("svg") => Some("image/svg+xml"),

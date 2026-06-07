@@ -139,9 +139,26 @@ export async function apiServerReloadConfig(): Promise<string> {
   return "ok"
 }
 
+export async function mcpServerEntryPath(): Promise<string> {
+  throw new Error("MCP server is not available in HTTP read-only mode")
+}
+
 /** Bootstrap helper used by App.tsx patch in HTTP mode. */
 export async function bootstrapHttpProject(): Promise<WikiProject | null> {
-  return resolveHttpProject()
+  const project = await resolveHttpProject()
+  if (!project) return null
+
+  try {
+    const { useWikiStore } = await import("@/stores/wiki-store")
+    const runtime = await getBackendClient().getRuntimeConfig()
+    if (runtime.chatEnabled && runtime.llmConfig) {
+      useWikiStore.getState().setLlmConfig(runtime.llmConfig as import("@/stores/wiki-store").LlmConfig)
+    }
+  } catch (err) {
+    console.warn("Failed to load runtime LLM config:", err)
+  }
+
+  return project
 }
 
 export type { RawProject }

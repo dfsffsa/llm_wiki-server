@@ -44,4 +44,24 @@ else
   npm run build --prefix "${UPSTREAM}"
 fi
 
+LITE_SRC="${ROOT}/overlay/static/lite"
+LITE_DST="${UPSTREAM}/dist/lite"
+if [[ -d "${LITE_SRC}" ]]; then
+  echo "==> Copying Lite static UI to dist/lite..."
+  mkdir -p "${LITE_SRC}/vendor"
+  if [[ -f "${UPSTREAM}/node_modules/marked/lib/marked.esm.js" ]]; then
+    cp "${UPSTREAM}/node_modules/marked/lib/marked.esm.js" "${LITE_SRC}/vendor/"
+    cp "${UPSTREAM}/node_modules/dompurify/dist/purify.es.mjs" "${LITE_SRC}/vendor/purify.es.js"
+  fi
+  mkdir -p "${LITE_DST}"
+  cp -r "${LITE_SRC}/." "${LITE_DST}/"
+  TOKEN="${VITE_API_TOKEN:-e2e-test-token}"
+  cat > "${LITE_DST}/config.js" <<EOF
+window.LLM_WIKI_LITE_CONFIG = {
+  apiBase: "${VITE_API_BASE:-}",
+  apiToken: "${TOKEN}",
+};
+EOF
+fi
+
 echo "done. UI output: ${UPSTREAM}/dist"

@@ -21,14 +21,14 @@ npm install --prefix upstream
 
 ## 文档
 
-| 文档 | 说明 |
+**全局入口：[文档指引.md](文档指引.md)**（按任务导航 · 四大模块）
+
+| 模块 | 入口 |
 |------|------|
-| [docs/README.md](docs/README.md) | 文档索引 |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 完整架构、分阶段计划、耦合分析 |
-| [docs/UPSTREAM_SYNC.md](docs/UPSTREAM_SYNC.md) | upstream 与官方 repo 同步原理与操作 |
-| [docs/feasibility-assessment.md](docs/feasibility-assessment.md) | 服务化可行性评估 |
-| [docs/upstream-architecture-zh.md](docs/upstream-architecture-zh.md) | 上游桌面版架构说明（中文） |
-| [README-OVERLAY.md](README-OVERLAY.md) | Overlay 开发指南、Git 工作流 |
+| 项目结构与开发 | [代码结构总览](docs/代码结构总览.md) · [开发与测试](docs/开发与测试.md) |
+| 日常运维 | [日常运维](docs/日常运维.md) · [新项目指引](docs/新项目指引.md) |
+| 部署 | [部署指引](docs/部署指引.md) · [ECS 与 Tunnel](docs/部署-ECS与Tunnel.md) |
+| 完整目录 | [docs/文档索引.md](docs/文档索引.md) |
 
 原本地 `llm_wiki/` 目录中的分析已全部迁入本仓库，**可删除**；请勿使用或推送 `dfsffsa/llm_wiki`。
 

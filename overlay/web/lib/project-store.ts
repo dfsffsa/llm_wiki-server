@@ -2,6 +2,7 @@ import type { WikiProject } from "@/types/wiki"
 import type {
   ApiConfig,
   EmbeddingConfig,
+  GeneralConfig,
   LlmConfig,
   MultimodalConfig,
   OutputLanguage,
@@ -161,6 +162,33 @@ export async function loadApiConfig(): Promise<ApiConfig | null> {
   return ((await getStore()).get<ApiConfig>(API_CONFIG_KEY)) ?? null
 }
 
+const GENERAL_CONFIG_KEY = "generalConfig"
+
+export const DEFAULT_GENERAL_CONFIG: GeneralConfig = {
+  autostart: false,
+  closeBehavior: "minimize",
+}
+
+export function normalizeGeneralConfig(config?: Partial<GeneralConfig> | null): GeneralConfig {
+  const closeBehavior = config?.closeBehavior
+  return {
+    autostart: typeof config?.autostart === "boolean" ? config.autostart : DEFAULT_GENERAL_CONFIG.autostart,
+    closeBehavior:
+      closeBehavior === "ask" || closeBehavior === "minimize" || closeBehavior === "exit"
+        ? closeBehavior
+        : DEFAULT_GENERAL_CONFIG.closeBehavior,
+  }
+}
+
+export async function saveGeneralConfig(config: GeneralConfig): Promise<void> {
+  await (await getStore()).set(GENERAL_CONFIG_KEY, normalizeGeneralConfig(config))
+}
+
+export async function loadGeneralConfig(): Promise<GeneralConfig> {
+  const config = await (await getStore()).get<Partial<GeneralConfig>>(GENERAL_CONFIG_KEY)
+  return normalizeGeneralConfig(config)
+}
+
 const SCHEDULED_IMPORT_KEY_PREFIX = "scheduledImportConfig:"
 
 function scheduledImportKey(projectPath: string): string {
@@ -215,6 +243,16 @@ export async function saveLanguage(lang: string): Promise<void> {
 
 export async function loadLanguage(): Promise<string | null> {
   return ((await getStore()).get<string>(LANGUAGE_KEY)) ?? null
+}
+
+const THEME_KEY = "theme"
+
+export async function saveTheme(theme: "light" | "dark" | "system"): Promise<void> {
+  await (await getStore()).set(THEME_KEY, theme)
+}
+
+export async function loadTheme(): Promise<"light" | "dark" | "system" | null> {
+  return ((await getStore()).get<"light" | "dark" | "system">(THEME_KEY)) ?? null
 }
 
 const OUTPUT_LANGUAGE_KEY = "outputLanguage"
