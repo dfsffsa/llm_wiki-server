@@ -4,3 +4,5 @@
 //! starts as a stub so the crate compiles before any logic is in place.
 
 pub mod schema;
+
+pub mod password;
