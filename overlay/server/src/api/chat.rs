@@ -94,13 +94,32 @@ pub fn try_handle_chat_sse(
         return;
     }
 
-    let mut child = match Command::new("npx")
-        .args(["tsx", script.to_str().unwrap_or_default(), "--config"])
+    // Invoke tsx directly via `node <cli.mjs>` rather than `npx tsx`.
+    // `npx`/`npm exec` spawns intermediate `npm exec` + `sh -c` processes that
+    // inherit the child's stdout pipe and stay alive after the real worker
+    // exits, so the pipe's write end is never closed and the server's response
+    // copy never sees EOF — the request hangs forever. Driving `node` with
+    // tsx's CLI module is a single process with no lingering parents.
+    let cli_dir = repo_root.join("overlay/cli/node");
+    let tsx_cli = cli_dir.join("node_modules/tsx/dist/cli.mjs");
+    let node_bin = std::env::var("LLM_WIKI_NODE_BIN")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "node".to_string());
+
+    eprintln!("[chat] spawning node tsx for chat stream");
+    let mut child = match Command::new(&node_bin)
+        .arg(&tsx_cli)
+        .arg(&script)
+        .arg("--config")
         .arg(&config_path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .current_dir(repo_root.join("overlay/cli/node"))
+        // stderr must NOT be piped-and-unread: tsx/undici write startup noise to
+        // stderr, and a full pipe buffer (64KB) deadlocks the child before it
+        // ever streams on stdout. Inherit so it lands in the server log.
+        .stderr(Stdio::inherit())
+        .current_dir(&cli_dir)
         .env("LLM_WIKI_REPO", &repo_root)
         .spawn()
     {
@@ -126,6 +145,8 @@ pub fn try_handle_chat_sse(
     let body_owned = body.to_string();
     thread::spawn(move || {
         let _ = stdin.write_all(body_owned.as_bytes());
+        // stdin drops here, closing the pipe's write end so the child's
+        // readStdin() sees EOF and proceeds to stream.
     });
 
     let stdout = match child.stdout.take() {

@@ -70,6 +70,11 @@ async function main() {
       },
     },
   )
+
+  // Force exit: tsx's loader and undici (fetch) keep the event loop alive after
+  // streaming finishes, so stdout never reaches EOF and the HTTP server's
+  // response copy hangs. Exit explicitly to flush the SSE `done` event.
+  process.exit(0)
 }
 
 main().catch((err) => {
