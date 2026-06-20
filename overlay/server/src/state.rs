@@ -26,6 +26,9 @@ struct ServerStateInner {
     config_path: Option<PathBuf>,
     token_override: Option<String>,
     config_cache: Mutex<Option<CachedAppState>>,
+    auth: Option<Arc<llm_wiki_auth::AuthService>>,
+    require_login: bool,
+    daily_chat_limit: u32,
 }
 
 impl ServerState {
@@ -36,6 +39,9 @@ impl ServerState {
                 config_path: config.config_path.clone(),
                 token_override: config.token_override.clone(),
                 config_cache: Mutex::new(None),
+                auth: None,
+                require_login: false,
+                daily_chat_limit: 50,
             }),
         }
     }
@@ -52,6 +58,39 @@ impl ServerState {
         if let Ok(mut cache) = self.inner.config_cache.lock() {
             *cache = None;
         }
+    }
+
+    /// Attach the AuthService (built at startup) and auth-mode flags. Consumes
+    /// self and returns a new ServerState wrapping a fresh inner Arc that
+    /// carries the auth values. Called once at startup.
+    pub fn with_auth(
+        self,
+        auth: Option<Arc<llm_wiki_auth::AuthService>>,
+        require_login: bool,
+        daily_chat_limit: u32,
+    ) -> Self {
+        let inner = Arc::new(ServerStateInner {
+            project: self.inner.project.clone(),
+            config_path: self.inner.config_path.clone(),
+            token_override: self.inner.token_override.clone(),
+            config_cache: Mutex::new(None),
+            auth,
+            require_login,
+            daily_chat_limit,
+        });
+        Self { inner }
+    }
+
+    pub fn auth(&self) -> Option<&Arc<llm_wiki_auth::AuthService>> {
+        self.inner.auth.as_ref()
+    }
+
+    pub fn require_login(&self) -> bool {
+        self.inner.require_login
+    }
+
+    pub fn daily_chat_limit(&self) -> u32 {
+        self.inner.daily_chat_limit
     }
 
     pub fn load_app_state(&self) -> Option<Value> {

@@ -9,8 +9,12 @@ use crate::config::ServerConfig;
 use crate::state::ServerState;
 use crate::static_files;
 
-pub fn run(config: ServerConfig) -> Result<(), String> {
-    let state = ServerState::from_config(&config);
+pub fn run(
+    config: ServerConfig,
+    auth: Option<Arc<llm_wiki_auth::AuthService>>,
+) -> Result<(), String> {
+    let state = ServerState::from_config(&config)
+        .with_auth(auth, config.require_login, config.daily_chat_limit);
     let static_dir = config.static_dir.clone();
     let bind = config.bind.clone();
     let project = config.project.display().to_string();

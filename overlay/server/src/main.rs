@@ -98,7 +98,27 @@ fn main() {
         });
     });
 
-    if let Err(err) = http_server::run(config) {
+    let auth_service = match &config.auth_db {
+        Some(path) => {
+            let store = match llm_wiki_auth::Store::open(path) {
+                Ok(s) => std::sync::Arc::new(s),
+                Err(e) => {
+                    eprintln!("auth: failed to open SQLite at {}: {e}", path.display());
+                    std::process::exit(1);
+                }
+            };
+            let svc = llm_wiki_auth::AuthService::new(store, llm_wiki_auth::AuthServiceConfig {
+                session_ttl_secs: (config.session_ttl_days as i64) * 24 * 3600,
+                admin_email: config.admin_email.clone(),
+                login_attempts: 25.0,
+                login_period_secs: 3600.0,
+            });
+            Some(std::sync::Arc::new(svc))
+        }
+        None => None,
+    };
+
+    if let Err(err) = http_server::run(config, auth_service) {
         eprintln!("error: {err}");
         std::process::exit(1);
     }
