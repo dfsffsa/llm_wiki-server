@@ -13,4 +13,6 @@ pub mod error;
 
 pub mod store;
 
+pub mod ratelimit;
+
 pub use error::AuthError;

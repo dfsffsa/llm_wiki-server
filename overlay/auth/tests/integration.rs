@@ -214,3 +214,36 @@ fn usage_increment_counts_per_day() {
     assert_eq!(store.get_usage(uid, "2026-06-20").unwrap(), 2);
     assert_eq!(store.get_usage(uid, "2026-06-21").unwrap(), 0);
 }
+
+use llm_wiki_auth::ratelimit::RateLimiter;
+
+#[test]
+fn rate_limit_blocks_after_quota() {
+    let rl = RateLimiter::new();
+    // 3 attempts per 60 seconds
+    for _ in 0..3 {
+        assert!(rl.allow("login:alice", 3.0, 60.0, 1_000));
+    }
+    assert!(!rl.allow("login:alice", 3.0, 60.0, 1_001));
+}
+
+#[test]
+fn rate_limit_isolates_keys() {
+    let rl = RateLimiter::new();
+    for _ in 0..3 {
+        rl.allow("login:alice", 3.0, 60.0, 1_000);
+    }
+    // bob still has full quota
+    assert!(rl.allow("login:bob", 3.0, 60.0, 1_000));
+}
+
+#[test]
+fn rate_limit_refills_over_time() {
+    let rl = RateLimiter::new();
+    for _ in 0..3 {
+        rl.allow("k", 3.0, 60.0, 1_000);
+    }
+    assert!(!rl.allow("k", 3.0, 60.0, 1_000));
+    // After 60s, the bucket has fully refilled.
+    assert!(rl.allow("k", 3.0, 60.0, 1_060));
+}
