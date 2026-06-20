@@ -6,3 +6,5 @@
 pub mod schema;
 
 pub mod password;
+
+pub mod session;
