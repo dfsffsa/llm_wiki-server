@@ -137,7 +137,7 @@ async function buildContext(projectId, query) {
 
 const STREAM_TIMEOUT_MS = 120_000;
 
-function parseSseChunk(chunk, onToken) {
+function parseSseChunk(chunk, onToken, onReasoning) {
   for (const line of chunk.split("\n")) {
     if (!line.startsWith("data: ")) continue;
     const raw = line.slice(6).trim();
@@ -149,6 +149,7 @@ function parseSseChunk(chunk, onToken) {
       continue;
     }
     if (parsed.event === "token" && parsed.data?.token) onToken(parsed.data.token);
+    if (parsed.event === "reasoning" && parsed.data?.token) onReasoning(parsed.data.token);
     if (parsed.event === "done") return "done";
     if (parsed.event === "error") {
       throw new Error(parsed.data?.message || "Stream error");
@@ -157,7 +158,7 @@ function parseSseChunk(chunk, onToken) {
   return null;
 }
 
-async function streamChat(projectId, messages, onToken, signal) {
+async function streamChat(projectId, messages, onToken, onReasoning, signal) {
   const res = await fetch(apiUrl(`/api/v1/projects/${encodeURIComponent(projectId)}/chat`), {
     method: "POST",
     headers: apiHeaders({
@@ -185,11 +186,11 @@ async function streamChat(projectId, messages, onToken, signal) {
       while (boundary !== -1) {
         const chunk = buffer.slice(0, boundary);
         buffer = buffer.slice(boundary + 2);
-        if (parseSseChunk(chunk, onToken) === "done") return;
+        if (parseSseChunk(chunk, onToken, onReasoning) === "done") return;
         boundary = buffer.indexOf("\n\n");
       }
     }
-    if (buffer.trim() && parseSseChunk(buffer, onToken) === "done") return;
+    if (buffer.trim() && parseSseChunk(buffer, onToken, onReasoning) === "done") return;
   } catch (err) {
     if (isAbortError(err)) return;
     throw err;
@@ -300,6 +301,20 @@ function renderMessages(messages, opts = {}) {
     if (isStreaming) {
       const stack = document.createElement("div");
       stack.className = "msg-stack";
+      // Reasoning (思考过程) — shown above the answer, collapsible. Populated
+      // live as `reasoning` SSE events arrive.
+      const reasoning = document.createElement("details");
+      reasoning.className = "msg-reasoning";
+      reasoning.id = "streaming-reasoning";
+      reasoning.open = true;
+      const summary = document.createElement("summary");
+      summary.textContent = "思考过程";
+      reasoning.appendChild(summary);
+      const reasoningText = document.createElement("div");
+      reasoningText.className = "msg-reasoning-text";
+      reasoningText.id = "streaming-reasoning-text";
+      reasoning.appendChild(reasoningText);
+      stack.appendChild(reasoning);
       stack.appendChild(bubble);
       const status = document.createElement("div");
       status.className = "stream-status";
@@ -324,31 +339,47 @@ function normalizeMessages(messages) {
     .map((m) => ({ role: m.role, content: String(m.content ?? ""), error: !!m.error }));
 }
 
-let streamMdTimer = 0;
-let streamMdPending = "";
+// Streaming render state. While tokens arrive we avoid re-running marked.parse
+// on every chunk (expensive, and visually jumpy) — instead we render plain text
+// per animation frame for a smooth typewriter feel, then do a full markdown
+// pass once when the stream finishes.
+let streamRafId = 0;
+let streamPendingContent = "";
+let streamPendingReasoning = "";
 
-function scheduleStreamMarkdownRender(content) {
-  streamMdPending = content;
-  if (streamMdTimer) return;
-  streamMdTimer = window.setTimeout(() => {
-    streamMdTimer = 0;
-    const pending = streamMdPending;
-    const el = document.getElementById("streaming-bubble");
-    if (el) {
-      el.classList.remove("msg-placeholder");
-      setAssistantBubbleContent(el, pending);
-      $("#messages").scrollTop = $("#messages").scrollHeight;
-    }
-    if (streamMdPending !== pending) scheduleStreamMarkdownRender(streamMdPending);
-  }, 120);
+function paintStreamingBubble() {
+  streamRafId = 0;
+  const bubble = document.getElementById("streaming-bubble");
+  if (bubble) {
+    bubble.classList.remove("msg-placeholder");
+    // Plain text during streaming — fast, no re-parse. Escaped to avoid raw
+    // HTML injection from partial markdown.
+    bubble.textContent = streamPendingContent;
+  }
+  paintStreamingReasoning();
+  const box = $("#messages");
+  if (box) box.scrollTop = box.scrollHeight;
+}
+
+function paintStreamingReasoning() {
+  const el = document.getElementById("streaming-reasoning-text");
+  if (el) el.textContent = streamPendingReasoning;
+}
+
+function scheduleStreamRender() {
+  // Coalesce into one paint per frame (~16ms) regardless of how fast tokens
+  // arrive. Each token schedules; the first one queues a RAF, the rest just
+  // update the pending buffer.
+  if (streamRafId) return;
+  streamRafId = window.requestAnimationFrame(paintStreamingBubble);
 }
 
 function flushStreamMarkdownRender(content) {
-  if (streamMdTimer) {
-    clearTimeout(streamMdTimer);
-    streamMdTimer = 0;
+  if (streamRafId) {
+    window.cancelAnimationFrame(streamRafId);
+    streamRafId = 0;
   }
-  streamMdPending = content;
+  streamPendingContent = content;
   const el = document.getElementById("streaming-bubble");
   if (el) {
     el.classList.remove("msg-placeholder");
@@ -490,12 +521,17 @@ async function sendMessage(text) {
   const input = $("#input");
   input.value = "";
 
+  // Reset streaming render state for this turn.
+  streamPendingContent = "";
+  streamPendingReasoning = "";
+
   let aborted = false;
+  let firstAnswerToken = true;
   try {
     const context = await buildContext(state.activeProject.id, trimmed);
     if (generation !== state.sendGeneration) return;
 
-    updateStreamStatus("正在生成回答…");
+    updateStreamStatus("正在思考…");
     const systemParts = [
       `你是「${state.activeProject.title}」知识库助手，用简洁中文回答家长/职场新人的实际问题。`,
       "优先依据下方检索到的资料；若无相关资料，请诚实说明并给出通用建议。",
@@ -519,8 +555,17 @@ async function sendMessage(text) {
       state.activeProject.id,
       apiMessages,
       (token) => {
+        if (firstAnswerToken) {
+          firstAnswerToken = false;
+          updateStreamStatus("正在生成回答…");
+        }
         assistant.content += token;
-        scheduleStreamMarkdownRender(assistant.content);
+        streamPendingContent = assistant.content;
+        scheduleStreamRender();
+      },
+      (token) => {
+        streamPendingReasoning += token;
+        scheduleStreamRender();
       },
       signal,
     );

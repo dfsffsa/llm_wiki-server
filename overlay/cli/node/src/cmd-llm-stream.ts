@@ -60,6 +60,61 @@ async function readStdin(): Promise<string> {
   return Buffer.concat(chunks).toString("utf8")
 }
 
+// --- <think> stream splitter ---
+// Splits the incoming content token stream into reasoning (inside <think>…)
+// and answer (everything else). Maintains a hold-back buffer so a tag
+// straddling two tokens isn't emitted as literal text.
+const OPEN_TAG = "<think>"
+const CLOSE_TAG = "</think>"
+let thinkMode = false
+let holdBack = ""
+
+function routeContent(token: string): void {
+  holdBack += token
+  while (holdBack.length > 0) {
+    if (thinkMode) {
+      const closeIdx = holdBack.indexOf(CLOSE_TAG)
+      if (closeIdx !== -1) {
+        const reasoning = holdBack.slice(0, closeIdx)
+        if (reasoning) writeSse("reasoning", { token: reasoning })
+        holdBack = holdBack.slice(closeIdx + CLOSE_TAG.length)
+        thinkMode = false
+      } else {
+        // Emit everything that can't be the start of CLOSE_TAG, keep the rest.
+        const safeLen = holdBack.length - (CLOSE_TAG.length - 1)
+        if (safeLen > 0) {
+          writeSse("reasoning", { token: holdBack.slice(0, safeLen) })
+          holdBack = holdBack.slice(safeLen)
+        }
+        return
+      }
+    } else {
+      const openIdx = holdBack.indexOf(OPEN_TAG)
+      if (openIdx !== -1) {
+        const answer = holdBack.slice(0, openIdx)
+        if (answer) writeSse("token", { token: answer })
+        holdBack = holdBack.slice(openIdx + OPEN_TAG.length)
+        thinkMode = true
+      } else {
+        const safeLen = holdBack.length - (OPEN_TAG.length - 1)
+        if (safeLen > 0) {
+          writeSse("token", { token: holdBack.slice(0, safeLen) })
+          holdBack = holdBack.slice(safeLen)
+        }
+        return
+      }
+    }
+  }
+}
+
+function flushContent(): void {
+  // Stream ended: emit any buffered text as-is (unclosed <think> → reasoning).
+  if (holdBack) {
+    writeSse(thinkMode ? "reasoning" : "token", { token: holdBack })
+    holdBack = ""
+  }
+}
+
 async function main() {
   const configPath = parseFlag("--config")
   if (!configPath) {
@@ -93,10 +148,22 @@ async function main() {
     llmConfig,
     body.messages,
     {
-      onToken: (token) => writeSse("token", { token }),
+      // MiniMax (and some other models via OpenAI/Anthropic-compatible wires)
+      // inline the chain-of-thought as literal `<think>...</think>` text inside
+      // the content stream, rather than a structured reasoning field. upstream's
+      // reasoning-detector only handles structured fields, so without this the
+      // raw `<think>` text leaks into the answer. Here we split the content
+      // stream: text inside `<think>` becomes a `reasoning` SSE event (shown in
+      // the UI's 思考过程 panel), everything else becomes a `token` event.
+      // Handles tags split across token boundaries.
+      onToken: (token) => routeContent(token),
       onReasoningToken: (token) => writeSse("reasoning", { token }),
-      onDone: () => writeSse("done", {}),
+      onDone: () => {
+        flushContent()
+        writeSse("done", {})
+      },
       onError: (err) => {
+        flushContent()
         writeSse("error", { message: err.message })
         process.exit(1)
       },

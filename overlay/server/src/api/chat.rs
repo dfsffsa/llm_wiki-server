@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 
 use serde_json::{json, Value};
-use tiny_http::{Header, Request, Response, StatusCode};
+use tiny_http::Request;
 
 use crate::api::{self, resolve_project, API_PREFIX};
 use crate::state::ServerState;
@@ -217,19 +217,14 @@ pub fn try_handle_chat_sse(
         }
     };
 
-    let mut response = Response::new(
-        StatusCode(200),
-        sse_headers(),
-        stdout,
-        None,
-        None,
-    );
-    for header in api::cors_headers() {
-        response.add_header(header);
-    }
-    if let Err(e) = request.respond(response) {
-        eprintln!("[chat] respond error: {e}");
-    }
+    // Stream the child's stdout to the client with our own copy loop instead of
+    // `request.respond()`. tiny_http's `respond()` path wraps the socket in a
+    // `BufWriter` (1KB) and only flushes once at the end of `io::copy`, so SSE
+    // events would batch up and the client saw the whole answer "jump out at
+    // once" rather than stream. `into_writer()` gives us the raw socket writer;
+    // we write the HTTP status line + headers + chunked body ourselves and
+    // flush after every read, so each SSE event reaches the browser promptly.
+    stream_chat_response(request, stdout);
 
     // The stream has ended — either the child finished cleanly (stdout EOF
     // after the `done` event) or the client disconnected mid-stream (tiny_http
@@ -249,12 +244,113 @@ pub fn try_handle_chat_sse(
     }
 }
 
-fn sse_headers() -> Vec<Header> {
-    vec![
-        Header::from_bytes("Content-Type", "text/event-stream").unwrap(),
-        Header::from_bytes("Cache-Control", "no-cache").unwrap(),
-        Header::from_bytes("Connection", "keep-alive").unwrap(),
-    ]
+/// Write a streaming SSE response directly to the request's raw writer, flushing
+/// after every read so events aren't batched by tiny_http's internal buffer.
+fn stream_chat_response<R: std::io::Read>(request: tiny_http::Request, mut body: R) {
+    use std::io::Write;
+
+    let mut writer = request.into_writer();
+
+    // Build the response headers. We use chunked transfer-encoding (no
+    // Content-Length) since the stream length is unknown up front.
+    let mut header_lines: Vec<String> = vec![
+        "HTTP/1.1 200 OK".to_string(),
+        "Content-Type: text/event-stream".to_string(),
+        "Cache-Control: no-cache".to_string(),
+        "Connection: keep-alive".to_string(),
+        "Transfer-Encoding: chunked".to_string(),
+        "Access-Control-Allow-Origin: *".to_string(),
+        "Access-Control-Allow-Methods: GET, POST, OPTIONS".to_string(),
+        "Access-Control-Allow-Headers: Content-Type, Authorization, X-LLM-Wiki-Token".to_string(),
+        "X-Accel-Buffering: no".to_string(), // hint proxies (nginx) not to buffer
+        format!("Date: {}", http_date_now()),
+        "Server: llm-wiki-server".to_string(),
+    ];
+    let header_blob = header_lines.join("\r\n") + "\r\n\r\n";
+
+    if let Err(e) = writer.write_all(header_blob.as_bytes()) {
+        eprintln!("[chat] failed to write headers: {e}");
+        return;
+    }
+    let _ = writer.flush();
+
+    // Copy the child's stdout in small chunks, flushing after each so the
+    // client receives SSE events as they are produced. 64 bytes is small
+    // enough to flush per-event (each SSE event is ~40-80 bytes) without
+    // excessive syscalls.
+    let mut buf = [0u8; 64];
+    loop {
+        match body.read(&mut buf) {
+            Ok(0) => break,
+            Ok(n) => {
+                let chunk = &buf[..n];
+                // chunked-encoding frame: "<hexlen>\r\n<data>\r\n"
+                if write!(writer, "{:X}\r\n", n).is_err() {
+                    break;
+                }
+                if writer.write_all(chunk).is_err() {
+                    break;
+                }
+                if writer.write_all(b"\r\n").is_err() {
+                    break;
+                }
+                if writer.flush().is_err() {
+                    break;
+                }
+            }
+            Err(ref e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(e) => {
+                eprintln!("[chat] stdout read error: {e}");
+                break;
+            }
+        }
+    }
+
+    // Terminating chunk + flush.
+    let _ = writer.write_all(b"0\r\n\r\n");
+    let _ = writer.flush();
+    header_lines.clear();
+}
+
+/// RFC 7231 IMF-fixdate, e.g. "Sun, 06 Nov 1994 08:49:37 GMT".
+fn http_date_now() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    epoch_to_http_date(secs)
+}
+
+/// Convert a Unix epoch second to an HTTP date without pulling in a time crate.
+fn epoch_to_http_date(secs: u64) -> String {
+    const DAY: u64 = 86_400;
+    let days = secs / DAY;
+    let sod = secs % DAY; // seconds of day
+    let hour = sod / 3600;
+    let min = (sod % 3600) / 60;
+    let sec = sod % 60;
+
+    // 1970-01-01 was a Thursday (weekday index 4 if Sun=0).
+    let weekday = (4 + days) % 7;
+    let wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][weekday as usize];
+
+    // Civil-from-days algorithm (Howard Hinnant).
+    let z = days as i64 + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    let month = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ][(m as usize) - 1];
+
+    format!("{wd}, {d:02} {month} {y:04} {hour:02}:{min:02}:{sec:02} GMT")
 }
 
 fn repo_root() -> PathBuf {
