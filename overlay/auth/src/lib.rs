@@ -8,3 +8,7 @@ pub mod schema;
 pub mod password;
 
 pub mod session;
+
+pub mod error;
+
+pub use error::AuthError;
