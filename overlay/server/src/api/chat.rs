@@ -1,6 +1,7 @@
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 
 use serde_json::{json, Value};
@@ -8,6 +9,41 @@ use tiny_http::{Header, Request, Response, StatusCode};
 
 use crate::api::{self, resolve_project, API_PREFIX};
 use crate::state::ServerState;
+
+/// Maximum number of concurrent chat streams. Chat requests are long-lived
+/// (up to the LLM's streaming duration, potentially minutes) and each holds a
+/// worker thread plus a Node subprocess. Without a separate bound, a burst of
+/// slow chats would exhaust the global `MAX_IN_FLIGHT_REQUESTS` slots and
+/// starve fast endpoints (health, search). Keep chat on its own, smaller leash.
+const MAX_CONCURRENT_CHAT: usize = 8;
+static IN_FLIGHT_CHAT: AtomicUsize = AtomicUsize::new(0);
+
+/// RAII guard reserving one chat concurrency slot. Released on drop, which
+/// happens after the stream finishes (or the client disconnects).
+struct ChatSlot;
+impl Drop for ChatSlot {
+    fn drop(&mut self) {
+        IN_FLIGHT_CHAT.fetch_sub(1, Ordering::Relaxed);
+    }
+}
+
+fn try_acquire_chat_slot() -> Option<ChatSlot> {
+    let mut current = IN_FLIGHT_CHAT.load(Ordering::Relaxed);
+    loop {
+        if current >= MAX_CONCURRENT_CHAT {
+            return None;
+        }
+        match IN_FLIGHT_CHAT.compare_exchange_weak(
+            current,
+            current + 1,
+            Ordering::Relaxed,
+            Ordering::Relaxed,
+        ) {
+            Ok(_) => return Some(ChatSlot),
+            Err(next) => current = next,
+        }
+    }
+}
 
 pub fn try_handle_chat_sse(
     state: &ServerState,
@@ -94,6 +130,26 @@ pub fn try_handle_chat_sse(
         return;
     }
 
+    // Reserve a chat concurrency slot. Held until the stream ends / client
+    // disconnects (ChatSlot drops at end of scope). Reject before spawning a
+    // worker so a saturated server fails fast with 503 instead of queuing.
+    let _chat_slot = match try_acquire_chat_slot() {
+        Some(slot) => slot,
+        None => {
+            api::respond_json(
+                request,
+                503,
+                json!({
+                    "ok": false,
+                    "error": format!(
+                        "Too many concurrent chat requests (max {MAX_CONCURRENT_CHAT}). Try again shortly."
+                    ),
+                }),
+            );
+            return;
+        }
+    };
+
     // Invoke tsx directly via `node <cli.mjs>` rather than `npx tsx`.
     // `npx`/`npm exec` spawns intermediate `npm exec` + `sh -c` processes that
     // inherit the child's stdout pipe and stay alive after the real worker
@@ -109,6 +165,10 @@ pub fn try_handle_chat_sse(
 
     eprintln!("[chat] spawning node tsx for chat stream");
     let mut child = match Command::new(&node_bin)
+        // --no-warnings: Node's own deprecation/warning output fires before our
+        // script can redirect stdout away from the SSE wire. Silence it at the
+        // source so no startup noise corrupts the stream.
+        .arg("--no-warnings")
         .arg(&tsx_cli)
         .arg(&script)
         .arg("--config")
@@ -171,10 +231,22 @@ pub fn try_handle_chat_sse(
         eprintln!("[chat] respond error: {e}");
     }
 
-    // Reap child in background (stdout already consumed by response).
-    thread::spawn(move || {
-        let _ = child.wait();
-    });
+    // The stream has ended — either the child finished cleanly (stdout EOF
+    // after the `done` event) or the client disconnected mid-stream (tiny_http
+    // surfaces that as a write error and returns from `respond`). Either way,
+    // kill the child if it is still alive so a disconnected client does not
+    // leave a Node process running and continuing to pull LLM tokens, then reap
+    // it to avoid a zombie. `kill` on an already-exited child is a no-op error
+    // we ignore. `_chat_slot` drops after this, releasing the concurrency slot.
+    if let Err(e) = child.kill() {
+        // ESRCH means the child already exited — expected for the normal path.
+        if e.raw_os_error() != Some(3) {
+            eprintln!("[chat] failed to kill child: {e}");
+        }
+    }
+    if let Err(e) = child.wait() {
+        eprintln!("[chat] failed to wait on child: {e}");
+    }
 }
 
 fn sse_headers() -> Vec<Header> {

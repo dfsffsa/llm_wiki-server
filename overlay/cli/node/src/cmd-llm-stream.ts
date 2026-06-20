@@ -15,10 +15,42 @@ interface StreamRequest {
   messages: ChatMessage[]
 }
 
+// stdout is the SSE wire — every byte the client receives is parsed as an SSE
+// event by overlay/web/lib/llm-client.ts. Any stray write (an undici banner, a
+// deprecation warning, a forgotten console.log, a stack trace) would corrupt
+// the stream. So we capture the real stdout for our own use, then redirect
+// everything else that would hit stdout to stderr instead.
+const rawStdoutWrite: typeof process.stdout.write =
+  process.stdout.write.bind(process.stdout)
+process.stdout.write = ((chunk: any, ...rest: any[]) =>
+  process.stderr.write(chunk, ...rest)) as typeof process.stdout.write
+// console.* and any code logging through stdout now land on stderr (server log),
+// never on the SSE wire.
+console.log = (...args: unknown[]) => process.stderr.write(`${args.join(" ")}\n`)
+console.warn = (...args: unknown[]) => process.stderr.write(`${args.join(" ")}\n`)
+console.error = (...args: unknown[]) => process.stderr.write(`${args.join(" ")}\n`)
+console.info = (...args: unknown[]) => process.stderr.write(`${args.join(" ")}\n`)
+console.debug = (...args: unknown[]) => process.stderr.write(`${args.join(" ")}\n`)
+
 function writeSse(event: string, data: unknown): void {
   const payload = JSON.stringify({ event, data })
-  process.stdout.write(`data: ${payload}\n\n`)
+  rawStdoutWrite(`data: ${payload}\n\n`)
 }
+
+// Safety net for failures outside the main() promise chain: an uncaught
+// synchronous exception or an unhandled rejection would otherwise kill the
+// process silently — the client would see the stream truncate with no `done`
+// and no way to tell a clean end from a crash. Emit an `error` frame first.
+function emitFatalAndExit(message: string): void {
+  writeSse("error", { message })
+  process.exit(1)
+}
+process.on("uncaughtException", (err) => {
+  emitFatalAndExit(err instanceof Error ? err.message : String(err))
+})
+process.on("unhandledRejection", (reason) => {
+  emitFatalAndExit(reason instanceof Error ? reason.message : String(reason))
+})
 
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = []
