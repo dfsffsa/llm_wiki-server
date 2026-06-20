@@ -11,4 +11,6 @@ pub mod session;
 
 pub mod error;
 
+pub mod store;
+
 pub use error::AuthError;
