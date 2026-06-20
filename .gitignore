@@ -14,6 +14,8 @@ overlay/crates/**/target/
 
 # Rust
 upstream/src-tauri/target/
+# Local cargo config (per-user, e.g., musl linker, mirror)
+.cargo/
 
 # Secrets & local experiments
 .env
