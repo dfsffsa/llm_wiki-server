@@ -38,6 +38,27 @@ struct Args {
     /// Static UI directory (default: upstream/dist if present)
     #[arg(long, env = "LLM_WIKI_STATIC")]
     static_dir: Option<String>,
+
+    /// SQLite path for auth/history/usage. If unset, multi-user mode is off.
+    #[arg(long, env = "LLM_WIKI_AUTH_DB")]
+    auth_db: Option<String>,
+
+    /// Require login on the lite page (browser users). Bearer token auth
+    /// for CLI/e2e is unaffected.
+    #[arg(long, env = "LLM_WIKI_REQUIRE_LOGIN", default_value_t = false)]
+    require_login: bool,
+
+    /// Per-user daily chat limit (cookie-authenticated requests only).
+    #[arg(long, env = "LLM_WIKI_DAILY_CHAT_LIMIT", default_value_t = 50)]
+    daily_chat_limit: u32,
+
+    /// Email that is auto-marked admin on registration.
+    #[arg(long, env = "LLM_WIKI_ADMIN_EMAIL")]
+    admin_email: Option<String>,
+
+    /// Session cookie lifetime in days.
+    #[arg(long, env = "LLM_WIKI_SESSION_TTL_DAYS", default_value_t = 30)]
+    session_ttl_days: u32,
 }
 
 fn main() {
@@ -48,6 +69,11 @@ fn main() {
         args.config,
         args.static_dir,
         args.token,
+        args.auth_db,
+        args.require_login,
+        args.daily_chat_limit,
+        args.admin_email,
+        args.session_ttl_days,
     ) {
         Ok(config) => config,
         Err(err) => {

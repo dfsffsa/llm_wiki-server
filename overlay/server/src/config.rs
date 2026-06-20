@@ -11,6 +11,11 @@ pub struct ServerConfig {
     pub config_path: Option<PathBuf>,
     pub static_dir: Option<PathBuf>,
     pub token_override: Option<String>,
+    pub auth_db: Option<PathBuf>,
+    pub require_login: bool,
+    pub daily_chat_limit: u32,
+    pub admin_email: Option<String>,
+    pub session_ttl_days: u32,
 }
 
 impl ServerConfig {
@@ -20,6 +25,11 @@ impl ServerConfig {
         config: Option<String>,
         static_dir: Option<String>,
         token: Option<String>,
+        auth_db: Option<String>,
+        require_login: bool,
+        daily_chat_limit: u32,
+        admin_email: Option<String>,
+        session_ttl_days: u32,
     ) -> Result<Self, String> {
         let project = project
             .map(PathBuf::from)
@@ -70,12 +80,25 @@ impl ServerConfig {
             })
             .transpose()?;
 
+        let auth_db = auth_db
+            .map(PathBuf::from)
+            .filter(|p| !p.as_os_str().is_empty());
+
+        let admin_email = admin_email
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty());
+
         Ok(Self {
             project,
             bind,
             config_path,
             static_dir,
             token_override: token.filter(|t| !t.trim().is_empty()),
+            auth_db,
+            require_login,
+            daily_chat_limit,
+            admin_email,
+            session_ttl_days,
         })
     }
 }
