@@ -139,6 +139,52 @@ impl AuthService {
         self.store.find_user_by_id(uid)
     }
 
+    /// Start a password-reset flow. Returns a fresh token if the email
+    /// belongs to a real user, or `None` otherwise. The HTTP layer must
+    /// always respond `{ok:true}` regardless to avoid email enumeration.
+    pub fn start_password_reset(
+        &self,
+        email: &str,
+        now: i64,
+    ) -> Result<Option<String>, AuthError> {
+        let email = normalize_email(email)?;
+        let user = match self.store.find_user_by_email(&email)? {
+            Some(u) => u,
+            None => return Ok(None),
+        };
+        let token = generate_token();
+        let hash = hash_token(&token);
+        let expires_at = now + 3600; // 1 hour
+        self.store.create_reset_token(&hash, user.id, expires_at)?;
+        Ok(Some(token))
+    }
+
+    /// Use a reset token to set a new password. Token is single-use:
+    /// consumed even on success. All existing sessions for the user are
+    /// invalidated.
+    pub fn complete_password_reset(
+        &self,
+        reset_token: &str,
+        new_password: &str,
+        now: i64,
+    ) -> Result<(), AuthError> {
+        validate_password(new_password)?;
+        let hash = hash_token(reset_token);
+        let (user_id, expires_at) = match self.store.find_reset_token_user(&hash, now)? {
+            Some(t) => t,
+            None => return Err(AuthError::InvalidResetToken),
+        };
+        // Always consume the token, even if expired, to prevent retries.
+        self.store.delete_reset_token(&hash)?;
+        if expires_at <= now {
+            return Err(AuthError::ExpiredResetToken);
+        }
+        let new_hash = hash_password(new_password)?;
+        self.store.update_password(user_id, &new_hash)?;
+        self.store.delete_user_sessions(user_id)?;
+        Ok(())
+    }
+
     fn issue_session(
         &self,
         user_id: i64,
