@@ -247,3 +247,132 @@ fn rate_limit_refills_over_time() {
     // After 60s, the bucket has fully refilled.
     assert!(rl.allow("k", 3.0, 60.0, 1_060));
 }
+
+// --- AuthService tests (Task 2.4) ---
+
+use llm_wiki_auth::service::{AuthService, AuthServiceConfig, LoginInput, RegisterInput};
+use std::sync::Arc;
+
+fn fresh_service() -> (Arc<AuthService>, TempDir) {
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("auth.db");
+    let store = Arc::new(Store::open(&path).unwrap());
+    let cfg = AuthServiceConfig {
+        session_ttl_secs: 30 * 24 * 3600,
+        admin_email: Some("admin@x.com".into()),
+        login_attempts: 5.0,
+        login_period_secs: 3600.0,
+    };
+    (Arc::new(AuthService::new(store, cfg)), dir)
+}
+
+#[test]
+fn register_then_login_then_me() {
+    let (svc, _dir) = fresh_service();
+    let reg = svc.register(RegisterInput {
+        email: "Alice@Example.Com",
+        password: "supersecret",
+        now: 1_000,
+        ip: None,
+        user_agent: None,
+    }).unwrap();
+    assert_eq!(reg.user.email, "alice@example.com"); // lowercased
+
+    let token = reg.session_token.clone();
+    let me = svc.session_user(&token, 2_000).unwrap().unwrap();
+    assert_eq!(me.id, reg.user.id);
+
+    // logout
+    svc.logout(&token).unwrap();
+    assert!(svc.session_user(&token, 3_000).unwrap().is_none());
+
+    // re-login
+    let lo = svc.login(LoginInput {
+        email: "alice@example.com",
+        password: "supersecret",
+        now: 4_000,
+        ip: None,
+        user_agent: None,
+    }).unwrap();
+    assert_eq!(lo.user.id, reg.user.id);
+}
+
+#[test]
+fn admin_email_marks_user_admin() {
+    let (svc, _dir) = fresh_service();
+    let reg = svc.register(RegisterInput {
+        email: "admin@x.com",
+        password: "p123abcd",
+        now: 1,
+        ip: None,
+        user_agent: None,
+    }).unwrap();
+    assert!(reg.user.is_admin);
+}
+
+#[test]
+fn duplicate_email_is_rejected() {
+    let (svc, _dir) = fresh_service();
+    svc.register(RegisterInput {
+        email: "x@x.com", password: "p1234567", now: 1, ip: None, user_agent: None,
+    }).unwrap();
+    let err = svc.register(RegisterInput {
+        email: "x@x.com", password: "p1234567", now: 2, ip: None, user_agent: None,
+    }).unwrap_err();
+    assert_eq!(err.code(), "email_already_exists");
+}
+
+#[test]
+fn login_with_wrong_password_returns_invalid_credentials() {
+    let (svc, _dir) = fresh_service();
+    svc.register(RegisterInput {
+        email: "y@x.com", password: "p1234567", now: 1, ip: None, user_agent: None,
+    }).unwrap();
+    let err = svc.login(LoginInput {
+        email: "y@x.com", password: "wrong000", now: 2, ip: None, user_agent: None,
+    }).unwrap_err();
+    assert_eq!(err.code(), "invalid_credentials");
+}
+
+#[test]
+fn login_unknown_email_also_invalid_credentials() {
+    let (svc, _dir) = fresh_service();
+    let err = svc.login(LoginInput {
+        email: "nobody@x.com", password: "p1234567", now: 1, ip: None, user_agent: None,
+    }).unwrap_err();
+    // do NOT leak "no such user" — same error as wrong password
+    assert_eq!(err.code(), "invalid_credentials");
+}
+
+#[test]
+fn login_rate_limit_kicks_in() {
+    let (svc, _dir) = fresh_service();
+    svc.register(RegisterInput {
+        email: "z@x.com", password: "p1234567", now: 1, ip: Some("1.2.3.4"), user_agent: None,
+    }).unwrap();
+    // config gives 5 attempts/hour. The 6th wrong-password attempt should hit
+    // the rate limiter, not the credential check.
+    for _ in 0..5 {
+        let _ = svc.login(LoginInput {
+            email: "z@x.com", password: "wrong000", now: 2, ip: Some("1.2.3.4"), user_agent: None,
+        });
+    }
+    let err = svc.login(LoginInput {
+        email: "z@x.com", password: "wrong000", now: 2, ip: Some("1.2.3.4"), user_agent: None,
+    }).unwrap_err();
+    assert_eq!(err.code(), "rate_limited");
+}
+
+#[test]
+fn invalid_input_email_or_short_password() {
+    let (svc, _dir) = fresh_service();
+    let err = svc.register(RegisterInput {
+        email: "not-an-email", password: "p1234567", now: 1, ip: None, user_agent: None,
+    }).unwrap_err();
+    assert_eq!(err.code(), "invalid_input");
+
+    let err = svc.register(RegisterInput {
+        email: "ok@e.com", password: "short", now: 1, ip: None, user_agent: None,
+    }).unwrap_err();
+    assert_eq!(err.code(), "invalid_input");
+}

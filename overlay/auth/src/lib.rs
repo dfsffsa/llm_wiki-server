@@ -15,4 +15,8 @@ pub mod store;
 
 pub mod ratelimit;
 
+pub mod service;
+
+pub use service::{AuthService, AuthServiceConfig, AuthOutcome, LoginInput, RegisterInput};
+pub use store::{Store, User};
 pub use error::AuthError;
