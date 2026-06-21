@@ -278,6 +278,38 @@ body {
   text-overflow: ellipsis;
 }
 
+.history-row {
+  display: flex;
+  align-items: center;
+}
+
+.history-row .history-item {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-del {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+  font-size: 1rem;
+  line-height: 1;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.history-row:hover .history-del {
+  opacity: 1;
+}
+
+.history-del:hover {
+  color: #b91c1c;
+  background: rgba(0, 0, 0, 0.05);
+}
+
 /* Messages */
 .messages {
   flex: 1;
@@ -632,4 +664,27 @@ body {
   .history-header span {
     display: none;
   }
+}
+
+/* Topbar (user + quota) */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--surface, #fff);
+  border-bottom: 1px solid var(--border, rgba(0,0,0,0.08));
+  font-size: 0.85rem;
+}
+.topbar[hidden] { display: none; }
+.topbar-title { font-weight: 600; }
+.topbar-spacer { flex: 1; }
+.user-email { color: var(--text-muted, #666); max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.usage-info { color: var(--text-muted, #888); font-variant-numeric: tabular-nums; }
+.usage-info.low { color: #b91c1c; font-weight: 600; }
+#btn-menu[hidden] { display: none; }
+
+@media (max-width: 640px) {
+  .user-email { display: none; }
+  .topbar { padding: 0.45rem 0.6rem; gap: 0.4rem; }
 }
