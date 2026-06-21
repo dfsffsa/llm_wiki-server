@@ -1,3 +1,4 @@
+pub(crate) mod auth_routes;
 pub(crate) mod chat;
 mod files;
 mod graph;

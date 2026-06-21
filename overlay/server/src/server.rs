@@ -73,8 +73,9 @@ fn dispatch_request(
 
     let (path, _) = api::split_url(&url);
     let is_api = path == "/health" || path.starts_with(API_PREFIX);
+    let is_auth = path.starts_with("/auth/");
 
-    if is_api {
+    if is_api || is_auth {
         let headers: Vec<(String, String)> = request
             .headers()
             .iter()
@@ -92,6 +93,12 @@ fn dispatch_request(
                 return;
             }
         };
+
+        if is_auth {
+            api::auth_routes::handle(&state, &method, &path, &headers, &body, request);
+            return;
+        }
+
         let (path, _) = api::split_url(&url);
         let path_norm = path.trim_end_matches('/');
         let is_chat_post = method == Method::Post
