@@ -1,5 +1,6 @@
 pub(crate) mod auth_routes;
 pub(crate) mod chat;
+pub(crate) mod conversations;
 mod files;
 mod graph;
 mod projects;
@@ -214,7 +215,7 @@ pub fn respond_json(request: tiny_http::Request, status: u16, body: Value) {
 pub fn cors_headers() -> Vec<Header> {
     vec![
         Header::from_bytes("Access-Control-Allow-Origin", "*").unwrap(),
-        Header::from_bytes("Access-Control-Allow-Methods", "GET, POST, OPTIONS").unwrap(),
+        Header::from_bytes("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS").unwrap(),
         Header::from_bytes(
             "Access-Control-Allow-Headers",
             "Content-Type, Authorization, X-LLM-Wiki-Token",

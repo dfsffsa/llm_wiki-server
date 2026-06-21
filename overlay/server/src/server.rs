@@ -4,6 +4,8 @@ use std::thread;
 
 use tiny_http::{Method, Server};
 
+use serde_json::json;
+
 use crate::api::{self, API_PREFIX};
 use crate::config::ServerConfig;
 use crate::state::ServerState;
@@ -108,6 +110,29 @@ fn dispatch_request(
             api::chat::try_handle_chat_sse(&state, &url, &body, &headers, request);
             return;
         }
+
+        // Per-user conversation history. Needs the Request handle + user_id
+        // from authorize(), so it bypasses handle_request (like chat does).
+        let conv_parts: Vec<&str> = path
+            .trim_start_matches(API_PREFIX)
+            .trim_start_matches('/')
+            .split('/')
+            .filter(|p| !p.is_empty())
+            .collect();
+        if conv_parts.first().copied() == Some("conversations") {
+            let outcome = match api::authorize(&state, "", &headers) {
+                Some(o) => o,
+                None => {
+                    api::respond_json(request, 401, json!({
+                        "error": { "code": "not_authenticated", "message": "需要登录" }
+                    }));
+                    return;
+                }
+            };
+            api::conversations::handle(&state, &method, &conv_parts, &body, outcome, request);
+            return;
+        }
+
         let response = api::handle_request(&state, &method, &url, &body, &headers);
         api::respond_json(request, response.status, response.body);
         return;

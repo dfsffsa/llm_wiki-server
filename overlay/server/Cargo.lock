@@ -412,6 +412,7 @@ dependencies = [
  "serde_json",
  "tiny_http",
  "tokio",
+ "uuid",
  "walkdir",
 ]
 
