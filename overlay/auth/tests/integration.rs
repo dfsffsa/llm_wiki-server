@@ -446,3 +446,45 @@ fn reset_token_expires() {
     let err = svc.complete_password_reset(&token, "newpassword", 10 + 3601).unwrap_err();
     assert_eq!(err.code(), "expired_reset_token");
 }
+
+// --- Conversation + Message storage tests (Task 5.1) ---
+
+#[test]
+fn conversations_crud_per_user() {
+    let (store, _dir) = fresh_store();
+    let alice = store.create_user(NewUser {
+        email: "a@e.com", password_hash: "x", display_name: None, is_admin: false, now: 1
+    }).unwrap();
+    let bob = store.create_user(NewUser {
+        email: "b@e.com", password_hash: "x", display_name: None, is_admin: false, now: 1
+    }).unwrap();
+
+    let c1 = "conv-1";
+    store.create_conversation(c1, alice, "proj-x", "first chat", 100).unwrap();
+    let c2 = "conv-2";
+    store.create_conversation(c2, alice, "proj-x", "second", 200).unwrap();
+
+    let alices = store.list_conversations(alice, 50).unwrap();
+    assert_eq!(alices.len(), 2);
+    // most-recent first
+    assert_eq!(alices[0].id, c2);
+
+    // bob has none, can't see alice's
+    assert_eq!(store.list_conversations(bob, 50).unwrap().len(), 0);
+    let owner = store.find_conversation_owner(c1).unwrap().unwrap();
+    assert_eq!(owner, alice);
+
+    // append messages
+    store.append_message(c1, "user", "hello", 110).unwrap();
+    store.append_message(c1, "assistant", "hi back", 111).unwrap();
+    let msgs = store.list_messages(c1).unwrap();
+    assert_eq!(msgs.len(), 2);
+    assert_eq!(msgs[0].role, "user");
+    assert_eq!(msgs[1].content, "hi back");
+
+    // delete
+    store.delete_conversation(c1).unwrap();
+    assert_eq!(store.list_conversations(alice, 50).unwrap().len(), 1);
+    // messages cascade-deleted
+    assert!(store.list_messages(c1).unwrap().is_empty());
+}

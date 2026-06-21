@@ -193,6 +193,124 @@ impl Store {
         Ok(())
     }
 
+    // --- conversations ---
+
+    pub fn create_conversation(
+        &self,
+        id: &str,
+        user_id: i64,
+        project_id: &str,
+        title: &str,
+        now: i64,
+    ) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "INSERT INTO conversations (id, user_id, project_id, title, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?5)",
+            params![id, user_id, project_id, title, now],
+        )?;
+        Ok(())
+    }
+
+    pub fn list_conversations(
+        &self,
+        user_id: i64,
+        limit: u32,
+    ) -> Result<Vec<ConversationRow>, AuthError> {
+        let conn = self.lock();
+        let mut stmt = conn.prepare(
+            "SELECT id, project_id, title, created_at, updated_at
+             FROM conversations
+             WHERE user_id = ?1
+             ORDER BY updated_at DESC
+             LIMIT ?2",
+        )?;
+        let rows = stmt.query_map(params![user_id, limit as i64], |row| {
+            Ok(ConversationRow {
+                id: row.get(0)?,
+                project_id: row.get(1)?,
+                title: row.get(2)?,
+                created_at: row.get(3)?,
+                updated_at: row.get(4)?,
+            })
+        })?;
+        let mut out = Vec::new();
+        for r in rows {
+            out.push(r?);
+        }
+        Ok(out)
+    }
+
+    pub fn find_conversation_owner(&self, id: &str) -> Result<Option<i64>, AuthError> {
+        let conn = self.lock();
+        conn.query_row(
+            "SELECT user_id FROM conversations WHERE id = ?1",
+            params![id],
+            |row| row.get::<_, i64>(0),
+        )
+        .optional()
+        .map_err(AuthError::from)
+    }
+
+    pub fn delete_conversation(&self, id: &str) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute("DELETE FROM conversations WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
+    pub fn touch_conversation(&self, id: &str, now: i64) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "UPDATE conversations SET updated_at = ?1 WHERE id = ?2",
+            params![now, id],
+        )?;
+        Ok(())
+    }
+
+    // --- messages ---
+
+    pub fn append_message(
+        &self,
+        conv_id: &str,
+        role: &str,
+        content: &str,
+        now: i64,
+    ) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "INSERT INTO conversation_messages (conversation_id, role, content, created_at)
+             VALUES (?1, ?2, ?3, ?4)",
+            params![conv_id, role, content, now],
+        )?;
+        conn.execute(
+            "UPDATE conversations SET updated_at = ?1 WHERE id = ?2",
+            params![now, conv_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn list_messages(&self, conv_id: &str) -> Result<Vec<MessageRow>, AuthError> {
+        let conn = self.lock();
+        let mut stmt = conn.prepare(
+            "SELECT role, content, created_at
+             FROM conversation_messages
+             WHERE conversation_id = ?1
+             ORDER BY id ASC",
+        )?;
+        let rows = stmt.query_map(params![conv_id], |row| {
+            Ok(MessageRow {
+                role: row.get(0)?,
+                content: row.get(1)?,
+                created_at: row.get(2)?,
+            })
+        })?;
+        let mut out = Vec::new();
+        for r in rows {
+            out.push(r?);
+        }
+        Ok(out)
+    }
+
     // --- usage ---
 
     pub fn get_usage(&self, user_id: i64, date: &str) -> Result<i64, AuthError> {
@@ -228,4 +346,20 @@ fn row_to_user(row: &rusqlite::Row<'_>) -> rusqlite::Result<User> {
         created_at: row.get(5)?,
         last_seen_at: row.get(6)?,
     })
+}
+
+#[derive(Debug, Clone)]
+pub struct ConversationRow {
+    pub id: String,
+    pub project_id: String,
+    pub title: String,
+    pub created_at: i64,
+    pub updated_at: i64,
+}
+
+#[derive(Debug, Clone)]
+pub struct MessageRow {
+    pub role: String,
+    pub content: String,
+    pub created_at: i64,
 }
