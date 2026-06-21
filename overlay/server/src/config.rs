@@ -16,6 +16,12 @@ pub struct ServerConfig {
     pub daily_chat_limit: u32,
     pub admin_email: Option<String>,
     pub session_ttl_days: u32,
+    /// Directory holding the public landing page (index.html, landing.css,
+    /// landing.js, auth/login.html, auth/reset.html, ...). When set, requests
+    /// to `/`, `/login`, `/register`, `/reset-password` and the landing
+    /// assets are served from here instead of upstream/dist. `None` disables
+    /// (local dev unchanged — `/` still shows the full React UI).
+    pub public_landing_dir: Option<PathBuf>,
 }
 
 impl ServerConfig {
@@ -30,6 +36,7 @@ impl ServerConfig {
         daily_chat_limit: u32,
         admin_email: Option<String>,
         session_ttl_days: u32,
+        public_landing_dir: Option<String>,
     ) -> Result<Self, String> {
         let project = project
             .map(PathBuf::from)
@@ -88,6 +95,21 @@ impl ServerConfig {
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty());
 
+        let public_landing_dir = public_landing_dir
+            .map(PathBuf::from)
+            .filter(|p| !p.as_os_str().is_empty())
+            .map(|p| {
+                if p.is_dir() {
+                    Ok(p.canonicalize().unwrap_or(p))
+                } else {
+                    Err(format!(
+                        "Public landing directory not found: {} (set LLM_WIKI_PUBLIC_LANDING_DIR to a directory containing index.html)",
+                        p.display()
+                    ))
+                }
+            })
+            .transpose()?;
+
         Ok(Self {
             project,
             bind,
@@ -99,6 +121,7 @@ impl ServerConfig {
             daily_chat_limit,
             admin_email,
             session_ttl_days,
+            public_landing_dir,
         })
     }
 }

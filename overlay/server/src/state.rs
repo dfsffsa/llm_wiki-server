@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use std::borrow::ToOwned;
@@ -29,6 +29,7 @@ struct ServerStateInner {
     auth: Option<Arc<llm_wiki_auth::AuthService>>,
     require_login: bool,
     daily_chat_limit: u32,
+    public_landing_dir: Option<PathBuf>,
 }
 
 impl ServerState {
@@ -42,6 +43,7 @@ impl ServerState {
                 auth: None,
                 require_login: false,
                 daily_chat_limit: 50,
+                public_landing_dir: config.public_landing_dir.clone(),
             }),
         }
     }
@@ -77,6 +79,7 @@ impl ServerState {
             auth,
             require_login,
             daily_chat_limit,
+            public_landing_dir: self.inner.public_landing_dir.clone(),
         });
         Self { inner }
     }
@@ -91,6 +94,11 @@ impl ServerState {
 
     pub fn daily_chat_limit(&self) -> u32 {
         self.inner.daily_chat_limit
+    }
+
+    /// Public landing-page root, if configured (LLM_WIKI_PUBLIC_LANDING_DIR).
+    pub fn public_landing_dir(&self) -> Option<&Path> {
+        self.inner.public_landing_dir.as_deref()
     }
 
     pub fn load_app_state(&self) -> Option<Value> {

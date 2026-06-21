@@ -138,6 +138,32 @@ fn dispatch_request(
         return;
     }
 
+    // Public landing pages take priority over upstream/dist for an allowlist
+    // of paths when LLM_WIKI_PUBLIC_LANDING_DIR is configured. Falls through
+    // (to static_dir / 404) if the file is absent, so local dev is unchanged.
+    //
+    // NB: auth-page assets are NOT served here. Paths under /auth/ are caught
+    // by the is_auth branch above and routed to the auth API handler, so they
+    // never reach this match. Task 6.2 will add real routing for login-page
+    // CSS/JS (e.g. a /auth-static/ prefix or narrowing is_auth) when those
+    // files exist — do not assume /auth/*.css is served from here.
+    if let Some(landing_root) = state.public_landing_dir() {
+        let landing_path = match path.as_str() {
+            "/" => Some("index.html"),
+            "/landing.css" => Some("landing.css"),
+            "/landing.js" => Some("landing.js"),
+            "/login" | "/register" => Some("auth/login.html"),
+            "/reset-password" => Some("auth/reset.html"),
+            _ => None,
+        };
+        if let Some(rel) = landing_path {
+            if let Some(response) = static_files::serve_file(landing_root, rel) {
+                let _ = request.respond(response);
+                return;
+            }
+        }
+    }
+
     if let Some(ref root) = static_dir {
         if let Some(response) = static_files::serve_static(root, &path) {
             let _ = request.respond(response);

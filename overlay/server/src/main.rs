@@ -59,6 +59,12 @@ struct Args {
     /// Session cookie lifetime in days.
     #[arg(long, env = "LLM_WIKI_SESSION_TTL_DAYS", default_value_t = 30)]
     session_ttl_days: u32,
+
+    /// Directory containing the public landing page (index.html etc.). When
+    /// set, requests to `/` and `/login`/`/register`/`/reset-password` are
+    /// served from here instead of upstream/dist.
+    #[arg(long, env = "LLM_WIKI_PUBLIC_LANDING_DIR")]
+    public_landing_dir: Option<String>,
 }
 
 fn main() {
@@ -74,6 +80,7 @@ fn main() {
         args.daily_chat_limit,
         args.admin_email,
         args.session_ttl_days,
+        args.public_landing_dir,
     ) {
         Ok(config) => config,
         Err(err) => {
