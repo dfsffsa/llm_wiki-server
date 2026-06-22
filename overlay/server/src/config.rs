@@ -11,6 +11,17 @@ pub struct ServerConfig {
     pub config_path: Option<PathBuf>,
     pub static_dir: Option<PathBuf>,
     pub token_override: Option<String>,
+    pub auth_db: Option<PathBuf>,
+    pub require_login: bool,
+    pub daily_chat_limit: u32,
+    pub admin_email: Option<String>,
+    pub session_ttl_days: u32,
+    /// Directory holding the public landing page (index.html, landing.css,
+    /// landing.js, auth/login.html, auth/reset.html, ...). When set, requests
+    /// to `/`, `/login`, `/register`, `/reset-password` and the landing
+    /// assets are served from here instead of upstream/dist. `None` disables
+    /// (local dev unchanged — `/` still shows the full React UI).
+    pub public_landing_dir: Option<PathBuf>,
 }
 
 impl ServerConfig {
@@ -20,6 +31,12 @@ impl ServerConfig {
         config: Option<String>,
         static_dir: Option<String>,
         token: Option<String>,
+        auth_db: Option<String>,
+        require_login: bool,
+        daily_chat_limit: u32,
+        admin_email: Option<String>,
+        session_ttl_days: u32,
+        public_landing_dir: Option<String>,
     ) -> Result<Self, String> {
         let project = project
             .map(PathBuf::from)
@@ -70,12 +87,41 @@ impl ServerConfig {
             })
             .transpose()?;
 
+        let auth_db = auth_db
+            .map(PathBuf::from)
+            .filter(|p| !p.as_os_str().is_empty());
+
+        let admin_email = admin_email
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty());
+
+        let public_landing_dir = public_landing_dir
+            .map(PathBuf::from)
+            .filter(|p| !p.as_os_str().is_empty())
+            .map(|p| {
+                if p.is_dir() {
+                    Ok(p.canonicalize().unwrap_or(p))
+                } else {
+                    Err(format!(
+                        "Public landing directory not found: {} (set LLM_WIKI_PUBLIC_LANDING_DIR to a directory containing index.html)",
+                        p.display()
+                    ))
+                }
+            })
+            .transpose()?;
+
         Ok(Self {
             project,
             bind,
             config_path,
             static_dir,
             token_override: token.filter(|t| !t.trim().is_empty()),
+            auth_db,
+            require_login,
+            daily_chat_limit,
+            admin_email,
+            session_ttl_days,
+            public_landing_dir,
         })
     }
 }

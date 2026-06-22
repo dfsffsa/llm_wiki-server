@@ -4,13 +4,19 @@ use std::thread;
 
 use tiny_http::{Method, Server};
 
+use serde_json::json;
+
 use crate::api::{self, API_PREFIX};
 use crate::config::ServerConfig;
 use crate::state::ServerState;
 use crate::static_files;
 
-pub fn run(config: ServerConfig) -> Result<(), String> {
-    let state = ServerState::from_config(&config);
+pub fn run(
+    config: ServerConfig,
+    auth: Option<Arc<llm_wiki_auth::AuthService>>,
+) -> Result<(), String> {
+    let state = ServerState::from_config(&config)
+        .with_auth(auth, config.require_login, config.daily_chat_limit);
     let static_dir = config.static_dir.clone();
     let bind = config.bind.clone();
     let project = config.project.display().to_string();
@@ -69,8 +75,15 @@ fn dispatch_request(
 
     let (path, _) = api::split_url(&url);
     let is_api = path == "/health" || path.starts_with(API_PREFIX);
+    // Auth static assets (GET /auth/*.css|js) are served from the public
+    // landing dir, not the auth API. Exclude them so they fall through to
+    // the landing branch below; everything else under /auth/ is the API.
+    let is_auth_asset = method == Method::Get
+        && path.starts_with("/auth/")
+        && (path.ends_with(".css") || path.ends_with(".js"));
+    let is_auth = path.starts_with("/auth/") && !is_auth_asset;
 
-    if is_api {
+    if is_api || is_auth {
         let headers: Vec<(String, String)> = request
             .headers()
             .iter()
@@ -88,6 +101,12 @@ fn dispatch_request(
                 return;
             }
         };
+
+        if is_auth {
+            api::auth_routes::handle(&state, &method, &path, &headers, &body, request);
+            return;
+        }
+
         let (path, _) = api::split_url(&url);
         let path_norm = path.trim_end_matches('/');
         let is_chat_post = method == Method::Post
@@ -97,9 +116,60 @@ fn dispatch_request(
             api::chat::try_handle_chat_sse(&state, &url, &body, &headers, request);
             return;
         }
+
+        // Per-user conversation history. Needs the Request handle + user_id
+        // from authorize(), so it bypasses handle_request (like chat does).
+        let conv_parts: Vec<&str> = path
+            .trim_start_matches(API_PREFIX)
+            .trim_start_matches('/')
+            .split('/')
+            .filter(|p| !p.is_empty())
+            .collect();
+        if conv_parts.first().copied() == Some("conversations") {
+            let outcome = match api::authorize(&state, "", &headers) {
+                Some(o) => o,
+                None => {
+                    api::respond_json(request, 401, json!({
+                        "error": { "code": "not_authenticated", "message": "需要登录" }
+                    }));
+                    return;
+                }
+            };
+            api::conversations::handle(&state, &method, &conv_parts, &body, outcome, request);
+            return;
+        }
+
         let response = api::handle_request(&state, &method, &url, &body, &headers);
         api::respond_json(request, response.status, response.body);
         return;
+    }
+
+    // Public landing pages take priority over upstream/dist for an allowlist
+    // of paths when LLM_WIKI_PUBLIC_LANDING_DIR is configured. Falls through
+    // (to static_dir / 404) if the file is absent, so local dev is unchanged.
+    if let Some(landing_root) = state.public_landing_dir() {
+        let landing_path = match path.as_str() {
+            "/" => Some("index.html"),
+            "/landing.css" => Some("landing.css"),
+            "/landing.js" => Some("landing.js"),
+            "/login" | "/register" => Some("auth/login.html"),
+            "/reset-password" => Some("auth/reset.html"),
+            // Auth-page static assets (GET /auth/*.css|js). Excluded from
+            // is_auth above so they reach here; strip the leading "/" to get
+            // the path relative to the landing dir (e.g. "auth/auth.css").
+            other if other.starts_with("/auth/")
+                && (other.ends_with(".css") || other.ends_with(".js")) =>
+            {
+                Some(&other[1..])
+            }
+            _ => None,
+        };
+        if let Some(rel) = landing_path {
+            if let Some(response) = static_files::serve_file(landing_root, rel) {
+                let _ = request.respond(response);
+                return;
+            }
+        }
     }
 
     if let Some(ref root) = static_dir {

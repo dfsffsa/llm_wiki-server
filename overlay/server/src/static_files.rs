@@ -52,6 +52,34 @@ pub fn not_found_response() -> Response<std::io::Cursor<Vec<u8>>> {
     Response::from_data(body).with_status_code(StatusCode(404))
 }
 
+/// Serve a single file by its path *relative* to `root` (e.g. `"index.html"`,
+/// `"auth/login.html"`). Unlike `serve_static`, this does no SPA fallback —
+/// the exact file must exist or `None` is returned. Used for the public
+/// landing pages, which must take priority over upstream/dist without
+/// shadowing it for other paths.
+///
+/// `rel` is sanitized: a leading `/` is stripped and any `..` path component
+/// is rejected to prevent traversal outside `root`.
+pub fn serve_file(root: &Path, rel: &str) -> Option<Response<std::io::Cursor<Vec<u8>>>> {
+    let rel = rel.trim_start_matches('/');
+    if rel.is_empty() || rel.split('/').any(|c| c == "..") {
+        return None;
+    }
+    let file_path = root.join(rel);
+    if !file_path.is_file() {
+        return None;
+    }
+    let bytes = fs::read(&file_path).ok()?;
+    let mut response = Response::from_data(bytes).with_status_code(StatusCode(200));
+    if let Some(mime) = mime_for_path(&file_path) {
+        let _ = response.add_header(Header::from_bytes("Content-Type", mime).ok()?);
+    }
+    let _ = response.add_header(
+        Header::from_bytes("Cache-Control", "public, max-age=3600").ok()?,
+    );
+    Some(response)
+}
+
 pub fn read_body_limited(
     request: &mut tiny_http::Request,
     max_bytes: usize,

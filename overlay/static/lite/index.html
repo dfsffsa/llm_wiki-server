@@ -9,6 +9,15 @@
   </head>
   <body>
     <div id="app">
+      <header class="topbar" id="topbar" hidden>
+        <button type="button" id="btn-menu" class="icon-btn" aria-label="菜单" hidden>☰</button>
+        <span class="topbar-title">知识问答</span>
+        <span class="topbar-spacer"></span>
+        <span id="user-email" class="user-email"></span>
+        <span id="usage-info" class="usage-info"></span>
+        <button type="button" id="btn-logout" class="btn-text">登出</button>
+      </header>
+
       <!-- Home: pick project -->
       <section id="view-home" class="view active">
         <header class="home-header">
@@ -33,7 +42,7 @@
         </header>
 
         <div class="chat-layout">
-          <aside class="history-sidebar" aria-label="历史对话">
+          <aside class="history-sidebar" id="history-sidebar" aria-label="历史对话">
             <div class="history-header">
               <span>历史对话</span>
               <button type="button" id="btn-new-chat" class="btn-text">＋ 新建</button>

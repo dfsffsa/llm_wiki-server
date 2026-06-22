@@ -58,10 +58,13 @@ pub fn try_handle_chat_sse(
         api::respond_json(request, 503, json!({ "ok": false, "error": "API server is disabled" }));
         return;
     }
-    if !api::is_authorized(state, &query, headers) {
-        api::respond_json(request, 401, json!({ "ok": false, "error": "Unauthorized" }));
-        return;
-    }
+    let auth_outcome = match api::authorize(state, &query, headers) {
+        Some(o) => o,
+        None => {
+            api::respond_json(request, 401, json!({ "ok": false, "error": "Unauthorized" }));
+            return;
+        }
+    };
 
     let parts: Vec<&str> = path
         .trim_start_matches(API_PREFIX)
@@ -128,6 +131,45 @@ pub fn try_handle_chat_sse(
             json!({ "ok": false, "error": "Chat stream script not found" }),
         );
         return;
+    }
+
+    // Per-user daily quota — only applies to cookie-authenticated requests.
+    // Bearer-token clients (CLI / e2e) bypass the quota by design: the shared
+    // token is an operator channel, not distributed to end users.
+    if let api::AuthOutcome::Cookie(user_id) = auth_outcome {
+        if let Some(auth) = state.auth() {
+            let date = today_utc_for_chat();
+            // NOTE: get_usage + increment_usage are two separate Store mutex
+            // acquisitions, so this is a TOCTOU window — concurrent chats
+            // from the same user can both pass the check and both increment,
+            // letting a user exceed the limit by up to (concurrency - 1).
+            // Acceptable for v1 (single browser, sequential chats). A single
+            // conditional UPSERT in store.rs would close it atomically.
+            let used = match auth.store().get_usage(user_id, &date) {
+                Ok(n) => n,
+                Err(_) => 0,
+            };
+            let limit = state.daily_chat_limit() as i64;
+            if used >= limit {
+                api::respond_json(
+                    request, 429,
+                    json!({
+                        "ok": false,
+                        "error": {
+                            "code": "daily_limit_exceeded",
+                            "message": "今日额度已用完,明日重置",
+                            "used": used, "limit": limit,
+                        }
+                    }),
+                );
+                return;
+            }
+            // Increment BEFORE spawn — even if streaming fails partway, the
+            // attempt counts (consistent with most LLM products).
+            if let Err(e) = auth.store().increment_usage(user_id, &date) {
+                eprintln!("[chat] usage increment failed for user {user_id}: {e}");
+            }
+        }
     }
 
     // Reserve a chat concurrency slot. Held until the stream ends / client
@@ -363,4 +405,25 @@ fn repo_root() -> PathBuf {
         .join("../..")
         .canonicalize()
         .unwrap_or_else(|_| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."))
+}
+
+fn today_utc_for_chat() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    let days = secs / 86_400;
+    // Civil-from-days (Howard Hinnant). UTC date from unix epoch days.
+    let z = days + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+    format!("{y:04}-{m:02}-{d:02}")
 }
