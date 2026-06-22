@@ -688,3 +688,27 @@ body {
   .user-email { display: none; }
   .topbar { padding: 0.45rem 0.6rem; gap: 0.4rem; }
 }
+
+/* ===== Mobile drawer sidebar (Task 6.4) =====
+   On narrow screens the history sidebar becomes an off-canvas drawer:
+   hidden by default, slides in when .open is toggled by #btn-menu
+   (handler already wired in app.js). The hamburger (#btn-menu) is
+   hidden by default via its `hidden` attribute and revealed here only
+   on mobile, so desktop keeps the inline 220px sidebar. */
+@media (max-width: 768px) {
+  #btn-menu[hidden] { display: inline-flex; }
+
+  .history-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    width: 80%;
+    max-width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+  }
+  .history-sidebar.open { transform: translateX(0); }
+}
