@@ -105,6 +105,10 @@ export LLM_WIKI_CONFIG=overlay/config/llm.json
 
 See `overlay/cli/README.md` for command reference.
 
+## 公网部署（多用户认证）
+
+公网部署时启用账号系统(注册/登录/历史/用量限额),以极简落地页取代重前端 UI 作为入口。见 **[docs/部署-ECS与Tunnel.md §3.6.1](docs/部署-ECS与Tunnel.md#361-公网模式多用户认证)**。
+
 ## 测试与 FAQ
 
 完整说明见 **[docs/开发与测试.md](docs/开发与测试.md)**，包括：
