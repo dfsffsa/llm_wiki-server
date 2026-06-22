@@ -77,7 +77,7 @@ index 70c0e5f..bd1ba86 100644
 +  readonly env: ImportMetaEnv
 +}
 diff --git a/vite.config.ts b/vite.config.ts
-index 7c0d58f..339e669 100644
+index 7c0d58f..726dc0d 100644
 --- a/vite.config.ts
 +++ b/vite.config.ts
 @@ -5,6 +5,8 @@ import react from "@vitejs/plugin-react"
@@ -89,24 +89,26 @@ index 7c0d58f..339e669 100644
  
  // Read version from package.json at config-load time so the Settings
  // UI can show the running app version without duplicating the string.
-@@ -15,11 +17,22 @@ export default defineConfig(async () => ({
+@@ -15,11 +17,26 @@ export default defineConfig(async () => ({
    plugins: [react(), tailwindcss()],
  
    resolve: {
 -    alias: { "@": path.resolve(__dirname, "./src") },
-+    alias: {
-+      "@": path.resolve(__dirname, "./src"),
-+      ...(isHttpBackend
-+        ? {
-+            "@/commands/fs": path.join(overlayWeb, "commands/fs.ts"),
-+            "@/commands/file-sync": path.join(overlayWeb, "commands/file-sync.ts"),
-+            "@/lib/search": path.join(overlayWeb, "lib/search.ts"),
-+            "@/lib/project-store": path.join(overlayWeb, "lib/project-store.ts"),
-+            "@/lib/llm-client": path.join(overlayWeb, "lib/llm-client.ts"),
-+            "@/lib/persist": path.join(overlayWeb, "lib/persist.ts"),
-+          }
-+        : {}),
-+    },
++    // CRITICAL: vite alias is PREFIX-matched in iteration order.
++    // Specific overlay aliases MUST come BEFORE the generic "@" alias,
++    // otherwise vite matches "@" first and the overlay versions are
++    // never used (bootstrapHttpProject would return null).
++    alias: isHttpBackend
++      ? [
++          { find: "@/commands/fs", replacement: path.join(overlayWeb, "commands/fs.ts") },
++          { find: "@/commands/file-sync", replacement: path.join(overlayWeb, "commands/file-sync.ts") },
++          { find: "@/lib/search", replacement: path.join(overlayWeb, "lib/search.ts") },
++          { find: "@/lib/project-store", replacement: path.join(overlayWeb, "lib/project-store.ts") },
++          { find: "@/lib/llm-client", replacement: path.join(overlayWeb, "lib/llm-client.ts") },
++          { find: "@/lib/persist", replacement: path.join(overlayWeb, "lib/persist.ts") },
++          { find: "@", replacement: path.resolve(__dirname, "./src") },
++        ]
++      : [{ find: "@", replacement: path.resolve(__dirname, "./src") }],
    },
  
    define: {
@@ -115,18 +117,3 @@ index 7c0d58f..339e669 100644
    },
  
    // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-@@ -42,6 +55,14 @@ export default defineConfig(async () => ({
-       // 3. tell vite to ignore watching `src-tauri`
-       ignored: ["**/src-tauri/**"],
-     },
-+    proxy: isHttpBackend
-+      ? {
-+          "/api": {
-+            target: process.env.VITE_DEV_API_PROXY ?? "http://127.0.0.1:8080",
-+            changeOrigin: true,
-+          },
-+        }
-+      : undefined,
-   },
- 
-   test: {
