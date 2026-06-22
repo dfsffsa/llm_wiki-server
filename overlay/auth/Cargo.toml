@@ -1,0 +1,20 @@
+[package]
+name = "llm-wiki-auth"
+version = "0.1.0"
+edition = "2021"
+description = "Auth, sessions, conversation history, usage limits for llm-wiki-server"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+rusqlite = { version = "0.31", features = ["bundled"] }
+argon2 = "0.5"
+rand = "0.8"
+sha2 = "0.10"
+base64 = "0.22"
+uuid = { version = "1", features = ["v4"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+
+[dev-dependencies]
+tempfile = "3"

@@ -1,4 +1,6 @@
+pub(crate) mod auth_routes;
 pub(crate) mod chat;
+pub(crate) mod conversations;
 mod files;
 mod graph;
 mod projects;
@@ -37,6 +39,28 @@ pub fn err(status: u16, message: impl Into<String>) -> ApiResponse {
     ApiResponse {
         status,
         body: json!({ "ok": false, "error": message.into() }),
+    }
+}
+
+/// Result of authorizing an incoming request.
+/// - `Cookie(user_id)`: logged-in browser user (session cookie). Used for
+///   per-user chat usage accounting.
+/// - `Bearer`: legacy shared-token path (CLI, e2e, internal). No user
+///   identity, no usage accounting.
+/// - `Anonymous`: allowed only when `allowUnauthenticated` is on.
+#[derive(Debug, Clone, Copy)]
+pub enum AuthOutcome {
+    Cookie(i64),
+    Bearer,
+    Anonymous,
+}
+
+impl AuthOutcome {
+    pub fn user_id(&self) -> Option<i64> {
+        match self {
+            Self::Cookie(id) => Some(*id),
+            _ => None,
+        }
     }
 }
 
@@ -191,7 +215,7 @@ pub fn respond_json(request: tiny_http::Request, status: u16, body: Value) {
 pub fn cors_headers() -> Vec<Header> {
     vec![
         Header::from_bytes("Access-Control-Allow-Origin", "*").unwrap(),
-        Header::from_bytes("Access-Control-Allow-Methods", "GET, POST, OPTIONS").unwrap(),
+        Header::from_bytes("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS").unwrap(),
         Header::from_bytes(
             "Access-Control-Allow-Headers",
             "Content-Type, Authorization, X-LLM-Wiki-Token",
@@ -236,32 +260,66 @@ pub fn percent_decode(input: &str) -> String {
 }
 
 pub(crate) fn is_authorized(state: &ServerState, query: &str, headers: &[(String, String)]) -> bool {
+    authorize(state, query, headers).is_some()
+}
+
+/// Authorize a request, trying cookie session first, then Bearer/query token,
+/// then anonymous (if allowUnauthenticated). Returns `None` to reject (401).
+///
+/// The `AuthOutcome` distinguishes cookie users (who get per-user usage
+/// accounting) from Bearer clients (CLI/e2e, no accounting).
+pub(crate) fn authorize(
+    state: &ServerState,
+    query: &str,
+    headers: &[(String, String)],
+) -> Option<AuthOutcome> {
+    // 1) Cookie session — preferred when auth is enabled.
+    if let Some(auth) = state.auth() {
+        if let Some(cookie_hdr) = headers.iter().find(|(k, _)| k == "cookie").map(|(_, v)| v.as_str()) {
+            if let Some(token) = llm_wiki_auth::session::parse_session_cookie(cookie_hdr) {
+                let now = now_secs_for_auth();
+                if let Ok(Some(user)) = auth.session_user(&token, now) {
+                    return Some(AuthOutcome::Cookie(user.id));
+                }
+            }
+        }
+    }
+
+    // 2) Bearer token / query token — existing path (CLI, e2e, internal).
     if !state.api_auth_required() {
-        return true;
+        return Some(AuthOutcome::Anonymous);
     }
     let Some(token) = state.api_token() else {
-        return false;
+        return None;
     };
     let params = parse_query(query);
-    if params
-        .get("token")
-        .map(|v| constant_time_eq(v.as_bytes(), token.as_bytes()))
-        .unwrap_or(false)
-    {
-        return true;
+    if params.get("token").map(|v| constant_time_eq(v.as_bytes(), token.as_bytes())).unwrap_or(false) {
+        return Some(AuthOutcome::Bearer);
     }
-    headers.iter().any(|(key, value)| {
+    let bearer_ok = headers.iter().any(|(key, value)| {
         if key == "x-llm-wiki-token" {
             return constant_time_eq(value.as_bytes(), token.as_bytes());
         }
         if key == "authorization" {
-            return value
-                .strip_prefix("Bearer ")
+            return value.strip_prefix("Bearer ")
                 .map(|v| constant_time_eq(v.as_bytes(), token.as_bytes()))
                 .unwrap_or(false);
         }
         false
-    })
+    });
+    if bearer_ok {
+        Some(AuthOutcome::Bearer)
+    } else {
+        None
+    }
+}
+
+fn now_secs_for_auth() -> i64 {
+    use std::time::{SystemTime, UNIX_EPOCH};
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0)
 }
 
 fn constant_time_eq(left: &[u8], right: &[u8]) -> bool {

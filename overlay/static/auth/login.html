@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>登录 — LLM Wiki</title>
+  <link rel="stylesheet" href="/auth/auth.css">
+</head>
+<body>
+  <main class="card">
+    <h1>LLM Wiki</h1>
+    <div class="tabs">
+      <button id="tab-login" class="tab active">登录</button>
+      <button id="tab-register" class="tab">注册</button>
+    </div>
+    <form id="auth-form">
+      <label>邮箱
+        <input type="email" name="email" required autocomplete="email">
+      </label>
+      <label>密码
+        <input type="password" name="password" required minlength="8" autocomplete="current-password">
+      </label>
+      <button type="submit" id="submit-btn">登录</button>
+      <div id="error" class="error" role="alert"></div>
+    </form>
+    <p class="link"><a href="/reset-password">忘记密码?</a></p>
+  </main>
+  <script src="/auth/auth.js"></script>
+</body>
+</html>

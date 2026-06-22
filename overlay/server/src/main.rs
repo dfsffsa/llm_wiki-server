@@ -38,6 +38,33 @@ struct Args {
     /// Static UI directory (default: upstream/dist if present)
     #[arg(long, env = "LLM_WIKI_STATIC")]
     static_dir: Option<String>,
+
+    /// SQLite path for auth/history/usage. If unset, multi-user mode is off.
+    #[arg(long, env = "LLM_WIKI_AUTH_DB")]
+    auth_db: Option<String>,
+
+    /// Require login on the lite page (browser users). Bearer token auth
+    /// for CLI/e2e is unaffected.
+    #[arg(long, env = "LLM_WIKI_REQUIRE_LOGIN", default_value_t = false)]
+    require_login: bool,
+
+    /// Per-user daily chat limit (cookie-authenticated requests only).
+    #[arg(long, env = "LLM_WIKI_DAILY_CHAT_LIMIT", default_value_t = 50)]
+    daily_chat_limit: u32,
+
+    /// Email that is auto-marked admin on registration.
+    #[arg(long, env = "LLM_WIKI_ADMIN_EMAIL")]
+    admin_email: Option<String>,
+
+    /// Session cookie lifetime in days.
+    #[arg(long, env = "LLM_WIKI_SESSION_TTL_DAYS", default_value_t = 30)]
+    session_ttl_days: u32,
+
+    /// Directory containing the public landing page (index.html etc.). When
+    /// set, requests to `/` and `/login`/`/register`/`/reset-password` are
+    /// served from here instead of upstream/dist.
+    #[arg(long, env = "LLM_WIKI_PUBLIC_LANDING_DIR")]
+    public_landing_dir: Option<String>,
 }
 
 fn main() {
@@ -48,6 +75,12 @@ fn main() {
         args.config,
         args.static_dir,
         args.token,
+        args.auth_db,
+        args.require_login,
+        args.daily_chat_limit,
+        args.admin_email,
+        args.session_ttl_days,
+        args.public_landing_dir,
     ) {
         Ok(config) => config,
         Err(err) => {
@@ -72,7 +105,27 @@ fn main() {
         });
     });
 
-    if let Err(err) = http_server::run(config) {
+    let auth_service = match &config.auth_db {
+        Some(path) => {
+            let store = match llm_wiki_auth::Store::open(path) {
+                Ok(s) => std::sync::Arc::new(s),
+                Err(e) => {
+                    eprintln!("auth: failed to open SQLite at {}: {e}", path.display());
+                    std::process::exit(1);
+                }
+            };
+            let svc = llm_wiki_auth::AuthService::new(store, llm_wiki_auth::AuthServiceConfig {
+                session_ttl_secs: (config.session_ttl_days as i64) * 24 * 3600,
+                admin_email: config.admin_email.clone(),
+                login_attempts: 25.0,
+                login_period_secs: 3600.0,
+            });
+            Some(std::sync::Arc::new(svc))
+        }
+        None => None,
+    };
+
+    if let Err(err) = http_server::run(config, auth_service) {
         eprintln!("error: {err}");
         std::process::exit(1);
     }

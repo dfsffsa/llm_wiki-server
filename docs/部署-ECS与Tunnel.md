@@ -254,6 +254,41 @@ export DASHSCOPE_API_KEY='...'
 export LLM_API_KEY='...'
 ```
 
+### 3.6.1 公网模式:多用户认证
+
+公网部署时启用账号系统(注册/登录/历史/用量限额),让落地页取代重前端 UI 作为入口:
+
+```bash
+sudo mkdir -p /var/lib/llm-wiki
+sudo chown deploy: /var/lib/llm-wiki
+sudo chmod 700 /var/lib/llm-wiki
+```
+
+在 `/etc/llm-wiki/env` 追加:
+
+```bash
+export LLM_WIKI_AUTH_DB=/var/lib/llm-wiki/auth.db
+export LLM_WIKI_REQUIRE_LOGIN=true
+export LLM_WIKI_DAILY_CHAT_LIMIT=50
+export LLM_WIKI_ADMIN_EMAIL=you@example.com   # 该邮箱注册时自动 admin
+export LLM_WIKI_SESSION_TTL_DAYS=30
+export LLM_WIKI_PUBLIC_LANDING_DIR=/opt/llm-wiki/overlay/static
+```
+
+`overlay/static/` 已随代码同步到 ECS 的 `/opt/llm-wiki/overlay/static/`(rsync 时已包含)。
+
+`systemctl restart llm-wiki-server` 后,访问 `https://your-domain/`:
+
+| 路径 | 显示 |
+|------|------|
+| `/` | 落地页 |
+| `/login` `/register` | 登录/注册(同一页,tab 切换) |
+| `/reset-password` | 重置密码(token 暂时打到 server stderr,通过 `journalctl -u llm-wiki-server` 取) |
+| `/lite/` | 问答页(需登录) |
+| `/api/v1/*` | 仍接受 cookie 或 Bearer(CLI 不变) |
+
+**备份:** 将 `/var/lib/llm-wiki/auth.db` 加入备份清单。生产建议用 `sqlite3 auth.db ".backup /backup/auth.db"`(WAL 模式下直接 `cp` 可能拿到部分写入)。
+
 ### 3.7 systemd：llm-wiki-server
 
 `/etc/systemd/system/llm-wiki-server.service`：
