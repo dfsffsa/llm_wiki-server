@@ -1,0 +1,290 @@
+{
+  "project": "ParentingBooks",
+  "version": "1.0.0",
+  "description": "育儿书籍知识库评测集 — 基于郑玉巧《婴儿卷》与崔玉涛《宝贝健康公开课》",
+  "cases": [
+    {
+      "id": "pb_001",
+      "question": "宝宝2个月，纯母乳喂养，要补充维生素D吗？每天多少剂量？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-01-*.md"
+      ],
+      "expected_entities": ["维生素D", "佝偻病"],
+      "expected_answers": [
+        "生后15天",
+        "200-400国际单位",
+        "预防佝偻病"
+      ],
+      "keywords": ["维生素D", "剂量", "补充", "纯母乳"],
+      "category": "fact",
+      "difficulty": "easy",
+      "note": "考察：关键营养素补充时机与剂量"
+    },
+    {
+      "id": "pb_002",
+      "question": "宝宝吐奶很厉害怎么办？什么时候需要去医院？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-03-*.md",
+        "wiki/scenarios/宝宝吐奶应对.md"
+      ],
+      "expected_entities": ["胃食道反流", "吐奶"],
+      "expected_answers": [
+        "控制喂养量",
+        "体位管理",
+        "拍嗝",
+        "就医指征"
+      ],
+      "keywords": ["吐奶", "就医", "处理"],
+      "category": "scenario",
+      "difficulty": "medium",
+      "note": "考察：场景应对与就医指征识别"
+    },
+    {
+      "id": "pb_003",
+      "question": "什么是厌奶期？宝宝厌奶真的是因为进入了厌奶期吗？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-05-*.md",
+        "wiki/concepts/婴儿厌奶的常见原因与应对.md"
+      ],
+      "expected_entities": ["厌奶", "味觉过早发育"],
+      "expected_answers": [
+        "厌奶期是伪命题",
+        "味觉过早发育",
+        "果汁添加过早"
+      ],
+      "keywords": ["厌奶", "味觉", "伪命题"],
+      "category": "fact",
+      "difficulty": "medium",
+      "note": "考察：常见误区纠正能力"
+    },
+    {
+      "id": "pb_004",
+      "question": "宝宝什么时候可以添加辅食？有什么信号说明宝宝准备好了？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-07-*.md"
+      ],
+      "expected_entities": ["辅食添加", "信号"],
+      "expected_answers": [
+        "4-6个月",
+        "6个信号",
+        "头部控制",
+        "对成人饭菜感兴趣"
+      ],
+      "keywords": ["辅食", "添加", "信号"],
+      "category": "fact",
+      "difficulty": "easy",
+      "note": "考察：月龄节点与准备信号"
+    },
+    {
+      "id": "pb_005",
+      "question": "配方粉和普通奶粉有什么区别？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-04-*.md"
+      ],
+      "expected_entities": ["婴儿配方粉", "普通奶粉"],
+      "expected_answers": [
+        "母乳为蓝本",
+        "营养配比不同",
+        "特殊配方粉"
+      ],
+      "keywords": ["配方粉", "普通奶粉", "区别"],
+      "category": "fact",
+      "difficulty": "easy",
+      "note": "考察：概念区分能力"
+    },
+    {
+      "id": "pb_006",
+      "question": "宝宝轮状病毒腹泻后还在拉肚子怎么办？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-06-*.md",
+        "wiki/scenarios/宝宝轮状病毒腹泻后持续腹泻怎么办.md"
+      ],
+      "expected_entities": ["轮状病毒", "乳糖不耐受", "无乳糖配方粉"],
+      "expected_answers": [
+        "继发性乳糖不耐受",
+        "无乳糖配方粉",
+        "肠道恢复"
+      ],
+      "keywords": ["轮状病毒", "腹泻", "乳糖不耐受"],
+      "category": "scenario",
+      "difficulty": "hard",
+      "note": "考察：疾病后续处理流程"
+    },
+    {
+      "id": "pb_007",
+      "question": "宝宝湿疹反复不好，是牛奶蛋白过敏吗？怎么判断？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-06-*.md",
+        "wiki/scenarios/宝宝湿疹反复不好是牛奶蛋白过敏吗.md"
+      ],
+      "expected_entities": ["湿疹", "牛奶蛋白过敏"],
+      "expected_answers": [
+        "氨基酸配方粉",
+        "诊断性治疗",
+        "逐步转奶"
+      ],
+      "keywords": ["湿疹", "过敏", "牛奶蛋白"],
+      "category": "scenario",
+      "difficulty": "hard",
+      "note": "考察：过敏诊断与治疗路径"
+    },
+    {
+      "id": "pb_008",
+      "question": "可以给宝宝喝葡萄糖水吗？为什么？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-01-*.md",
+        "wiki/lessons/婴儿不宜添加葡萄糖水.md"
+      ],
+      "expected_entities": ["葡萄糖水"],
+      "expected_answers": [
+        "血糖骤升骤降",
+        "影响大脑功能",
+        "不建议添加"
+      ],
+      "keywords": ["葡萄糖水", "禁忌"],
+      "category": "fact",
+      "difficulty": "easy",
+      "note": "考察：喂养禁忌知识"
+    },
+    {
+      "id": "pb_009",
+      "question": "宝宝6个月了，添加辅食应该首选什么？为什么推荐营养强化辅食？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-07-*.md"
+      ],
+      "expected_entities": ["强化铁米粉", "蛋黄"],
+      "expected_answers": [
+        "强化铁米粉",
+        "富铁辅食",
+        "营养强化食品优于传统辅食"
+      ],
+      "keywords": ["辅食", "首选", "强化铁"],
+      "category": "fact",
+      "difficulty": "medium",
+      "note": "考察：辅食选择原则"
+    },
+    {
+      "id": "pb_010",
+      "question": "什么是初乳？初乳有什么特别的价值？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-01-*.md",
+        "wiki/concepts/初乳的特点与价值.md"
+      ],
+      "expected_entities": ["初乳", "IgA"],
+      "expected_answers": [
+        "头12天",
+        "IgA丰富",
+        "免疫球蛋白A",
+        "抵御病原菌"
+      ],
+      "keywords": ["初乳", "IgA", "免疫"],
+      "category": "fact",
+      "difficulty": "easy",
+      "note": "考察：核心概念理解"
+    },
+    {
+      "id": "pb_011",
+      "question": "宝宝3个月大，奶量突然减少，是厌奶期吗？应该怎么办？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-05-*.md",
+        "wiki/scenarios/宝宝厌奶怎么办.md"
+      ],
+      "expected_entities": ["厌奶", "味觉过早发育", "果汁"],
+      "expected_answers": [
+        "暂停甜味辅食",
+        "味觉过早发育",
+        "不补锌"
+      ],
+      "keywords": ["厌奶", "奶量减少", "3个月"],
+      "category": "scenario",
+      "difficulty": "medium",
+      "note": "考察：症状分析 + 原因排查"
+    },
+    {
+      "id": "pb_012",
+      "question": "配方粉喂养的宝宝便秘了怎么办？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-04-*.md",
+        "wiki/scenarios/配方粉宝宝便秘怎么办.md"
+      ],
+      "expected_entities": ["便秘", "配方粉"],
+      "expected_answers": [
+        "配方粉本身不引起便秘",
+        "额外补钙",
+        "冲调过稠",
+        "检查冲调比例"
+      ],
+      "keywords": ["便秘", "配方粉", "补钙"],
+      "category": "scenario",
+      "difficulty": "medium",
+      "note": "考察：问题原因排查"
+    },
+    {
+      "id": "pb_013",
+      "question": "妈妈哺乳期可以吃药吗？需要注意什么？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-02-*.md",
+        "wiki/scenarios/哺乳期妈妈用药.md"
+      ],
+      "expected_entities": ["哺乳期用药"],
+      "expected_answers": [
+        "确认不影响配方粉营养",
+        "咨询医生"
+      ],
+      "keywords": ["哺乳期", "用药", "妈妈"],
+      "category": "fact",
+      "difficulty": "medium",
+      "note": "考察：用药安全知识"
+    },
+    {
+      "id": "pb_014",
+      "question": "什么是苯丙酮尿症？宝宝得了这个病还能吃母乳吗？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-06-*.md",
+        "wiki/scenarios/苯丙酮尿症宝宝可以吃母乳吗.md"
+      ],
+      "expected_entities": ["苯丙酮尿症", "低苯丙氨酸配方粉"],
+      "expected_answers": [
+        "可以吃母乳",
+        "配合低苯丙氨酸配方粉",
+        "越早干预越好"
+      ],
+      "keywords": ["苯丙酮尿症", "母乳"],
+      "category": "scenario",
+      "difficulty": "hard",
+      "note": "考察：特殊疾病营养管理"
+    },
+    {
+      "id": "pb_015",
+      "question": "宝宝多大开始需要补铁？应该怎么补？",
+      "project": "ParentingBooks",
+      "expected_sources": [
+        "wiki/sources/崔玉涛宝贝健康公开课-01-*.md",
+        "wiki/concepts/婴儿铁补充与辅食添加.md"
+      ],
+      "expected_entities": ["铁", "强化铁米粉"],
+      "expected_answers": [
+        "4-6个月",
+        "强化铁米粉首选"
+      ],
+      "keywords": ["铁", "补铁", "月龄"],
+      "category": "fact",
+      "difficulty": "medium",
+      "note": "考察：月龄节点营养补充"
+    }
+  ]
+}

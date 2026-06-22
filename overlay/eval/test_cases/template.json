@@ -1,0 +1,29 @@
+{
+  "project": "YOUR_PROJECT_NAME",
+  "version": "1.0.0",
+  "description": "RAG evaluation test cases",
+  "cases": [
+    {
+      "id": "case_001",
+      "question": "【问题描述】",
+      "project": "YOUR_PROJECT_NAME",
+      "expected_sources": [
+        "wiki/sources/*.md",
+        "wiki/concepts/*.md"
+      ],
+      "expected_entities": [
+        "【关键实体名】"
+      ],
+      "expected_answers": [
+        "【期望回答中的关键表述】"
+      ],
+      "keywords": [
+        "检索关键词1",
+        "检索关键词2"
+      ],
+      "category": "fact|number|scenario|concept",
+      "difficulty": "easy|medium|hard",
+      "note": "测试目的说明"
+    }
+  ]
+}
