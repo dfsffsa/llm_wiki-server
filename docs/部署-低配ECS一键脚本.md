@@ -191,6 +191,27 @@ rsync -avz --progress --delete \
 
 ### 6.2 改代码 / 重新构建
 
+**常规迭代**（代码或 UI 改了，配置和 systemd 不动）—— 用 `sync-artifacts.sh`，比 `deploy-ecs.sh` 轻得多：
+
+```bash
+# 远端：拉源码
+ssh -p 22022 root@47.103.39.152 'cd /root/llm_wiki-server && git pull --recurse-submodules'
+
+# 本地：重新构建
+./scripts/build-cli.sh   # cargo build musl，会自动复用 protoc
+VITE_BACKEND=http VITE_API_TOKEN="$VITE_API_TOKEN" ./scripts/build-web.sh
+
+# 本地：增量同步产物（首次 ~500MB；之后 rsync delta ~10s）
+SSH_HOST=root@47.103.39.152 SSH_PORT=22022 ./scripts/sync-artifacts.sh
+
+# 远端：重启服务
+ssh -p 22022 root@47.103.39.152 'systemctl restart llm-wiki-server'
+```
+
+`sync-artifacts.sh` 只 rsync 二进制 + dist + node_modules，不碰 systemd / config / wiki 数据，**常规迭代用这个**。
+
+**全量首部署 / 换机器 / 改 systemd** —— 仍用 `deploy-ecs.sh`：
+
 ```bash
 # 本地
 git pull --recurse-submodules

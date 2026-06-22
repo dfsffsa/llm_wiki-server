@@ -276,11 +276,23 @@ scp overlay/server/target/x86_64-unknown-linux-musl/release/llm-wiki-server \
 
 上面 §1–§14 讲的是**怎么编出** musl 静态二进制。第 8 / 12 节的 scp 上传是手工步骤，每次重新构建后都要重做一遍。
 
-仓库提供 `./scripts/deploy-ecs.sh` 把**整套**（server + CLI + `upstream/dist` + `upstream/src` + `overlay/cli/node` + `server.local.json` + systemd）打成一次部署。SSH target、端口、远端路径、API key 全走 env，常用一行：
+仓库提供两个脚本：
+
+| 脚本 | 用途 |
+|------|------|
+| `scripts/deploy-ecs.sh` | **全量首部署**：覆盖 systemd unit、上传 `server.local.json`、远端 `npm ci`、启动。首次 / 换机器 / 改 systemd 用这个 |
+| `scripts/sync-artifacts.sh` | **增量同步**：只 rsync 二进制 + `dist` + `node_modules`，不动 systemd / config。**常规迭代用这个**（首次 ~500MB；之后 rsync delta ~10s） |
+
+两者共享 env：`SSH_HOST` / `SSH_PORT` / `SSH_CONFIG` / `SERVER_REPO`。`deploy-ecs.sh` 还多 `LLM_API_KEY`（首次注入配置）。
 
 ```bash
+# 全量首部署
 SSH_HOST=root@47.103.39.152 SSH_PORT=22022 SERVER_PORT=8081 \
-LLM_API_KEY='sk-...' ./scripts/deploy-ecs.sh
+  LLM_API_KEY='sk-...' ./scripts/deploy-ecs.sh
+
+# 增量（git pull 后再跑这个）
+SSH_HOST=root@47.103.39.152 SSH_PORT=22022 ./scripts/sync-artifacts.sh
+ssh -p 22022 root@47.103.39.152 'systemctl restart llm-wiki-server'
 ```
 
 完整参数、坑位速查（vite alias 顺序、tsx 是 devDep、upstream/node_modules 必要性等）见 [部署-低配ECS一键脚本.md](./部署-低配ECS一键脚本.md)。
