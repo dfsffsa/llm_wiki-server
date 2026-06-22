@@ -269,3 +269,28 @@ scp overlay/server/target/x86_64-unknown-linux-musl/release/llm-wiki-server \
 - 一次完整编译耗时：≥ 6 小时（crate 下载 + 编译 + 链接），且容易因 OOM 反复失败
 
 本地 4 核 / 8GB 笔电，**5–15 分钟**完成，scp 上传 30 秒。
+
+---
+
+## 15. 一键部署到低配 ECS
+
+上面 §1–§14 讲的是**怎么编出** musl 静态二进制。第 8 / 12 节的 scp 上传是手工步骤，每次重新构建后都要重做一遍。
+
+仓库提供 `./scripts/deploy-ecs.sh` 把**整套**（server + CLI + `upstream/dist` + `upstream/src` + `overlay/cli/node` + `server.local.json` + systemd）打成一次部署。SSH target、端口、远端路径、API key 全走 env，常用一行：
+
+```bash
+SSH_HOST=root@47.103.39.152 SSH_PORT=22022 SERVER_PORT=8081 \
+LLM_API_KEY='sk-...' ./scripts/deploy-ecs.sh
+```
+
+完整参数、坑位速查（vite alias 顺序、tsx 是 devDep、upstream/node_modules 必要性等）见 [部署-低配ECS一键脚本.md](./部署-低配ECS一键脚本.md)。
+
+---
+
+## 16. 相关文档
+
+| 文档 | 说明 |
+|------|------|
+| [部署-低配ECS一键脚本.md](./部署-低配ECS一键脚本.md) | 一键部署脚本使用 + 坑位速查 |
+| [部署-ECS与Tunnel.md](./部署-ECS与Tunnel.md) | 通用 ECS + Cloudflare Tunnel |
+| [开发与测试.md](./开发与测试.md) | 本地构建 / e2e / FAQ |
