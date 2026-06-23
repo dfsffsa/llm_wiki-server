@@ -191,12 +191,18 @@ rsync -avz --progress --delete \
 
 ### 6.2 改代码 / 重新构建
 
+**关键原则**：远端**不需要 `git clone` / `git pull`**。`deploy-ecs.sh` 和 `sync-artifacts.sh` 把所有运行时需要的文件都 rsync 过去了——二进制、`upstream/dist/`、`upstream/src/`（让 chat/ingest 子进程能解析 `@/` 别名）、`node_modules/`、config。远端只要 Node + systemd，**不需要 git 仓库、Rust 工具链、npm、protoc**。
+
+| 远端需要 | 远端不需要 |
+|----------|-----------|
+| Node.js 20+（tsx chat/ingest 子进程） | git（不 `git clone` / `git pull`） |
+| systemd（服务管理） | Rust 工具链 / cargo |
+| `/root/llm_wiki-server/` rsync 目标目录 | npm / npx（node_modules 从 dev 机 rsync） |
+| LLM API 可达（chat + ingest 用） | protoc / lancedb 编译依赖 |
+
 **常规迭代**（代码或 UI 改了，配置和 systemd 不动）—— 用 `sync-artifacts.sh`，比 `deploy-ecs.sh` 轻得多：
 
 ```bash
-# 远端：拉源码
-ssh -p 22022 root@47.103.39.152 'cd /root/llm_wiki-server && git pull --recurse-submodules'
-
 # 本地：重新构建
 ./scripts/build-cli.sh   # cargo build musl，会自动复用 protoc
 VITE_BACKEND=http VITE_API_TOKEN="$VITE_API_TOKEN" ./scripts/build-web.sh
@@ -204,7 +210,7 @@ VITE_BACKEND=http VITE_API_TOKEN="$VITE_API_TOKEN" ./scripts/build-web.sh
 # 本地：增量同步产物（首次 ~500MB；之后 rsync delta ~10s）
 SSH_HOST=root@47.103.39.152 SSH_PORT=22022 ./scripts/sync-artifacts.sh
 
-# 远端：重启服务
+# 远端：重启服务（仅二进制或 dist 变化时需要）
 ssh -p 22022 root@47.103.39.152 'systemctl restart llm-wiki-server'
 ```
 
@@ -213,9 +219,7 @@ ssh -p 22022 root@47.103.39.152 'systemctl restart llm-wiki-server'
 **全量首部署 / 换机器 / 改 systemd** —— 仍用 `deploy-ecs.sh`：
 
 ```bash
-# 本地
-git pull --recurse-submodules
-# 重新构建（参考 §4）—— 增量通常 1–5 min
+# 本地：重新构建（参考 §4）—— 增量通常 1–5 min
 ./scripts/build-cli.sh   # 等价于 cargo build musl，会自动复用 protoc
 VITE_BACKEND=http VITE_API_TOKEN="$VITE_API_TOKEN" ./scripts/build-web.sh
 

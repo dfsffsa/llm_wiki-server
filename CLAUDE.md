@@ -174,17 +174,23 @@ Two scripts in `scripts/`, both driven by `SSH_HOST` / `SSH_PORT` / `SSH_CONFIG`
 
 | Script | Scope | Use when | Time (incremental) |
 |--------|-------|----------|--------------------|
-| `scripts/deploy-ecs.sh` | full: binary + dist + node_modules + `server.local.json` + systemd unit + npm ci + restart | first deploy, new machine, systemd/config change | 1–5 min |
-| `scripts/sync-artifacts.sh` | incremental: binary + dist + node_modules only (no systemd/config/source) | routine iteration after `git pull` | ~10s |
+| `scripts/deploy-ecs.sh` | full: binary + dist + node_modules + `server.local.json` + systemd unit + restart | first deploy, new machine, systemd/config change | 1–5 min |
+| `scripts/sync-artifacts.sh` | incremental: binary + dist + node_modules only (no systemd/config) | routine iteration after local rebuild | ~10s |
 
 Both accept a server-side `LLM_API_KEY` env (read at deploy time, injected into `server.local.json` via `sed` + `chmod 600`); `server.local.json` itself is gitignored via `*.local.json`. **Never hardcode the key in either script.**
+
+**Remote does NOT need `git clone` or `npm ci`** — both scripts rsync everything the runtime needs (binaries, `upstream/dist/`, `upstream/src/` for `@/` alias resolution, `node_modules/`, config). The dev machine is the single source of truth; the remote only consumes artifacts over SSH. Remote requirements: Node.js + systemd. No Rust toolchain, no npm, no protoc, no git repo.
+
+| Remote needs | Remote does NOT need |
+|--------------|---------------------|
+| Node.js 20+ (for tsx chat/ingest subprocess) | git (no `git clone` / `git pull` on remote) |
+| systemd (service management) | Rust toolchain / cargo |
+| `rsync` target dir `/root/llm_wiki-server/` | npm / npx (node_modules rsynced from dev machine) |
+| LLM API reachable (for chat + ingest) | protoc / lancedb build deps |
 
 Typical flow on a low-spec ECS (1.6 GB RAM, can't compile locally):
 
 ```bash
-# 远端：拉源码
-ssh -p 22022 root@47.103.39.152 'cd /root/llm_wiki-server && git pull --recurse-submodules'
-
 # 本地：交叉编译 musl 静态二进制 + 构建 UI
 cargo build --release --target x86_64-unknown-linux-musl --manifest-path overlay/server/Cargo.toml
 cargo build --release --target x86_64-unknown-linux-musl --manifest-path overlay/cli/rust/Cargo.toml
@@ -193,11 +199,11 @@ VITE_BACKEND=http VITE_API_TOKEN="$VITE_API_TOKEN" ./scripts/build-web.sh
 # 本地：增量同步产物（~10s 增量 / 500MB 首次）
 SSH_HOST=root@47.103.39.152 SSH_PORT=22022 ./scripts/sync-artifacts.sh
 
-# 远端：重启服务
+# 远端：重启服务（仅二进制或 dist 变化时需要）
 ssh -p 22022 root@47.103.39.152 'systemctl restart llm-wiki-server'
 ```
 
-The dev-machine (`wanghuacun`) is the build machine; remote ECS (47.103.39.152) only consumes artifacts over SSH. **Code lives in git, artifacts live on disk** (the 50 MB CLI binary never enters the repo).
+The dev-machine (`wanghuacun`) is the build machine; remote ECS (47.103.39.152) only consumes artifacts over SSH. **Code lives in git on the dev machine, artifacts live on disk on both** (the 50 MB CLI binary never enters the git repo).
 
 ## Patched Submodule Architecture
 

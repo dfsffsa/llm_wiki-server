@@ -280,17 +280,19 @@ scp overlay/server/target/x86_64-unknown-linux-musl/release/llm-wiki-server \
 
 | 脚本 | 用途 |
 |------|------|
-| `scripts/deploy-ecs.sh` | **全量首部署**：覆盖 systemd unit、上传 `server.local.json`、远端 `npm ci`、启动。首次 / 换机器 / 改 systemd 用这个 |
+| `scripts/deploy-ecs.sh` | **全量首部署**：覆盖 systemd unit、上传 `server.local.json`、rsync `node_modules`、启动。首次 / 换机器 / 改 systemd 用这个 |
 | `scripts/sync-artifacts.sh` | **增量同步**：只 rsync 二进制 + `dist` + `node_modules`，不动 systemd / config。**常规迭代用这个**（首次 ~500MB；之后 rsync delta ~10s） |
 
 两者共享 env：`SSH_HOST` / `SSH_PORT` / `SSH_CONFIG` / `SERVER_REPO`。`deploy-ecs.sh` 还多 `LLM_API_KEY`（首次注入配置）。
+
+**关键**：远端**不需要 `git clone` / `git pull` / `npm ci`**——两个脚本把所有运行时文件（二进制、`upstream/dist/`、`upstream/src/`、`node_modules/`、config）都 rsync 过去。远端只要 Node + systemd。
 
 ```bash
 # 全量首部署
 SSH_HOST=root@47.103.39.152 SSH_PORT=22022 SERVER_PORT=8081 \
   LLM_API_KEY='sk-...' ./scripts/deploy-ecs.sh
 
-# 增量（git pull 后再跑这个）
+# 增量（本机重 build 后再跑这个，远端无 git 操作）
 SSH_HOST=root@47.103.39.152 SSH_PORT=22022 ./scripts/sync-artifacts.sh
 ssh -p 22022 root@47.103.39.152 'systemctl restart llm-wiki-server'
 ```
