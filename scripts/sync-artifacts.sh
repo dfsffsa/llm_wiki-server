@@ -79,12 +79,15 @@ if (( ${#missing[@]} > 0 )); then
 fi
 ls -lh "$SERVER_BIN_LOCAL" "$CLI_BIN_LOCAL"
 
-# node_modules 是可选的（首次同步时可能还没装）
-skip_node_modules=false
+# node_modules 必须本机已装（远端不跑 npm ci，1.6GB RAM 会 OOM）
 if [[ ! -d "$CLI_NODE_MODULES_LOCAL" ]] || [[ ! -d "$UPSTREAM_NODE_MODULES_LOCAL" ]]; then
-  echo "  注意：本机缺 overlay/cli/node/node_modules 或 upstream/node_modules"
-  echo "        远端如果是首次同步，请改用 deploy-ecs.sh（会跑 npm ci）"
-  skip_node_modules=true
+  echo "  缺少 node_modules（远端不再 npm ci，必须本机装好 rsync 过去）:" >&2
+  [[ ! -d "$CLI_NODE_MODULES_LOCAL" ]] && echo "    - $CLI_NODE_MODULES_LOCAL" >&2
+  [[ ! -d "$UPSTREAM_NODE_MODULES_LOCAL" ]] && echo "    - $UPSTREAM_NODE_MODULES_LOCAL" >&2
+  echo "  请先在本机执行:" >&2
+  echo "    npm ci --prefix ${ROOT}/overlay/cli/node" >&2
+  echo "    npm ci --prefix ${ROOT}/upstream" >&2
+  exit 1
 fi
 
 # .tools/（protoc 等）也可选——只有远端要 cargo build 才会用
@@ -125,21 +128,19 @@ rsync -avz --delete --progress \
   "$DIST_LOCAL"/ \
   "${SSH_HOST}:${SERVER_REPO}/upstream/dist/"
 
-# ─── 同步 node_modules（可选；首次跳过） ─────────────────
-if ! $skip_node_modules; then
-  echo "==> 同步 overlay/cli/node/node_modules"
-  rsync -avz --progress \
-    --exclude='.cache' \
-    "$CLI_NODE_MODULES_LOCAL"/ \
-    "${SSH_HOST}:${SERVER_REPO}/overlay/cli/node/node_modules/"
+# ─── 同步 node_modules（从本机 rsync，不在远端 npm ci） ─────
+echo "==> 同步 overlay/cli/node/node_modules（约 35MB）"
+rsync -avz --progress \
+  --exclude='.cache' \
+  "$CLI_NODE_MODULES_LOCAL"/ \
+  "${SSH_HOST}:${SERVER_REPO}/overlay/cli/node/node_modules/"
 
-  echo "==> 同步 upstream/node_modules"
-  rsync -avz --progress \
-    --exclude='.cache' \
-    --exclude='.vite' \
-    "$UPSTREAM_NODE_MODULES_LOCAL"/ \
-    "${SSH_HOST}:${SERVER_REPO}/upstream/node_modules/"
-fi
+echo "==> 同步 upstream/node_modules（约 524MB，首次较慢；增量 ~10s）"
+rsync -avz --progress \
+  --exclude='.cache' \
+  --exclude='.vite' \
+  "$UPSTREAM_NODE_MODULES_LOCAL"/ \
+  "${SSH_HOST}:${SERVER_REPO}/upstream/node_modules/"
 
 # ─── 同步 .tools/（protoc 等；远端 cargo build 才需要） ─────
 if $sync_tools; then

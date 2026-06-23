@@ -156,18 +156,33 @@ rsync -avz --progress \
   "${SSH_HOST}:${SERVER_REPO}/overlay/config/server.local.json"
 "${SSH[@]}" "$SSH_HOST" "chmod 600 ${SERVER_REPO}/overlay/config/server.local.json"
 
-# ─── 服务端补装 Node 依赖（轻量） ──────────────────────────
-echo "==> 服务端 npm ci overlay/cli/node（含 dev：tsx 是 runtime 依赖）"
-"${SSH[@]}" "$SSH_HOST" "cd ${SERVER_REPO}/overlay/cli/node && \
-  ([ -d node_modules/tsx ] && echo 'tsx already installed' || npm ci 2>&1 | tail -5)"
+# ─── 上传 Node 依赖（从本机 rsync，不在远端 npm ci） ────────
+# 1.6GB RAM 的远端跑 npm ci 会 OOM/超时；改成在本机装好 node_modules
+# 再 rsync 过去。首次 ~559MB（upstream 524M + cli/node 35M），增量
+# rsync delta ~10s。前提：本机已 npm ci 过 overlay/cli/node/ 和 upstream/。
+echo "==> 检查本机 node_modules"
+for d in "${ROOT}/overlay/cli/node/node_modules" "${ROOT}/upstream/node_modules"; do
+  if [[ ! -d "$d" ]]; then
+    echo "  缺少: $d" >&2
+    echo "  请先在本机执行:" >&2
+    echo "    npm ci --prefix ${ROOT}/overlay/cli/node" >&2
+    echo "    npm ci --prefix ${ROOT}/upstream" >&2
+    exit 1
+  fi
+done
 
-# ─── 服务端装 upstream/node_modules ──────────────────────────
-# chat 子进程通过 @/ 别名解析到 upstream/src/，而那些文件会 import zustand/
-# milkdown 等上游包。Node 解析器沿着目录向上找 node_modules，所以要装到
-# upstream/ 下。
-echo "==> 服务端 npm ci upstream/（chat 子进程需要）"
-"${SSH[@]}" "$SSH_HOST" "cd ${SERVER_REPO}/upstream && \
-  ([ -d node_modules/zustand ] && echo 'upstream deps already installed' || npm ci --omit=dev 2>&1 | tail -5)"
+echo "==> rsync overlay/cli/node/node_modules（含 tsx；约 35MB）"
+rsync -avz --progress \
+  --exclude='.cache' \
+  "${ROOT}/overlay/cli/node/node_modules"/ \
+  "${SSH_HOST}:${SERVER_REPO}/overlay/cli/node/node_modules/"
+
+echo "==> rsync upstream/node_modules（约 524MB，首次较慢）"
+rsync -avz --progress \
+  --exclude='.cache' \
+  --exclude='.vite' \
+  "${ROOT}/upstream/node_modules"/ \
+  "${SSH_HOST}:${SERVER_REPO}/upstream/node_modules/"
 
 # ─── 验证产物是 musl 静态 ───────────────────────────────────
 echo "==> 验证远端二进制是 musl 静态"
