@@ -128,6 +128,47 @@ rsync -avz --delete --progress \
   "$DIST_LOCAL"/ \
   "${SSH_HOST}:${SERVER_REPO}/upstream/dist/"
 
+# ─── 同步 upstream/src/ + 顶层配置（chat 子进程 @/ 别名解析需要）────
+# cmd-llm-stream.ts 通过 @/lib/llm-client 等引用 upstream/src，Node 向上
+# 查找 node_modules 时也需要 upstream/package.json + tsconfig.json。
+# 不含 node_modules / dist（已单独同步），用 --exclude 排除避免重复。
+echo "==> 同步 upstream/src/ + package.json + tsconfig（chat 子进程需要）"
+rsync -avz --progress \
+  --exclude='node_modules' \
+  --exclude='dist' \
+  --exclude='dist-ssr' \
+  --exclude='.vite' \
+  --include='*/' \
+  --include='src/**' \
+  --include='package.json' \
+  --include='package-lock.json' \
+  --include='tsconfig.json' \
+  --include='tsconfig.node.json' \
+  --exclude='*' \
+  "${ROOT}/upstream/" \
+  "${SSH_HOST}:${SERVER_REPO}/upstream/"
+
+# ─── 同步 overlay/static/（landing + auth 页面） ─────────────
+echo "==> 同步 overlay/static/（landing + auth HTML）"
+rsync -avz --delete --progress \
+  "${ROOT}/overlay/static"/ \
+  "${SSH_HOST}:${SERVER_REPO}/overlay/static/"
+
+# ─── 同步 overlay/cli/node/src/ + 配置（ingest/chat TS 脚本） ─
+# cmd-ingest.ts / cmd-llm-stream.ts 在这里，rust 二进制通过 LLM_WIKI_REPO
+# 找到它们。node_modules 已单独同步，这里只同步 src + package 元数据。
+echo "==> 同步 overlay/cli/node/src/ + package.json + tsconfig"
+rsync -avz --progress \
+  --exclude='node_modules' \
+  --include='*/' \
+  --include='src/**' \
+  --include='package.json' \
+  --include='package-lock.json' \
+  --include='tsconfig.json' \
+  --exclude='*' \
+  "${ROOT}/overlay/cli/node/" \
+  "${SSH_HOST}:${SERVER_REPO}/overlay/cli/node/"
+
 # ─── 同步 node_modules（从本机 rsync，不在远端 npm ci） ─────
 echo "==> 同步 overlay/cli/node/node_modules（约 35MB）"
 rsync -avz --progress \
@@ -161,6 +202,7 @@ echo "==> 完成"
 echo "  远端重启服务（如改动了二进制或 dist）："
 echo "    ssh ${SSH_ARGS[*]} ${SSH_HOST} 'systemctl restart llm-wiki-server'"
 echo ""
-echo "  源码（upstream/src、overlay/cli/node/src）走 git pull 同步，本脚本不动。"
-echo "  package.json 改了需要远端手动 npm ci（不是常规改动）。"
+echo "  本脚本同步了全部运行时文件（二进制 + dist + src + node_modules + static）。"
+echo "  远端不需要 git clone / git pull / npm ci。"
+echo "  overlay/config/server.local.json 不在此同步（含密钥，手动管理）。"
 echo "  全量首部署/换机器请用 deploy-ecs.sh。"
