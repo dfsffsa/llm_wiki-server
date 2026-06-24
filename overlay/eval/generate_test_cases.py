@@ -22,6 +22,11 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
+try:
+    import yaml
+except Exception:  # pragma: no cover
+    yaml = None  # type: ignore
+
 # ============ 配置 ============
 
 DEFAULT_CONFIG = """
@@ -39,7 +44,7 @@ CATEGORY_PROMPTS = {
     "fact": "关于事实、定义的问答，如「什么是XX」「XX的原因是什么」",
     "number": "关于数值、剂量的问答，如「多少剂量」「多大月龄」",
     "scenario": "场景应对类，如「宝宝XX怎么办」「如何处理XX」",
-    "concept": "概念理解类，如「XX的原理」「XX与YY的区别」
+    "concept": "概念理解类，如「XX的原理」「XX与YY的区别」"
 }
 
 # ============ 工具函数 ============
@@ -53,20 +58,29 @@ def read_file(path: str) -> Optional[str]:
         return None
 
 def parse_frontmatter(content: str) -> tuple:
-    """解析 YAML frontmatter"""
+    """解析 YAML frontmatter，优先用 PyYAML，失败时回退到简单解析器"""
     fm_match = re.match(r'^---\n(.*?)\n---\n', content, re.DOTALL)
-    if fm_match:
-        fm_text = fm_match.group(1)
-        body = content[fm_match.end():]
-        
-        fm = {}
-        for line in fm_text.split('\n'):
-            if ':' in line:
-                key, value = line.split(':', 1)
-                fm[key.strip()] = value.strip().strip('"\'')
-        
-        return fm, body
-    return {}, content
+    if not fm_match:
+        return {}, content
+
+    fm_text = fm_match.group(1)
+    body = content[fm_match.end():]
+
+    if yaml is not None:
+        try:
+            fm = yaml.safe_load(fm_text) or {}
+            if isinstance(fm, dict):
+                return fm, body
+        except Exception as e:
+            print(f"[WARN] PyYAML 解析 frontmatter 失败，回退到简单解析: {e}")
+
+    fm = {}
+    for line in fm_text.split('\n'):
+        if ':' in line:
+            key, value = line.split(':', 1)
+            fm[key.strip()] = value.strip().strip('"\'')
+
+    return fm, body
 
 def extract_text_snippets(content: str, max_chars: int = 3000) -> List[str]:
     """提取文本片段（用于 LLM 输入）"""
@@ -93,45 +107,104 @@ def normalize_text(text: str) -> str:
 
 # ============ LLM 调用 ============
 
+def _build_anthropic_url(endpoint: str) -> str:
+    trimmed = endpoint.rstrip('/')
+    if re.search(r'/v\d+/messages$', trimmed):
+        return trimmed
+    if re.search(r'/v\d+$', trimmed):
+        return trimmed + '/messages'
+    return trimmed + '/v1/messages'
+
+
+def _requires_bearer_auth(url: str) -> bool:
+    u = url.lower().rstrip('/')
+    return (
+        u.startswith('https://api.minimax.io/anthropic')
+        or u.startswith('https://api.minimaxi.com/anthropic')
+        or u.startswith('https://coding.dashscope.aliyuncs.com/apps/anthropic')
+        or u.startswith('https://api.kimi.com/coding')
+        or u.startswith('https://api.moonshot.ai/anthropic')
+        or u.startswith('https://api.moonshot.cn/anthropic')
+    )
+
+
 def call_llm(prompt: str, config: Dict) -> Optional[str]:
-    """调用 LLM 生成内容"""
+    """调用 LLM 生成内容，支持 anthropic_messages 与 chat_completions 两种 wire format"""
     import urllib.request
-    import urllib.parse
-    
-    api_key = config.get('apiKey', os.environ.get('LLM_API_KEY', ''))
+    import urllib.error
+
+    api_key = config.get('apiKey') or os.environ.get('LLM_API_KEY', '')
     model = config.get('model', 'gpt-4o')
     endpoint = config.get('customEndpoint', 'https://api.openai.com/v1/chat/completions')
-    
+    api_mode = config.get('apiMode', 'chat_completions')
+    temperature = config.get('temperature', 0.3)
+    max_tokens = int(config.get('maxTokens', 4000))
+
     if not api_key:
-        print("[WARN] 未设置 LLM_API_KEY，跳过 LLM 调用")
+        print("[WARN] 未设置 apiKey / LLM_API_KEY，跳过 LLM 调用")
         return None
-    
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": DEFAULT_CONFIG},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.7,
-        "max_tokens": 4000
-    }
-    
-    data = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(endpoint, data=data, method='POST')
-    req.add_header('Authorization', f'Bearer {api_key}')
-    req.add_header('Content-Type', 'application/json')
-    
+
+    if api_mode == 'anthropic_messages':
+        url = _build_anthropic_url(endpoint)
+        headers = {
+            'Content-Type': 'application/json',
+            'anthropic-version': '2023-06-01',
+        }
+        if _requires_bearer_auth(url):
+            headers['Authorization'] = f'Bearer {api_key}'
+        else:
+            headers['x-api-key'] = api_key
+            headers['anthropic-dangerous-direct-browser-access'] = 'true'
+        payload = {
+            'model': model,
+            'max_tokens': max_tokens,
+            'temperature': temperature,
+            'system': DEFAULT_CONFIG,
+            'messages': [{'role': 'user', 'content': prompt}],
+        }
+        extract = lambda result: ''.join(
+            b.get('text', '') for b in result.get('content', [])
+            if b.get('type') == 'text'
+        )
+    else:
+        url = endpoint.rstrip('/')
+        if not re.search(r'/chat/completions$', url):
+            url = url + '/chat/completions'
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {api_key}',
+        }
+        payload = {
+            'model': model,
+            'temperature': temperature,
+            'max_tokens': max_tokens,
+            'messages': [
+                {'role': 'system', 'content': DEFAULT_CONFIG},
+                {'role': 'user', 'content': prompt},
+            ],
+        }
+        extract = lambda result: result['choices'][0]['message']['content']
+
+    data = json.dumps(payload, ensure_ascii=False).encode('utf-8')
+    req = urllib.request.Request(url, data=data, method='POST')
+    for k, v in headers.items():
+        req.add_header(k, v)
+
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=120) as resp:
             result = json.loads(resp.read().decode('utf-8'))
-            return result['choices'][0]['message']['content']
+            return extract(result)
+    except urllib.error.HTTPError as e:
+        body = e.read().decode('utf-8', errors='replace')[:500]
+        print(f"[WARN] LLM 调用失败 ({e.code}): {body}")
+        return None
     except Exception as e:
         print(f"[WARN] LLM 调用失败: {e}")
         return None
 
 # ============ 测试用例生成 ============
 
-def generate_from_source(source_path: str, config: Dict) -> List[Dict]:
+def generate_from_source(source_path: str, config: Dict, wiki_dir: str, project_dir: str = '') -> List[Dict]:
     """从单个源文件生成测试用例"""
     content = read_file(source_path)
     if not content:
@@ -182,9 +255,10 @@ def generate_from_source(source_path: str, config: Dict) -> List[Dict]:
         json_match = re.search(r'\[.*\]', response, re.DOTALL)
         if json_match:
             cases = json.loads(json_match.group(0))
-            # 添加 source 信息
+            # 添加 source 信息（expected_sources 相对 project_dir，与 parenting_books.json 一致）
             for case in cases:
-                rel_path = os.path.relpath(source_path, os.path.dirname(os.path.dirname(source_path)))
+                base = project_dir or os.path.dirname(wiki_dir)
+                rel_path = os.path.relpath(source_path, base).replace('\\', '/')
                 case['expected_sources'] = [rel_path]
                 case['source_file'] = os.path.basename(source_path)
             return cases
@@ -193,32 +267,40 @@ def generate_from_source(source_path: str, config: Dict) -> List[Dict]:
     
     return []
 
-def generate_batch_test_cases(project_dir: str, config: Dict, max_sources: int = 20) -> List[Dict]:
-    """批量生成测试用例"""
+def generate_batch_test_cases(project_dir: str, config: Dict, max_sources: int = 0) -> List[Dict]:
+    """批量生成测试用例。max_sources=0 表示处理全部。"""
     wiki_dir = os.path.join(project_dir, "wiki")
-    
+
     # 收集 wiki 页面
     md_files = glob.glob(f"{wiki_dir}/**/*.md", recursive=True)
-    
+
     all_cases = []
     case_id = 1
-    
-    print(f"准备生成测试用例（共 {len(md_files)} 个文件，最多处理 {max_sources} 个）...")
-    
-    for i, md_file in enumerate(md_files[:max_sources]):
+
+    limit = len(md_files) if max_sources <= 0 else min(max_sources, len(md_files))
+    print(f"准备生成测试用例（共 {len(md_files)} 个文件，将处理 {limit} 个）...")
+
+    for i, md_file in enumerate(md_files[:limit]):
         rel_path = os.path.relpath(md_file, wiki_dir)
-        print(f"  [{i+1}/{min(len(md_files), max_sources)}] {rel_path}")
-        
-        cases = generate_from_source(md_file, config)
-        
+        print(f"  [{i+1}/{limit}] {rel_path}")
+
+        cases = generate_from_source(md_file, config, wiki_dir, project_dir)
+
+        # 把源文件正文挂到 case 上，供 validate_test_case 使用
+        source_body = ''
+        raw = read_file(md_file)
+        if raw:
+            _, source_body = parse_frontmatter(raw)
+
         for case in cases:
             case['id'] = f"auto_{case_id:03d}"
+            case['_source_body'] = source_body
             all_cases.append(case)
             case_id += 1
-        
-        if len(all_cases) >= 50:  # 限制总数
+
+        if len(all_cases) >= 500:  # 总数硬上限，避免失控
             break
-    
+
     return all_cases
 
 def validate_test_case(case: Dict, wiki_dir: str) -> Dict:
@@ -228,35 +310,47 @@ def validate_test_case(case: Dict, wiki_dir: str) -> Dict:
         "warnings": [],
         "suggestions": []
     }
-    
+
     # 检查问题是否为空
     if not case.get('question'):
         validation["valid"] = False
         validation["warnings"].append("问题为空")
-    
+
     # 检查 expected_answers
     if not case.get('expected_answers'):
         validation["valid"] = False
         validation["warnings"].append("期望答案为空")
-    
+
+    # 检查 expected_answers 是否真在源材料里出现
+    source_body = case.get('_source_body', '') or ''
+    if source_body and case.get('expected_answers'):
+        missing = []
+        for ans in case['expected_answers']:
+            if ans.strip() and ans not in source_body:
+                missing.append(ans)
+        if missing:
+            validation["warnings"].append(
+                f"expected_answers 未在源材料中找到: {missing}"
+            )
+
     # 检查 expected_sources 指向的文件是否存在
     if case.get('expected_sources'):
         for pattern in case['expected_sources']:
-            pattern = pattern.replace('*', '[^/]+')
-            matches = glob.glob(f"{wiki_dir}/{pattern}")
+            pat = pattern.replace('*', '[^/]+')
+            matches = glob.glob(f"{wiki_dir}/{pat}")
             if not matches:
                 validation["suggestions"].append(f"expected_sources 可能需要更新: {pattern}")
-    
+
     # 检查 category 和 difficulty
     if case.get('category') not in ['fact', 'number', 'scenario', 'concept']:
         validation["suggestions"].append(f"未知的 category: {case.get('category')}")
-    
+
     return validation
 
 def filter_and_rank_cases(cases: List[Dict], wiki_dir: str) -> List[Dict]:
     """过滤并排序测试用例"""
     validated_cases = []
-    
+
     for case in cases:
         validation = validate_test_case(case, wiki_dir)
         if validation["valid"]:
@@ -345,21 +439,22 @@ def generate_human_review_list(cases: List[Dict], sample_size: int = 10) -> List
 
 # ============ 主流程 ============
 
-def generate_test_suite(project_dir: str, config: Dict, output_path: str, 
-                        mode: str = "auto", sample_for_review: int = 10):
-    """生成完整测试套件"""
+def generate_test_suite(project_dir: str, config: Dict, output_path: str,
+                        mode: str = "auto", sample_for_review: int = 10,
+                        max_sources: int = 0):
+    """生成完整测试套件。max_sources=0 表示处理全部源文件。"""
     wiki_dir = os.path.join(project_dir, "wiki")
-    
+
     print(f"\n{'='*60}")
     print(f"测试用例生成器")
     print(f"{'='*60}")
     print(f"项目: {project_dir}")
     print(f"模式: {mode}")
     print(f"{'='*60}\n")
-    
+
     # Step 1: 生成测试用例
     print(">>> Step 1: LLM 生成测试用例...")
-    cases = generate_batch_test_cases(project_dir, config)
+    cases = generate_batch_test_cases(project_dir, config, max_sources)
     print(f"    生成 {len(cases)} 个候选测试用例")
     
     # Step 2: 验证与过滤
@@ -377,7 +472,12 @@ def generate_test_suite(project_dir: str, config: Dict, output_path: str,
     
     # Step 4: 生成输出
     print("\n>>> Step 4: 生成输出文件...")
-    
+
+    # 清理临时字段
+    for case in validated_cases:
+        case.pop('_source_body', None)
+        case.pop('_validation', None)
+
     output = {
         "project": project_dir,
         "version": "1.0.0-auto",
@@ -429,24 +529,33 @@ def main():
                         help='auto=全自动, hybrid=人工审核')
     parser.add_argument('--review-size', '-r', type=int, default=10, 
                         help='人工审核抽样数量')
-    parser.add_argument('--max-sources', '-n', type=int, default=20, 
-                        help='最多处理源文件数')
-    
+    parser.add_argument('--max-sources', '-n', type=int, default=0,
+                        help='最多处理源文件数（0=全部）')
+    parser.add_argument('--temperature', type=float, default=0.3,
+                        help='LLM 采样温度（事实型 QA 建议 0.2-0.4）')
+    parser.add_argument('--max-tokens', type=int, default=4000,
+                        help='LLM 单次响应最大 token 数')
+
     args = parser.parse_args()
-    
+
     # 加载配置
     config = {
         'apiKey': os.environ.get('LLM_API_KEY', ''),
         'model': os.environ.get('LLM_MODEL', 'gpt-4o'),
-        'customEndpoint': os.environ.get('LLM_ENDPOINT', 'https://api.openai.com/v1/chat/completions')
+        'customEndpoint': os.environ.get('LLM_ENDPOINT', 'https://api.openai.com/v1/chat/completions'),
+        'apiMode': os.environ.get('LLM_API_MODE', 'chat_completions'),
+        'temperature': args.temperature,
+        'maxTokens': args.max_tokens,
     }
-    
+
     if args.config and os.path.exists(args.config):
         with open(args.config, 'r') as f:
             cfg = json.load(f)
-            config['apiKey'] = cfg.get('llmConfig', {}).get('apiKey', config['apiKey'])
-            config['model'] = cfg.get('llmConfig', {}).get('model', config['model'])
-            config['customEndpoint'] = cfg.get('llmConfig', {}).get('customEndpoint', config['customEndpoint'])
+            llm_cfg = cfg.get('llmConfig', {})
+            config['apiKey'] = llm_cfg.get('apiKey', config['apiKey'])
+            config['model'] = llm_cfg.get('model', config['model'])
+            config['customEndpoint'] = llm_cfg.get('customEndpoint', config['customEndpoint'])
+            config['apiMode'] = llm_cfg.get('apiMode', config['apiMode'])
     
     # 输出路径
     if not args.output:
@@ -460,7 +569,8 @@ def main():
         config=config,
         output_path=args.output,
         mode=args.mode,
-        sample_for_review=args.review_size
+        sample_for_review=args.review_size,
+        max_sources=args.max_sources
     )
 
 if __name__ == "__main__":
