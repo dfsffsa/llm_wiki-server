@@ -1,11 +1,19 @@
+//! LanceDB vector store access (shared by CLI ingest/reindex and HTTP search).
+//!
+//! Table schema (`wiki_chunks_v2`) matches what upstream ingest writes via
+//! the CLI `vector upsert-chunks` subcommand. The query side (`search_vector`)
+//! reads back by nearest-neighbour on the `vector` column.
+
 use std::path::Path;
 
 use arrow_array::{
-    ArrayRef, FixedSizeListArray, Float32Array, RecordBatch, StringArray, UInt32Array,
+    Array, ArrayRef, FixedSizeListArray, Float32Array, RecordBatch, StringArray, UInt32Array,
 };
 use arrow_schema::{DataType, Field, Schema};
+use futures::TryStreamExt;
 use lancedb::connect;
-use serde::Deserialize;
+use lancedb::query::{ExecutableQuery, QueryBase, Select};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 const TABLE_V2: &str = "wiki_chunks_v2";
@@ -221,4 +229,112 @@ pub async fn upsert_chunks_from_stdin(project_path: &Path, page_id: &str) -> Res
         payload.chunks,
     )
     .await
+}
+
+/// One nearest-neighbour hit from the vector index.
+///
+/// `page_id` is the wiki page stem (filename without `.md`); the caller maps
+/// it back to a wiki relpath. `distance` is LanceDB's `_distance` (lower =
+/// more similar). `chunk_text` / `heading_path` come from the stored chunk
+/// and feed the search snippet.
+#[derive(Debug, Clone, Serialize)]
+pub struct VectorHit {
+    pub page_id: String,
+    pub chunk_index: u32,
+    pub heading_path: String,
+    pub chunk_text: String,
+    pub distance: f32,
+}
+
+/// Nearest-neighbour search over `wiki_chunks_v2`. Returns up to `limit` hits
+/// ordered by ascending distance. Errors (no table, dim mismatch, bad vector)
+/// propagate to the caller; HTTP layer treats any `Err` as "vector unavailable"
+/// and degrades to keyword-only.
+pub async fn search_vector(
+    project_path: &str,
+    query_embedding: &[f32],
+    limit: usize,
+) -> Result<Vec<VectorHit>, String> {
+    if query_embedding.is_empty() {
+        return Err("query embedding is empty".to_string());
+    }
+    let db = connect(&db_path(project_path))
+        .execute()
+        .await
+        .map_err(|e| format!("DB connect error: {e}"))?;
+
+    let tables = db
+        .table_names()
+        .execute()
+        .await
+        .map_err(|e| format!("List tables error: {e}"))?;
+    if !tables.contains(&TABLE_V2.to_string()) {
+        return Err(format!("table {TABLE_V2} not found (run `llm-wiki reindex --vectors`)"));
+    }
+    let table = db
+        .open_table(TABLE_V2)
+        .execute()
+        .await
+        .map_err(|e| format!("Open table error: {e}"))?;
+
+    // Select only the columns we read back; lancedb also auto-projects
+    // `_distance` for vector queries.
+    let stream = table
+        .query()
+        .nearest_to(query_embedding.to_vec())
+        .map_err(|e| format!("Build vector query: {e}"))?
+        .limit(limit)
+        .select(Select::columns(&[
+            "page_id",
+            "chunk_index",
+            "heading_path",
+            "chunk_text",
+        ]))
+        .execute()
+        .await
+        .map_err(|e| format!("Vector query execute: {e}"))?;
+
+    let batches: Vec<RecordBatch> = stream
+        .try_collect()
+        .await
+        .map_err(|e| format!("Vector query collect: {e}"))?;
+
+    let mut hits = Vec::new();
+    for batch in batches {
+        let page_ids = batch
+            .column_by_name("page_id")
+            .and_then(|c| c.as_any().downcast_ref::<StringArray>());
+        let chunk_idx = batch
+            .column_by_name("chunk_index")
+            .and_then(|c| c.as_any().downcast_ref::<UInt32Array>());
+        let headings = batch
+            .column_by_name("heading_path")
+            .and_then(|c| c.as_any().downcast_ref::<StringArray>());
+        let texts = batch
+            .column_by_name("chunk_text")
+            .and_then(|c| c.as_any().downcast_ref::<StringArray>());
+        let dists = batch
+            .column_by_name("_distance")
+            .and_then(|c| c.as_any().downcast_ref::<Float32Array>());
+
+        let (Some(page_ids), Some(chunk_idx), Some(headings), Some(texts), Some(dists)) =
+            (page_ids, chunk_idx, headings, texts, dists)
+        else {
+            return Err("vector result missing expected columns".to_string());
+        };
+
+        for row in 0..batch.num_rows() {
+            if page_ids.is_null(row) {
+                continue;
+            }
+            hits.push(VectorHit {
+                page_id: page_ids.value(row).to_string(),
+                chunk_index: chunk_idx.value(row),
+                heading_path: headings.value(row).to_string(),
+                chunk_text: texts.value(row).to_string(),
+                distance: dists.value(row),
+            });
+        }
+    }
+    Ok(hits)
 }

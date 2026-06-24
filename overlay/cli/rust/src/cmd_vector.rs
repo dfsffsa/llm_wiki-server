@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::vector;
+use llm_wiki_common::vector;
 
 pub async fn upsert_chunks_from_stdin(project: PathBuf, page_id: String) -> Result<(), String> {
     vector::upsert_chunks_from_stdin(&project, &page_id).await

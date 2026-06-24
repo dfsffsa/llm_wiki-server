@@ -14,11 +14,13 @@ clap = { version = "4", features = ["derive", "env"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 uuid = { version = "1", features = ["v4"] }
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "sync", "io-util"] }
 tiny_http = "0.12"
 walkdir = "2"
 llm-wiki-common = { path = "../crates/llm-wiki-common" }
 llm-wiki-auth = { path = "../auth" }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "stream"] }
+futures = "0.3"
 
 [profile.release]
 codegen-units = 1

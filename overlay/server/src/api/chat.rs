@@ -1,20 +1,18 @@
 use std::io::Write;
-use std::path::PathBuf;
-use std::process::{Command, Stdio};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::thread;
 
 use serde_json::{json, Value};
 use tiny_http::Request;
 
 use crate::api::{self, resolve_project, API_PREFIX};
+use crate::llm::{parse_llm_config, stream_chat, ChatSink};
 use crate::state::ServerState;
 
 /// Maximum number of concurrent chat streams. Chat requests are long-lived
 /// (up to the LLM's streaming duration, potentially minutes) and each holds a
-/// worker thread plus a Node subprocess. Without a separate bound, a burst of
-/// slow chats would exhaust the global `MAX_IN_FLIGHT_REQUESTS` slots and
-/// starve fast endpoints (health, search). Keep chat on its own, smaller leash.
+/// worker thread. Without a separate bound, a burst of slow chats would
+/// exhaust the global `MAX_IN_FLIGHT_REQUESTS` slots and starve fast
+/// endpoints (health, search). Keep chat on its own, smaller leash.
 const MAX_CONCURRENT_CHAT: usize = 8;
 static IN_FLIGHT_CHAT: AtomicUsize = AtomicUsize::new(0);
 
@@ -86,7 +84,6 @@ pub fn try_handle_chat_sse(
             return;
         }
     };
-
     let _ = project;
 
     let config_path = match state.config_path() {
@@ -113,29 +110,43 @@ pub fn try_handle_chat_sse(
         }
     };
 
-    if !parsed_body.get("messages").map(Value::is_array).unwrap_or(false) {
-        api::respond_json(
-            request,
-            400,
-            json!({ "ok": false, "error": "Body must include messages array" }),
-        );
-        return;
-    }
+    let messages = match parsed_body.get("messages") {
+        Some(m) if m.is_array() => m.clone(),
+        _ => {
+            api::respond_json(
+                request,
+                400,
+                json!({ "ok": false, "error": "Body must include messages array" }),
+            );
+            return;
+        }
+    };
 
-    let repo_root = repo_root();
-    let script = repo_root.join("overlay/cli/node/src/cmd-llm-stream.ts");
-    if !script.is_file() {
+    // Load llmConfig from the config file (expands ${VAR} placeholders).
+    let app_state = crate::config::load_config_json(&config_path).unwrap_or(Value::Null);
+    let llm_config = match parse_llm_config(&app_state) {
+        Some(c) => c,
+        None => {
+            api::respond_json(
+                request,
+                503,
+                json!({ "ok": false, "error": "config.llmConfig (with model) is required for chat" }),
+            );
+            return;
+        }
+    };
+
+    let Some(runtime) = state.runtime() else {
         api::respond_json(
             request,
-            500,
-            json!({ "ok": false, "error": "Chat stream script not found" }),
+            503,
+            json!({ "ok": false, "error": "async runtime unavailable" }),
         );
         return;
-    }
+    };
 
     // Per-user daily quota — only applies to cookie-authenticated requests.
-    // Bearer-token clients (CLI / e2e) bypass the quota by design: the shared
-    // token is an operator channel, not distributed to end users.
+    // Bearer-token clients (CLI / e2e) bypass the quota by design.
     if let api::AuthOutcome::Cookie(user_id) = auth_outcome {
         if let Some(auth) = state.auth() {
             let date = today_utc_for_chat();
@@ -164,7 +175,7 @@ pub fn try_handle_chat_sse(
                 );
                 return;
             }
-            // Increment BEFORE spawn — even if streaming fails partway, the
+            // Increment BEFORE streaming — even if streaming fails partway, the
             // attempt counts (consistent with most LLM products).
             if let Err(e) = auth.store().increment_usage(user_id, &date) {
                 eprintln!("[chat] usage increment failed for user {user_id}: {e}");
@@ -173,8 +184,8 @@ pub fn try_handle_chat_sse(
     }
 
     // Reserve a chat concurrency slot. Held until the stream ends / client
-    // disconnects (ChatSlot drops at end of scope). Reject before spawning a
-    // worker so a saturated server fails fast with 503 instead of queuing.
+    // disconnects (ChatSlot drops at end of scope). Reject before streaming
+    // so a saturated server fails fast with 503 instead of queuing.
     let _chat_slot = match try_acquire_chat_slot() {
         Some(slot) => slot,
         None => {
@@ -192,166 +203,127 @@ pub fn try_handle_chat_sse(
         }
     };
 
-    // Invoke tsx directly via `node <cli.mjs>` rather than `npx tsx`.
-    // `npx`/`npm exec` spawns intermediate `npm exec` + `sh -c` processes that
-    // inherit the child's stdout pipe and stay alive after the real worker
-    // exits, so the pipe's write end is never closed and the server's response
-    // copy never sees EOF — the request hangs forever. Driving `node` with
-    // tsx's CLI module is a single process with no lingering parents.
-    let cli_dir = repo_root.join("overlay/cli/node");
-    let tsx_cli = cli_dir.join("node_modules/tsx/dist/cli.mjs");
-    let node_bin = std::env::var("LLM_WIKI_NODE_BIN")
-        .ok()
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| "node".to_string());
+    eprintln!("[chat] streaming via reqwest (no node subprocess)");
+    let mut responder = ChatResponder::new(request);
+    // Stream the LLM completion. This blocks the worker thread for the
+    // stream duration (bounded by MAX_CONCURRENT_CHAT), exactly as the old
+    // node-subprocess version did — no thread-pool regression.
+    let result = runtime.block_on(stream_chat(&llm_config, &messages, &mut responder));
 
-    eprintln!("[chat] spawning node tsx for chat stream");
-    let mut child = match Command::new(&node_bin)
-        // --no-warnings: Node's own deprecation/warning output fires before our
-        // script can redirect stdout away from the SSE wire. Silence it at the
-        // source so no startup noise corrupts the stream.
-        .arg("--no-warnings")
-        .arg(&tsx_cli)
-        .arg(&script)
-        .arg("--config")
-        .arg(&config_path)
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        // stderr must NOT be piped-and-unread: tsx/undici write startup noise to
-        // stderr, and a full pipe buffer (64KB) deadlocks the child before it
-        // ever streams on stdout. Inherit so it lands in the server log.
-        .stderr(Stdio::inherit())
-        .current_dir(&cli_dir)
-        .env("LLM_WIKI_REPO", &repo_root)
-        .spawn()
-    {
-        Ok(c) => c,
+    match result {
+        Ok(()) => responder.finish_done(),
         Err(e) => {
-            api::respond_json(
-                request,
-                500,
-                json!({ "ok": false, "error": format!("Failed to start chat stream (is Node installed?): {e}") }),
-            );
-            return;
+            eprintln!("[chat] stream error: {e}");
+            responder.finish_error(&e);
         }
-    };
-
-    let mut stdin = match child.stdin.take() {
-        Some(s) => s,
-        None => {
-            api::respond_json(request, 500, json!({ "ok": false, "error": "stdin unavailable" }));
-            return;
-        }
-    };
-
-    let body_owned = body.to_string();
-    thread::spawn(move || {
-        let _ = stdin.write_all(body_owned.as_bytes());
-        // stdin drops here, closing the pipe's write end so the child's
-        // readStdin() sees EOF and proceeds to stream.
-    });
-
-    let stdout = match child.stdout.take() {
-        Some(s) => s,
-        None => {
-            api::respond_json(request, 500, json!({ "ok": false, "error": "stdout unavailable" }));
-            return;
-        }
-    };
-
-    // Stream the child's stdout to the client with our own copy loop instead of
-    // `request.respond()`. tiny_http's `respond()` path wraps the socket in a
-    // `BufWriter` (1KB) and only flushes once at the end of `io::copy`, so SSE
-    // events would batch up and the client saw the whole answer "jump out at
-    // once" rather than stream. `into_writer()` gives us the raw socket writer;
-    // we write the HTTP status line + headers + chunked body ourselves and
-    // flush after every read, so each SSE event reaches the browser promptly.
-    stream_chat_response(request, stdout);
-
-    // The stream has ended — either the child finished cleanly (stdout EOF
-    // after the `done` event) or the client disconnected mid-stream (tiny_http
-    // surfaces that as a write error and returns from `respond`). Either way,
-    // kill the child if it is still alive so a disconnected client does not
-    // leave a Node process running and continuing to pull LLM tokens, then reap
-    // it to avoid a zombie. `kill` on an already-exited child is a no-op error
-    // we ignore. `_chat_slot` drops after this, releasing the concurrency slot.
-    if let Err(e) = child.kill() {
-        // ESRCH means the child already exited — expected for the normal path.
-        if e.raw_os_error() != Some(3) {
-            eprintln!("[chat] failed to kill child: {e}");
-        }
-    }
-    if let Err(e) = child.wait() {
-        eprintln!("[chat] failed to wait on child: {e}");
     }
 }
 
-/// Write a streaming SSE response directly to the request's raw writer, flushing
-/// after every read so events aren't batched by tiny_http's internal buffer.
-fn stream_chat_response<R: std::io::Read>(request: tiny_http::Request, mut body: R) {
-    use std::io::Write;
+/// Drives the SSE response: writes the HTTP chunked stream and implements
+/// `ChatSink` so `stream_chat` can push token/reasoning fragments. Tracks
+/// liveness via write success so a disconnected client aborts the upstream
+/// pull promptly.
+struct ChatResponder {
+    writer: Option<Box<dyn Write + Send>>,
+    alive: bool,
+    headers_sent: bool,
+}
 
-    let mut writer = request.into_writer();
-
-    // Build the response headers. We use chunked transfer-encoding (no
-    // Content-Length) since the stream length is unknown up front.
-    let mut header_lines: Vec<String> = vec![
-        "HTTP/1.1 200 OK".to_string(),
-        "Content-Type: text/event-stream".to_string(),
-        "Cache-Control: no-cache".to_string(),
-        "Connection: keep-alive".to_string(),
-        "Transfer-Encoding: chunked".to_string(),
-        "Access-Control-Allow-Origin: *".to_string(),
-        "Access-Control-Allow-Methods: GET, POST, OPTIONS".to_string(),
-        "Access-Control-Allow-Headers: Content-Type, Authorization, X-LLM-Wiki-Token".to_string(),
-        "X-Accel-Buffering: no".to_string(), // hint proxies (nginx) not to buffer
-        format!("Date: {}", http_date_now()),
-        "Server: llm-wiki-server".to_string(),
-    ];
-    let header_blob = header_lines.join("\r\n") + "\r\n\r\n";
-
-    if let Err(e) = writer.write_all(header_blob.as_bytes()) {
-        eprintln!("[chat] failed to write headers: {e}");
-        return;
-    }
-    let _ = writer.flush();
-
-    // Copy the child's stdout in small chunks, flushing after each so the
-    // client receives SSE events as they are produced. 64 bytes is small
-    // enough to flush per-event (each SSE event is ~40-80 bytes) without
-    // excessive syscalls.
-    let mut buf = [0u8; 64];
-    loop {
-        match body.read(&mut buf) {
-            Ok(0) => break,
-            Ok(n) => {
-                let chunk = &buf[..n];
-                // chunked-encoding frame: "<hexlen>\r\n<data>\r\n"
-                if write!(writer, "{:X}\r\n", n).is_err() {
-                    break;
-                }
-                if writer.write_all(chunk).is_err() {
-                    break;
-                }
-                if writer.write_all(b"\r\n").is_err() {
-                    break;
-                }
-                if writer.flush().is_err() {
-                    break;
-                }
-            }
-            Err(ref e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
-            Err(e) => {
-                eprintln!("[chat] stdout read error: {e}");
-                break;
-            }
+impl ChatResponder {
+    fn new(request: Request) -> Self {
+        let writer = request.into_writer();
+        Self {
+            writer: Some(writer),
+            alive: true,
+            headers_sent: false,
         }
     }
 
-    // Terminating chunk + flush.
-    let _ = writer.write_all(b"0\r\n\r\n");
-    let _ = writer.flush();
-    header_lines.clear();
+    fn ensure_headers(&mut self) {
+        if self.headers_sent {
+            return;
+        }
+        let Some(w) = self.writer.as_mut() else {
+            self.alive = false;
+            return;
+        };
+        let header_blob = [
+            "HTTP/1.1 200 OK",
+            "Content-Type: text/event-stream",
+            "Cache-Control: no-cache",
+            "Connection: keep-alive",
+            "Transfer-Encoding: chunked",
+            "Access-Control-Allow-Origin: *",
+            "Access-Control-Allow-Methods: GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers: Content-Type, Authorization, X-LLM-Wiki-Token",
+            "X-Accel-Buffering: no",
+            &format!("Date: {}", http_date_now()),
+            "Server: llm-wiki-server",
+        ]
+        .join("\r\n");
+        let blob = format!("{header_blob}\r\n\r\n");
+        if w.write_all(blob.as_bytes()).is_err() {
+            self.alive = false;
+            return;
+        }
+        let _ = w.flush();
+        self.headers_sent = true;
+    }
+
+    fn write_frame(&mut self, event: &str, data: &Value) {
+        if !self.alive {
+            return;
+        }
+        self.ensure_headers();
+        if !self.alive {
+            return;
+        }
+        // Wire format matches the old Node implementation exactly:
+        // `data: {"event":"token","data":{"token":"..."}}\n\n`. The web client
+        // (overlay/web/lib/llm-client.ts) parses `parsed.event` + `parsed.data`,
+        // so both keys are required.
+        let frame = build_sse_frame(event, data);
+        let Some(w) = self.writer.as_mut() else {
+            self.alive = false;
+            return;
+        };
+        if w.write_all(frame.as_bytes()).is_err() {
+            self.alive = false;
+            return;
+        }
+        if w.flush().is_err() {
+            self.alive = false;
+        }
+    }
+
+    fn finish_done(&mut self) {
+        self.write_frame("done", &json!({}));
+        self.end_stream();
+    }
+
+    fn finish_error(&mut self, message: &str) {
+        self.write_frame("error", &json!({ "message": message }));
+        self.end_stream();
+    }
+
+    fn end_stream(&mut self) {
+        if let Some(w) = self.writer.as_mut() {
+            let _ = w.write_all(b"0\r\n\r\n");
+            let _ = w.flush();
+        }
+    }
+}
+
+impl ChatSink for ChatResponder {
+    fn write_token(&mut self, fragment: &str) {
+        self.write_frame("token", &json!({ "token": fragment }));
+    }
+    fn write_reasoning(&mut self, fragment: &str) {
+        self.write_frame("reasoning", &json!({ "token": fragment }));
+    }
+    fn is_alive(&mut self) -> bool {
+        self.alive
+    }
 }
 
 /// RFC 7231 IMF-fixdate, e.g. "Sun, 06 Nov 1994 08:49:37 GMT".
@@ -395,18 +367,6 @@ fn epoch_to_http_date(secs: u64) -> String {
     format!("{wd}, {d:02} {month} {y:04} {hour:02}:{min:02}:{sec:02} GMT")
 }
 
-fn repo_root() -> PathBuf {
-    if let Ok(root) = std::env::var("LLM_WIKI_REPO") {
-        if !root.is_empty() {
-            return PathBuf::from(root);
-        }
-    }
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .canonicalize()
-        .unwrap_or_else(|_| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."))
-}
-
 fn today_utc_for_chat() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
     let secs = SystemTime::now()
@@ -426,4 +386,45 @@ fn today_utc_for_chat() -> String {
     let m = if mp < 10 { mp + 3 } else { mp - 9 };
     let y = if m <= 2 { y + 1 } else { y };
     format!("{y:04}-{m:02}-{d:02}")
+}
+
+/// Build one HTTP chunked-encoding frame carrying an SSE event.
+///
+/// The SSE payload is `data: {"event":<e>,"data":<d>}\n\n` (matching the
+/// Node implementation and the web client's parser). The chunked frame wraps
+/// it as `<hex-len>\r\n<payload>\r\n`. Pure / IO-free so the wire format is
+/// regression-tested.
+fn build_sse_frame(event: &str, data: &Value) -> String {
+    let payload = format!("data: {}\n\n", json!({ "event": event, "data": data }));
+    format!("{:X}\r\n{payload}\r\n", payload.len())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sse_frame_wraps_event_and_data_for_web_client() {
+        let frame = build_sse_frame("token", &json!({ "token": "hi" }));
+        // The web client parses `parsed.event` and `parsed.data.token`, so
+        // both keys must be present in the JSON.
+        assert!(frame.contains(r#""event":"token""#), "missing event: {frame}");
+        assert!(frame.contains(r#""data":{"token":"hi"}"#), "missing data: {frame}");
+        assert!(frame.contains("data: "), "missing SSE data: prefix: {frame}");
+    }
+
+    #[test]
+    fn sse_frame_done_has_empty_data() {
+        let frame = build_sse_frame("done", &json!({}));
+        assert!(frame.contains(r#""event":"done""#));
+        assert!(frame.contains(r#""data":{}"#));
+    }
+
+    #[test]
+    fn sse_frame_uses_chunked_hex_length_prefix() {
+        let frame = build_sse_frame("token", &json!({ "token": "x" }));
+        // First line is the hex length of the payload, then CRLF.
+        let first_line = frame.split("\r\n").next().unwrap();
+        assert!(usize::from_str_radix(first_line, 16).is_ok(), "bad hex prefix: {first_line}");
+    }
 }

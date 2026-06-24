@@ -4,6 +4,7 @@
 
 mod api;
 mod config;
+mod llm;
 mod server;
 mod state;
 mod static_files;
@@ -105,6 +106,20 @@ fn main() {
         });
     });
 
+    // Shared multi-thread runtime for embedding + chat streaming (reqwest).
+    // Worker threads block_on onto it; chat streams are bounded by
+    // MAX_CONCURRENT_CHAT so they can't exhaust the pool.
+    let runtime = match tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+    {
+        Ok(rt) => Some(std::sync::Arc::new(rt)),
+        Err(e) => {
+            eprintln!("error: failed to build async runtime: {e}");
+            std::process::exit(1);
+        }
+    };
+
     let auth_service = match &config.auth_db {
         Some(path) => {
             let store = match llm_wiki_auth::Store::open(path) {
@@ -125,7 +140,7 @@ fn main() {
         None => None,
     };
 
-    if let Err(err) = http_server::run(config, auth_service) {
+    if let Err(err) = http_server::run(config, auth_service, runtime) {
         eprintln!("error: {err}");
         std::process::exit(1);
     }

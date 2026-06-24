@@ -5,7 +5,6 @@ mod cmd_rescan;
 mod cmd_search;
 mod cmd_vector;
 mod config;
-mod vector;
 
 use std::path::PathBuf;
 use std::process::ExitCode;

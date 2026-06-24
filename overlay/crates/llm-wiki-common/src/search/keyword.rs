@@ -313,7 +313,7 @@ fn count_occurrences(haystack: &str, needle: &str) -> usize {
     haystack.match_indices(needle).count()
 }
 
-fn extract_title(content: &str, file_name: &str) -> String {
+pub(crate) fn extract_title(content: &str, file_name: &str) -> String {
     let has_frontmatter = content.starts_with("---");
     let mut in_frontmatter = has_frontmatter;
     for line in content.lines().skip(if has_frontmatter { 1 } else { 0 }) {
@@ -397,7 +397,7 @@ fn truncate_chars(text: &str, max_chars: usize) -> String {
     out
 }
 
-fn extract_image_refs(content: &str) -> Vec<SearchImageRef> {
+pub(crate) fn extract_image_refs(content: &str) -> Vec<SearchImageRef> {
     let mut out = Vec::new();
     for line in content.lines() {
         let trimmed = line.trim();
@@ -422,7 +422,7 @@ fn extract_image_refs(content: &str) -> Vec<SearchImageRef> {
     out
 }
 
-fn relative_to_project(project_path: &str, path: &Path) -> String {
+pub(crate) fn relative_to_project(project_path: &str, path: &Path) -> String {
     let root = Path::new(project_path);
     path.strip_prefix(root)
         .map(|p| p.to_string_lossy().replace('\\', "/"))

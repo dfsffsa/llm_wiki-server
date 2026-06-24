@@ -14,9 +14,10 @@ use crate::static_files;
 pub fn run(
     config: ServerConfig,
     auth: Option<Arc<llm_wiki_auth::AuthService>>,
+    runtime: Option<Arc<tokio::runtime::Runtime>>,
 ) -> Result<(), String> {
     let state = ServerState::from_config(&config)
-        .with_auth(auth, config.require_login, config.daily_chat_limit);
+        .with_auth(auth, config.require_login, config.daily_chat_limit, runtime);
     let static_dir = config.static_dir.clone();
     let bind = config.bind.clone();
     let project = config.project.display().to_string();

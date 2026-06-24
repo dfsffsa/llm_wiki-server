@@ -30,6 +30,11 @@ struct ServerStateInner {
     require_login: bool,
     daily_chat_limit: u32,
     public_landing_dir: Option<PathBuf>,
+    /// Shared async runtime for embedding + chat streaming (reqwest). Built
+    /// once at startup; HTTP handlers `block_on` onto it from their worker
+    /// threads. Chat streams are long-lived but bounded by
+    /// `MAX_CONCURRENT_CHAT`, so they won't exhaust the pool.
+    runtime: Option<Arc<tokio::runtime::Runtime>>,
 }
 
 impl ServerState {
@@ -44,6 +49,7 @@ impl ServerState {
                 require_login: false,
                 daily_chat_limit: 50,
                 public_landing_dir: config.public_landing_dir.clone(),
+                runtime: None,
             }),
         }
     }
@@ -62,14 +68,15 @@ impl ServerState {
         }
     }
 
-    /// Attach the AuthService (built at startup) and auth-mode flags. Consumes
-    /// self and returns a new ServerState wrapping a fresh inner Arc that
-    /// carries the auth values. Called once at startup.
+    /// Attach the AuthService (built at startup), auth-mode flags, and the
+    /// shared async runtime. Consumes self and returns a new ServerState
+    /// wrapping a fresh inner Arc. Called once at startup.
     pub fn with_auth(
         self,
         auth: Option<Arc<llm_wiki_auth::AuthService>>,
         require_login: bool,
         daily_chat_limit: u32,
+        runtime: Option<Arc<tokio::runtime::Runtime>>,
     ) -> Self {
         let inner = Arc::new(ServerStateInner {
             project: self.inner.project.clone(),
@@ -80,8 +87,15 @@ impl ServerState {
             require_login,
             daily_chat_limit,
             public_landing_dir: self.inner.public_landing_dir.clone(),
+            runtime,
         });
         Self { inner }
+    }
+
+    /// Shared async runtime for embedding/chat. `None` only if startup
+    /// failed to build one (handlers then 503 with a clear message).
+    pub fn runtime(&self) -> Option<&Arc<tokio::runtime::Runtime>> {
+        self.inner.runtime.as_ref()
     }
 
     pub fn auth(&self) -> Option<&Arc<llm_wiki_auth::AuthService>> {
