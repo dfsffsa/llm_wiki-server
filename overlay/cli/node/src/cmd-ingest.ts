@@ -26,6 +26,11 @@ async function main() {
   for (const file of written) {
     console.log(`  ${file}`)
   }
+  // Explicit exit: tsx + upstream ingest leave handles/timers alive (file
+  // watchers, lancedb connections) that keep the event loop from draining.
+  // Without this, the parent Rust `Command::status()` never returns and a
+  // batch loop hangs on every file.
+  process.exit(0)
 }
 
 main().catch((err) => {

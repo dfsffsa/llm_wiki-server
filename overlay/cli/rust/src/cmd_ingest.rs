@@ -24,8 +24,28 @@ pub fn run(file: PathBuf, project: PathBuf, config: Option<PathBuf>) -> Result<(
         return Err(format!("Node ingest script not found: {}", script.display()));
     }
 
-    let status = Command::new("npx")
-        .arg("tsx")
+    // Drive `node <tsx cli.mjs>` directly instead of `npx tsx`. `npx`/`npm exec`
+    // spawns intermediate `npm exec` + `sh -c` processes that do not always exit
+    // when the real worker finishes, so the parent `Command::status()` call
+    // hangs and a batch loop never advances to the next file. Driving `node`
+    // with tsx's CLI module is a single process with no lingering parents
+    // (same fix the chat SSE handler already uses — see chat.rs).
+    let tsx_cli = node_dir.join("node_modules/tsx/dist/cli.mjs");
+    if !tsx_cli.is_file() {
+        return Err(format!(
+            "tsx CLI module not found: {}. Run `npm ci --prefix {}` first.",
+            tsx_cli.display(),
+            node_dir.display()
+        ));
+    }
+    let node_bin = std::env::var("LLM_WIKI_NODE_BIN")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "node".to_string());
+
+    let status = Command::new(&node_bin)
+        .arg("--no-warnings")
+        .arg(&tsx_cli)
         .arg(&script)
         .arg("--project")
         .arg(&project)
@@ -37,7 +57,7 @@ pub fn run(file: PathBuf, project: PathBuf, config: Option<PathBuf>) -> Result<(
         .env("LLM_WIKI_REPO", &repo_root)
         .current_dir(&node_dir)
         .status()
-        .map_err(|e| format!("Failed to run Node ingest (is Node/npx installed?): {e}"))?;
+        .map_err(|e| format!("Failed to run Node ingest (is Node installed?): {e}"))?;
 
     if !status.success() {
         return Err(format!("Ingest exited with status {status}"));
