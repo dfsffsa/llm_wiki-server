@@ -47,11 +47,11 @@ flowchart LR
 |------|------|------|
 | Ingest | **仅本地** | `./scripts/llm-wiki ingest`；ECS 不跑入库 |
 | Wiki 数据 | ECS `/data/wiki` | 只读挂载；定时 rsync |
-| `llm-wiki-server` | ECS | Rust 二进制，监听 `127.0.0.1:8080` |
-| Node.js | ECS | Chat 通过 `npx tsx overlay/cli/node/...` 调 LLM |
+| `llm-wiki-server` | ECS | Rust 二进制，监听 `127.0.0.1:8080`；chat/search 纯 Rust |
+| Node.js | 仅 ingest 需要 | Chat 已改 reqwest 直连，**ECS 跑只读+chat 无需 Node**；若 ECS 要跑 ingest 才需要 tsx |
 | 静态 UI | ECS `upstream/dist` | 完整 UI + `/lite/` 同源托管 |
 | cloudflared | ECS | Tunnel 到 Cloudflare，**不**用 SSH 反向代理 |
-| LLM / Embedding API | 公网 | 按 `server.local.json` 配置（如 DashScope） |
+| LLM / Embedding API | 公网 | 按 `server.local.json` 配置（如 DashScope）；embedding 供向量搜索 |
 
 ---
 
@@ -186,29 +186,32 @@ rsync -avz --exclude node_modules \
 
 **方式 B**：在 ECS 上 `git clone` 后完整构建（需 ECS 上安装 Rust + Node，2C4G 编译较慢）。
 
-无论 A/B，ECS 上都必须安装 Chat 依赖：
+> **Chat 已是纯 Rust，不再需要 Node。** 下列 Node 依赖仅当 ECS 也要跑 `ingest` 时才需要；只部署只读 + chat 服务的 ECS 可跳过本节，远端无需 Node/npm。
+
+如果 ECS 需要跑 ingest（少见，通常 ingest 在本地），才装 ingest 依赖：
 
 ```bash
 cd /opt/llm-wiki/overlay/cli/node
-npm ci    # 或 npm install；安装 tsx 等，供 npx tsx 使用
+npm ci    # 安装 tsx 等，供 ingest 的 node <tsx cli.mjs> 使用
 ```
 
-#### 3.5.1 Chat 运行时依赖说明
+#### 3.5.1 运行时依赖说明
 
-| 依赖 | 原因 |
-|------|------|
-| `overlay/cli/node/node_modules/` | `chat.rs` 通过 `npx tsx …/cmd-llm-stream.ts` 启动；需 **tsx** |
-| `upstream/src/` | `cmd-llm-stream.ts` 的 `@/lib/llm-client` 等 import 由 **`overlay/cli/node/tsconfig.json` paths** 映射到 `upstream/src/*`，**不是** Vite 构建产物 |
-| `LLM_WIKI_REPO` 环境变量 | 二进制从本机拷到 ECS 后，编译期 `CARGO_MANIFEST_DIR` 仍指向构建机路径；**必须**设 `LLM_WIKI_REPO=/opt/llm-wiki`，否则找不到 `overlay/cli/node/src/cmd-llm-stream.ts` |
+| 依赖 | 谁需要 | 原因 |
+|------|--------|------|
+| `overlay/cli/node/node_modules/` | 仅 ingest | ingest 子进程 `node <tsx cli.mjs> …/cmd-ingest.ts` 需 **tsx** |
+| `upstream/src/` | 仅 ingest | `cmd-ingest.ts` 的 `@/lib/ingest` 等 import 由 `tsconfig.json paths` 映射到 `upstream/src/*` |
+| `LLM_WIKI_REPO` 环境变量 | 仅 ingest | ingest 找 `overlay/cli/node/src/cmd-ingest.ts`；**chat/search 不再依赖此变量**（reqwest / LanceDB 路径从 `--project` 解析） |
+| `server.local.json` 的 `llmConfig` | chat | reqwest 直连 `customEndpoint + /chat/completions`，须配 `apiMode: chat_completions` |
+| `embeddingConfig` | 向量搜索 | 可选；未配或不通则 `/search` 自动降级为纯关键词，不报错 |
 
-本地验证 Chat 脚本（模块解析，非 LLM 连通性）：
+**Chat 不再需要本地验证 tsx 模块解析**——它直接在 server 进程内 reqwest 调 LLM。验证 chat 连通性直接 curl：
 
 ```bash
-cd overlay/cli/node
-echo '{"messages":[{"role":"user","content":"ping"}]}' \
-  | LLM_WIKI_REPO="$(cd ../.. && pwd)" \
-    npx tsx src/cmd-llm-stream.ts --config ../../config/server.example.json
-# 若出现 network/endpoint 相关 error 而非 "Cannot find module '@/…'"，说明 alias 解析正常
+curl -N -X POST http://127.0.0.1:8080/api/v1/projects/current/chat \
+  -H 'Content-Type: application/json' -H 'Authorization: Bearer <token>' \
+  -d '{"messages":[{"role":"user","content":"ping"}]}'
+# 看到 data: {"event":"token",...} 流即正常
 ```
 
 **Lite 静态页**：执行 `build-web.sh` 后 Lite 已在 `upstream/dist/lite/` 内；**不要**再单独 rsync `overlay/static/lite/`（除非你在 ECS 上跳过 build-web、手工维护 dist）。

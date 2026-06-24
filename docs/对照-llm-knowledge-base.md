@@ -133,8 +133,8 @@ Query → 读 _index + _concepts → 选定文章路径 → 加载全文 → 回
 
 ### 推荐实现路径（server Chat）— 已实现 MVP
 
-1. ~~**Server Chat 代理**~~ ✅ `overlay/server/src/api/chat.rs` + `cmd-llm-stream.ts`
-2. **RAG** — 关键词 search + 可选 LanceDB 混合（待 server 侧接入）
+1. ~~**Server Chat 代理**~~ ✅ `overlay/server/src/api/chat.rs` + `llm.rs`（reqwest 直连，不再走 Node `cmd-llm-stream.ts`）
+2. ~~**RAG**~~ ✅ 关键词 + LanceDB 向量混合检索已接入 `/search`（RRF 融合，向量侧失败降级 keyword）
 3. **Citation** — 强制引用 `wiki/...md`；可选 `output/reports/`
 4. **持久化** — HTTP 模式 localStorage；桌面 `.llm-wiki/chats/`
 

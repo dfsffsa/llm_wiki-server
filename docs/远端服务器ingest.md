@@ -29,7 +29,7 @@
 | `/root/llm_wiki-server/scripts/llm-wiki` | bash wrapper（364 B，自动设 `LLM_WIKI_REPO`） |
 | `/root/llm_wiki-server/overlay/config/server.local.json` | 含真实 `LLM_API_KEY`，chmod 600（`PLACEHOLDER_FILL_ON_SERVER` 已被 sed 替换） |
 | `/root/llm_wiki-server/overlay/cli/node/node_modules/tsx` | tsx 运行时（devDep，但 `npm ci` 没省） |
-| `/root/llm_wiki-server/upstream/node_modules/` | zustand / milkdown 等（chat 子进程要） |
+| `/root/llm_wiki-server/upstream/node_modules/` | zustand / milkdown 等（**ingest** 子进程要；chat 已是纯 Rust，不需要） |
 | `/root/llm_wiki_projects/<项目>/` | wiki 数据，每个项目有 `wiki/` `raw/sources/` `purpose.md` 等 |
 
 > **不要重传这些**。如果怀疑缺失，跑 `sync-artifacts.sh`（首次可能漏传）或 `deploy-ecs.sh`（重置）。

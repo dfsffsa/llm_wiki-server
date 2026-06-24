@@ -29,7 +29,7 @@
 | systemd User | `deploy` | `root`（小机无 sudo 配置时间） |
 | 代码路径 | `/opt/llm-wiki/` | `/root/llm_wiki-server/` |
 | Wiki 路径 | `/data/wiki/<项目>` | `/root/llm_wiki_projects/<项目>` |
-| Node 依赖 | `overlay/cli/node` 装上即可 | **还要**装 `upstream/node_modules`（chat 子进程要 zustand/milkdown） |
+| Node 依赖 | `overlay/cli/node` 装上即可 | 若 ECS 跑 ingest：**还要**装 `upstream/node_modules`（ingest 子进程要 zustand/milkdown）；只读+chat 无需 Node |
 | 部署方式 | 手工 rsync + systemctl | `./scripts/deploy-ecs.sh` 一键 |
 | 端口 | 8080 | 视占用情况（8080/8081/…），先 `ss -ltnp` 查 |
 
@@ -134,8 +134,8 @@ LLM_API_KEY="$LLM_API_KEY" \
 3. 准备远端目录
 4. 上传 server / CLI / `upstream/dist` / `upstream/src`（增量）
 5. 注入真实 `LLM_API_KEY` 到 `server.local.json`，chmod 600
-6. 远端 `npm ci overlay/cli/node`（含 tsx）
-7. 远端 `npm ci upstream/`（chat 子进程需要 zustand/milkdown 等）
+6. 远端 `npm ci overlay/cli/node`（含 tsx；仅 ingest 需要）
+7. 远端 `npm ci upstream/`（ingest 子进程需要 zustand/milkdown 等；只读+chat 可跳过）
 8. 写 systemd unit
 9. 启动服务
 10. 校验 `/api/v1/health` 与 `/api/v1/projects`
@@ -268,17 +268,19 @@ alias: isHttpBackend
 
 对象 spread 形式（`{ ...specific, "@": ... }`）看着对，但 JS 对象遍历顺序对 vite 不友好，**用数组**。这块对应 `overlay/patches/0002-http-ui-bootstrap.patch`，升级 upstream 时若 patch 冲突，重点看这里。
 
-### 7.2 tsx 是 devDep 但运行时必需
+### 7.2 tsx 是 devDep 但 ingest 运行时必需
 
-`overlay/cli/node` 启动 chat 子进程走 `npx tsx …/cmd-llm-stream.ts`。`tsx` 写在 `devDependencies` 里（TypeScript 直接跑在 Node 上时合理），但**远端 `npm ci` 不能 `--omit=dev`**，否则 `Cannot find module 'tsx'`。
+> **Chat 已不走 Node。** 自 reqwest 重写后，`/chat` 在 Rust server 进程内直连 LLM，不再 spawn `cmd-llm-stream.ts`。下面的 tsx / node_modules 要求现在**只针对在远端跑 `ingest` 的场景**；只部署只读+chat 服务则可忽略，远端甚至不需要 Node。
+
+`overlay/cli/node` 的 ingest 子进程走 `node <tsx cli.mjs> …/cmd-ingest.ts`（直接 drive node + tsx CLI 模块，非 `npx`，避免 batch hang）。`tsx` 写在 `devDependencies` 里，但运行时 ingest 需要，所以**远端 `npm ci` 不能 `--omit=dev`**，否则 `Cannot find module 'tsx'`。
 
 脚本里 `overlay/cli/node` 用的是 `npm ci`（默认装 dev），`upstream/node_modules` 才用 `--omit=dev`（体积大、生产不需要 React devtools 等）。不要统一加 `--omit=dev`。
 
-### 7.3 chat 子进程需要 upstream/node_modules
+### 7.3 ingest 子进程需要 upstream/node_modules
 
-`cmd-llm-stream.ts` 通过 `overlay/cli/node/tsconfig.json` 的 `paths` 把 `@/lib/llm-client` 等映射到 `upstream/src/`，而这些文件 `import { create } from "zustand"`、`@milkdown/...` 等。Node 解析器沿目录向上找 `node_modules`，所以 `upstream/` 下必须有 `node_modules`。
+`cmd-ingest.ts` 通过 `overlay/cli/node/tsconfig.json` 的 `paths` 把 `@/lib/llm-client`、`@/lib/ingest` 等映射到 `upstream/src/`，而这些文件 `import { create } from "zustand"`、`@milkdown/...` 等。Node 解析器沿目录向上找 `node_modules`，所以 `upstream/` 下必须有 `node_modules`。
 
-部署时只传 `overlay/cli/node/node_modules` 不够——必须也 `npm ci` `upstream/`。代价是远端 482 MB 磁盘。生产想省空间的话可改 Vite 把 `@/` 重写为构建后绝对路径 + 用 esbuild bundle 进 `cmd-llm-stream.js`（远端只跑 `node` 不跑 `tsx`），但那是后续优化项。
+部署时只传 `overlay/cli/node/node_modules` 不够——必须也 `npm ci` `upstream/`。代价是远端约 482 MB 磁盘。**这是 ingest 的代价，不是 chat 的**——chat 已经是纯 Rust，零 Node 依赖。
 
 ### 7.4 端口冲突
 
