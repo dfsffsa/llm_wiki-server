@@ -9,13 +9,14 @@ RAG + Chat 在线评测脚本
 """
 
 import argparse
+import fnmatch
 import json
 import os
 import sys
 import glob
 import re
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set, Tuple
 
 # ============ 配置 ============
 LLM_WIKI_SERVER = "http://127.0.0.1:8080"
@@ -44,32 +45,75 @@ def check_keyword_match(text: str, keywords: List[str]) -> float:
     matches = sum(1 for kw in keywords if normalize_text(kw) in text_lower)
     return matches / len(keywords)
 
-def check_source_coverage(retrieved: List[str], expected: List[str], project_dir: str) -> float:
-    """检查来源覆盖度（支持 glob 模式）"""
+def glob_to_regex(pattern: str) -> re.Pattern:
+    """把 glob pattern 转成精确匹配路径的 regex"""
+    return re.compile(fnmatch.translate(pattern))
+
+
+def check_source_coverage(retrieved: List[str], expected: List[str]) -> float:
+    """检查来源覆盖度（支持 glob 模式）
+
+    coverage = |expected patterns that match at least one retrieved file| / |expected|
+    文件是否存在不在本指标考核范围内。
+    """
     if not expected:
         return 1.0
-    
-    coverage = 0.0
+
+    matched = 0
     for pattern in expected:
-        # 转换 glob pattern 为 regex
-        pattern = pattern.replace('*', '.*')
-        pattern = pattern.replace('.', r'\.')
-        
-        # 检查是否有文件匹配
-        matched = False
-        for wiki_file in retrieved:
-            if re.search(pattern, wiki_file):
-                matched = True
-                break
-        
-        # 也检查项目目录中是否存在该模式对应的文件
-        full_pattern = os.path.join(project_dir, pattern)
-        if glob.glob(full_pattern):
-            coverage += 1.0 if matched else 0.5
-        elif matched:
-            coverage += 0.8
-    
-    return min(coverage / len(expected), 1.0)
+        regex = glob_to_regex(pattern)
+        if any(regex.match(f) for f in retrieved):
+            matched += 1
+
+    return matched / len(expected)
+
+
+def expand_expected_sources(expected: List[str], project_dir: str) -> Set[str]:
+    """把 expected_sources 中的 glob 展开为项目中的实际文件路径集合"""
+    relevant: Set[str] = set()
+    for pattern in expected:
+        matches = glob.glob(os.path.join(project_dir, pattern))
+        if matches:
+            for m in matches:
+                rel = os.path.relpath(m, project_dir).replace('\\', '/')
+                relevant.add(rel)
+        else:
+            # pattern 未命中实际文件：把它本身作为潜在 relevant 路径保留，
+            # 这样召回不会被人为放大，也不会除零。
+            relevant.add(pattern.replace('\\', '/'))
+    return relevant
+
+
+def compute_recall_and_mrr(
+    retrieved: List[str], relevant: Set[str], k: int = 10
+) -> Tuple[float, float]:
+    """计算真正的 Recall@K 与 MRR"""
+    if not relevant:
+        return 1.0, 0.0
+
+    retrieved_top_k = retrieved[:k]
+    relevant_retrieved = {f for f in retrieved_top_k if f in relevant}
+    recall = len(relevant_retrieved) / len(relevant)
+
+    mrr = 0.0
+    for i, f in enumerate(retrieved_top_k):
+        if f in relevant:
+            mrr = 1.0 / (i + 1)
+            break
+
+    return recall, mrr
+
+
+def compute_keyword_match(results: List[Dict], keywords: List[str]) -> float:
+    """基于检索返回的 title/snippet 检查关键词匹配度"""
+    if not keywords:
+        return 0.0
+    text_parts = []
+    for r in results:
+        text_parts.append(r.get('title', ''))
+        text_parts.append(r.get('snippet', ''))
+    text = ' '.join(text_parts)
+    return check_keyword_match(text, keywords)
 
 # ============ API 调用 ============
 
@@ -112,40 +156,48 @@ def search_wiki(query: str, project_id: str, token: str) -> Dict:
         return {"results": []}
 
 def chat_ask(question: str, project_id: str, token: str) -> Dict:
-    """发送 Chat 请求（SSE）"""
+    """发送 Chat 请求（SSE）
+
+    server 端 cmd-llm-stream.ts 发两种事件：
+      - reasoning: {token: "..."}  thinking 内容（M2.7 等推理模型）
+      - token:     {token: "..."}  实际回答
+    我们只收集 token 事件作为 answer。
+    """
     import urllib.request
     import urllib.parse
-    
+
     url = f"{LLM_WIKI_SERVER}/api/v1/projects/{project_id}/chat"
     data = json.dumps({
         "messages": [
             {"role": "user", "content": question}
         ]
     }).encode('utf-8')
-    
+
     req = urllib.request.Request(url, data=data, method='POST')
     req.add_header('Authorization', f'Bearer {token}')
     req.add_header('Content-Type', 'application/json')
     req.add_header('Accept', 'text/event-stream')
-    
+
     try:
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            # 解析 SSE
+        with urllib.request.urlopen(req, timeout=300) as resp:
             chunks = []
             for line in resp:
                 line = line.decode('utf-8').strip()
-                if line.startswith('data:'):
-                    try:
-                        event = json.loads(line[5:].strip())
-                        if event.get('event') == 'token':
-                            chunks.append(event.get('data', {}).get('content', ''))
-                        elif event.get('event') == 'done':
-                            break
-                        elif event.get('event') == 'error':
-                            print(f"  [WARN] Chat 错误: {event.get('data')}", file=sys.stderr)
-                            break
-                    except json.JSONDecodeError:
-                        pass
+                if not line.startswith('data:'):
+                    continue
+                try:
+                    event = json.loads(line[5:].strip())
+                except json.JSONDecodeError:
+                    continue
+                etype = event.get('event')
+                edata = event.get('data', {}) or {}
+                if etype == 'token':
+                    chunks.append(edata.get('content', '') or edata.get('token', ''))
+                elif etype == 'done':
+                    break
+                elif etype == 'error':
+                    print(f"  [WARN] Chat 错误: {edata}", file=sys.stderr)
+                    break
             return {"answer": ''.join(chunks), "chunks": chunks}
     except Exception as e:
         print(f"  [WARN] Chat 失败: {question[:30]}... - {e}", file=sys.stderr)
@@ -158,26 +210,20 @@ def eval_retrieval(test_case: Dict, project_dir: str, project_id: str, token: st
     query = test_case['question']
     expected_sources = test_case.get('expected_sources', [])
     keywords = test_case.get('keywords', [])
-    
+
     # 调用搜索 API
     result = search_wiki(query, project_id, token)
-    retrieved_files = [r.get('file', r.get('path', '')) for r in result.get('results', [])]
-    
+    results = result.get('results', [])
+    retrieved_files = [r.get('path', '') for r in results]
+
     # 计算指标
-    source_coverage = check_source_coverage(retrieved_files, expected_sources, project_dir)
-    keyword_match = check_keyword_match(' '.join(retrieved_files), keywords)
-    
-    # Top-K 召回
-    top_k = len(expected_sources)
-    recall_at_k = 0.0
-    if retrieved_files and expected_sources:
-        for i, expected in enumerate(expected_sources[:top_k]):
-            expected_pattern = expected.replace('*', '.*')
-            for retrieved in retrieved_files[:top_k]:
-                if re.search(expected_pattern, retrieved):
-                    recall_at_k += 1.0 / (i + 1)
-                    break
-    
+    source_coverage = check_source_coverage(retrieved_files, expected_sources)
+    keyword_match = compute_keyword_match(results, keywords)
+
+    # 真正的 Recall@K 与 MRR
+    relevant = expand_expected_sources(expected_sources, project_dir)
+    recall_at_k, mrr = compute_recall_and_mrr(retrieved_files, relevant, k=10)
+
     return {
         "case_id": test_case['id'],
         "question": query,
@@ -185,7 +231,8 @@ def eval_retrieval(test_case: Dict, project_dir: str, project_id: str, token: st
         "source_coverage": round(source_coverage, 3),
         "keyword_match": round(keyword_match, 3),
         "recall_at_k": round(recall_at_k, 3),
-        "retrieval_success": source_coverage >= 0.5
+        "mrr": round(mrr, 3),
+        "retrieval_success": source_coverage >= 1.0
     }
 
 def eval_chat(test_case: Dict, project_dir: str, project_id: str, token: str) -> Dict:
@@ -219,7 +266,7 @@ def run_evaluation(project: str, test_cases_path: str, mode: str = "all", output
     cases = data.get('cases', [])
     
     # 获取项目 ID
-    projects_resp = call_api("/api/v1/projects")
+    projects_resp = call_api("/api/v1/projects", token=DEFAULT_TOKEN)
     if not projects_resp:
         print("[ERROR] 无法获取项目列表，请确认 server 运行中", file=sys.stderr)
         return
@@ -283,10 +330,12 @@ def run_evaluation(project: str, test_cases_path: str, mode: str = "all", output
     if results["retrieval_results"]:
         retrieval_success = sum(1 for r in results["retrieval_results"] if r["retrieval_success"])
         avg_recall = sum(r["recall_at_k"] for r in results["retrieval_results"]) / len(results["retrieval_results"])
+        avg_mrr = sum(r["mrr"] for r in results["retrieval_results"]) / len(results["retrieval_results"])
         avg_coverage = sum(r["source_coverage"] for r in results["retrieval_results"]) / len(results["retrieval_results"])
         results["summary"]["retrieval"] = {
             "success_rate": f"{retrieval_success}/{len(cases)} ({retrieval_success/len(cases)*100:.1f}%)",
             "avg_recall_at_k": round(avg_recall, 3),
+            "avg_mrr": round(avg_mrr, 3),
             "avg_source_coverage": round(avg_coverage, 3)
         }
     
@@ -308,6 +357,7 @@ def run_evaluation(project: str, test_cases_path: str, mode: str = "all", output
         print(f"\n📊 检索效果:")
         print(f"   召回成功率: {r['success_rate']}")
         print(f"   平均 Recall@K: {r['avg_recall_at_k']:.3f}")
+        print(f"   平均 MRR: {r['avg_mrr']:.3f}")
         print(f"   平均来源覆盖: {r['avg_source_coverage']:.3f}")
     
     if "chat" in results["summary"]:

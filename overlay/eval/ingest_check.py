@@ -15,6 +15,11 @@ import glob
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
+try:
+    import yaml
+except Exception:  # pragma: no cover - 允许无 PyYAML 的环境回退
+    yaml = None  # type: ignore
+
 # ============ 配置 ============
 
 SCHEMA_KEYS = ['type', 'title', 'created', 'updated']
@@ -31,21 +36,31 @@ def read_file(path: str) -> Optional[str]:
         return None
 
 def parse_frontmatter(content: str) -> Tuple[Dict, str]:
-    """解析 YAML frontmatter"""
+    """解析 YAML frontmatter，优先用 PyYAML，失败时回退到简单解析器"""
     fm_match = re.match(r'^---\n(.*?)\n---\n', content, re.DOTALL)
-    if fm_match:
-        fm_text = fm_match.group(1)
-        body = content[fm_match.end():]
-        
-        # 简单解析 YAML
-        fm = {}
-        for line in fm_text.split('\n'):
-            if ':' in line:
-                key, value = line.split(':', 1)
-                fm[key.strip()] = value.strip().strip('"\'')
-        
-        return fm, body
-    return {}, content
+    if not fm_match:
+        return {}, content
+
+    fm_text = fm_match.group(1)
+    body = content[fm_match.end():]
+
+    if yaml is not None:
+        try:
+            fm = yaml.safe_load(fm_text) or {}
+            if isinstance(fm, dict):
+                return fm, body
+        except Exception as e:
+            print(f"[WARN] PyYAML 解析 frontmatter 失败，回退到简单解析: {e}",
+                  file=__import__('sys').stderr)
+
+    # 简单解析器（兜底）
+    fm = {}
+    for line in fm_text.split('\n'):
+        if ':' in line:
+            key, value = line.split(':', 1)
+            fm[key.strip()] = value.strip().strip('"\'')
+
+    return fm, body
 
 def extract_wikilinks(content: str) -> List[str]:
     """提取 wiki 内链"""
@@ -63,6 +78,37 @@ def extract_headers(content: str) -> List[str]:
 def count_words(text: str) -> int:
     """统计中文字符数（粗略）"""
     return len(re.findall(r'[一-鿿]', text))
+
+
+def page_identity(md_file: str, wiki_dir: str) -> str:
+    """页面唯一标识：相对 wiki 目录、无 .md 后缀的路径"""
+    rel = os.path.relpath(md_file, wiki_dir)
+    return os.path.splitext(rel)[0].replace('\\', '/')
+
+
+def normalize_link_target(link: str) -> str:
+    """规范化 wikilink 目标：去 alias、去 anchor、去 .md 后缀"""
+    return link.split('|')[0].split('#')[0].removesuffix('.md').strip()
+
+
+def is_linked(identity: str, link_targets: set) -> bool:
+    """判断页面 identity 是否被链接集合覆盖"""
+    base = os.path.basename(identity)
+    for t in link_targets:
+        if t == identity:
+            return True
+        if os.path.basename(t) == base:
+            return True
+        if t == base:
+            return True
+    return False
+
+
+def normalize_slug(name: str) -> str:
+    """把文件名/标题归一化为可比较的 slug"""
+    name = os.path.splitext(name)[0]
+    return re.sub(r'[^\w一-鿿]', '', name).lower()
+
 
 def check_wikilink_density(wiki_dir: str) -> Dict:
     """检查 Wikilink 密度"""
@@ -86,20 +132,15 @@ def check_wikilink_density(wiki_dir: str) -> Dict:
             links = extract_wikilinks(content)
             stats["total_links"] += len(links)
             for link in links:
-                link_targets.add(link.split('|')[0].split('#')[0])
+                link_targets.add(normalize_link_target(link))
     
     stats["link_targets"] = link_targets
     stats["avg_links_per_page"] = stats["total_links"] / max(stats["total_pages"], 1)
     
-    # 检查孤立页面（没有被任何页面链接）
-    all_titles = set()
-    for md_file in md_files:
-        fm, body = parse_frontmatter(read_file(md_file) or "")
-        if fm.get('title'):
-            all_titles.add(fm['title'])
-    
-    linked_titles = link_targets
-    stats["orphaned_pages"] = len(all_titles - linked_titles)
+    # 孤立页面：没有链接指向其 identity 或 basename
+    identities = {page_identity(f, wiki_dir) for f in md_files}
+    linked_identities = {ident for ident in identities if is_linked(ident, link_targets)}
+    stats["orphaned_pages"] = len(identities - linked_identities)
     
     return stats
 
@@ -183,25 +224,27 @@ def compare_source_to_wiki(raw_dir: str, wiki_sources_dir: str) -> Dict:
     wiki_files = glob.glob(f"{wiki_sources_dir}/*.md")
     stats["total_wiki_pages"] = len(wiki_files)
     
-    # 匹配检查
+    # 匹配检查（用归一化 slug 精确匹配，避免子串误匹配）
     if raw_files and wiki_files:
         raw_basenames = {os.path.basename(f) for f in raw_files}
         wiki_basenames = {os.path.basename(f) for f in wiki_files}
-        
-        # 简单匹配（可能名称不同）
+        wiki_slugs = {normalize_slug(b) for b in wiki_basenames}
+
         matched = 0
+        missing = []
         for raw_base in raw_basenames:
-            raw_name = os.path.splitext(raw_base)[0]
-            for wiki_base in wiki_basenames:
-                if raw_name in wiki_base or wiki_base in raw_name:
-                    matched += 1
-                    break
-        
+            raw_slug = normalize_slug(raw_base)
+            if raw_slug in wiki_slugs:
+                matched += 1
+            else:
+                missing.append(raw_base)
+
         stats["coverage_rate"] = matched / max(len(raw_basenames), 1)
         stats["matched_sources"] = matched
+        stats["missing_wiki_pages"] = missing[:20]
     else:
         stats["coverage_rate"] = 0
-    
+
     return stats
 
 def analyze_wiki_quality(wiki_dir: str) -> Dict:
@@ -328,13 +371,14 @@ def run_ingest_check(project_dir: str, verbose: bool = False) -> Dict:
     print(f"  - Schema 合规: {schema_score:.1f}/40")
     print(f"  - Wikilink 密度: {link_score:.1f}/30")
     print(f"  - 页面质量: {quality_score:.1f}/30")
-    
+    print("\n[NOTE] 此分数仅反映结构完整性（frontmatter、链接密度、字数），不代表内容事实准确性。")
+
     if total_score >= 80:
-        print("\n✅ Ingest 质量良好")
+        print("\n✅ Ingest 结构质量良好")
     elif total_score >= 60:
-        print("\n⚠️ Ingest 质量一般，建议优化")
+        print("\n⚠️ Ingest 结构质量一般，建议优化")
     else:
-        print("\n❌ Ingest 质量较差，需要改进")
+        print("\n❌ Ingest 结构质量较差，需要改进")
     
     return results
 
