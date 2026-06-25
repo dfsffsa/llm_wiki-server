@@ -17,6 +17,7 @@ import argparse
 import json
 import os
 import re
+import sys
 import glob
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -119,6 +120,139 @@ def scan_derived_pages(wiki_dir: str) -> Dict[str, List[str]]:
             rel = os.path.relpath(md_file, os.path.dirname(wiki_dir)).replace('\\', '/')
             mapping.setdefault(src.strip(), []).append(rel)
     return mapping
+
+def generate_v2_from_source(source_path: str, wiki_dir: str, project_dir: str,
+                             llm_response: str, case_id_start: int) -> List[Dict]:
+    """从单个源文件 + LLM 响应构造 v2 schema 用例。
+
+    must 自动从源文件名推导：wiki/sources/<basename>
+    should 由 LLM 从候选衍生页中选；不在候选列表中的路径被过滤。
+    """
+    source_basename = os.path.basename(source_path)
+    must = [f"wiki/sources/{source_basename}"]
+
+    # 该源文件的所有衍生页（候选 should）
+    derived_map = scan_derived_pages(wiki_dir)
+    candidates = derived_map.get(source_basename, [])
+
+    # 解析 LLM 响应
+    cases = []
+    try:
+        json_match = re.search(r'\[.*\]', llm_response, re.DOTALL)
+        if not json_match:
+            return []
+        raw_cases = json.loads(json_match.group(0))
+    except json.JSONDecodeError:
+        return []
+
+    for i, raw in enumerate(raw_cases):
+        # 过滤 should：只保留实际存在于候选列表中的路径
+        should_raw = raw.get('should', [])
+        if not isinstance(should_raw, list):
+            should_raw = []
+        should = [s for s in should_raw if isinstance(s, str) and s in candidates]
+
+        cases.append({
+            "id": f"auto_{case_id_start + i:03d}",
+            "schema_version": "v2",
+            "question": raw.get('question', ''),
+            "category": raw.get('category', 'fact'),
+            "difficulty": raw.get('difficulty', 'medium'),
+            "expected_sources": {
+                "must": must,
+                "should": should,
+            },
+            "keywords": raw.get('keywords', []),
+            "note": raw.get('note', ''),
+            "source_file": source_basename,
+        })
+    return cases
+
+
+def generate_v2_batch(project_dir: str, config: Dict, target_count: int = 100) -> List[Dict]:
+    """批量生成 v2 用例，达到 target_count 即停。
+
+    每个源文件调一次 LLM，让 LLM 同时生成 1-2 个 question 并从候选衍生页中选 should。
+    """
+    wiki_dir = os.path.join(project_dir, "wiki")
+    raw_dir = os.path.join(project_dir, "raw", "sources")
+    if not os.path.isdir(raw_dir):
+        print(f"[WARN] raw/sources 不存在: {raw_dir}", file=sys.stderr)
+        return []
+
+    # 衍生页索引（一次扫描，多次复用）
+    derived_map = scan_derived_pages(wiki_dir)
+
+    # 收集源文件
+    source_files = sorted(glob.glob(f"{raw_dir}/*.md"))
+    print(f"准备生成 v2 用例：{len(source_files)} 个源文件，目标 {target_count} 个用例")
+
+    all_cases = []
+    case_id = 1
+    for i, source_path in enumerate(source_files):
+        if len(all_cases) >= target_count:
+            break
+
+        source_basename = os.path.basename(source_path)
+        candidates = derived_map.get(source_basename, [])
+
+        # 准备 LLM 输入
+        content = read_file(source_path)
+        if not content:
+            continue
+        snippets = extract_text_snippets(content)
+        candidates_block = '\n'.join(f"  - {c}" for c in candidates) or '  （无衍生页）'
+
+        prompt = f"""
+材料文件名: {source_basename}
+
+材料内容摘要:
+{snippets}
+
+该材料对应的衍生 wiki 页面（仅可从这些中选 should）:
+{candidates_block}
+
+请生成 1-2 个测试用例，格式如下（JSON 数组）:
+[
+  {{
+    "question": "用户问题",
+    "category": "fact|number|scenario|concept",
+    "difficulty": "easy|medium|hard",
+    "should": ["从上面候选衍生页中选 0-5 个，必须是上面列出的路径"],
+    "keywords": ["检索关键词1", "关键词2"],
+    "note": "测试目的"
+  }}
+]
+
+要求：
+1. question 必须能从材料中找到答案
+2. should 必须是上面候选列表中的路径，不要自创
+3. category 多样化，scenario 类至少占 30%
+"""
+
+        response = call_llm(prompt, config)
+        if not response:
+            continue
+
+        cases = generate_v2_from_source(
+            source_path=source_path,
+            wiki_dir=wiki_dir,
+            project_dir=project_dir,
+            llm_response=response,
+            case_id_start=case_id,
+        )
+
+        # category 平衡：如果已超 target，跳过部分 fact
+        for c in cases:
+            if len(all_cases) >= target_count:
+                break
+            all_cases.append(c)
+            case_id += 1
+
+        print(f"  [{i+1}/{len(source_files)}] {source_basename} -> +{len(cases)} (total {len(all_cases)})")
+
+    return all_cases
+
 
 def extract_text_snippets(content: str, max_chars: int = 3000) -> List[str]:
     """提取文本片段（用于 LLM 输入）"""
@@ -573,6 +707,10 @@ def main():
                         help='LLM 采样温度（事实型 QA 建议 0.2-0.4）')
     parser.add_argument('--max-tokens', type=int, default=4000,
                         help='LLM 单次响应最大 token 数')
+    parser.add_argument('--schema', choices=['v1', 'v2'], default='v1',
+                        help='测试用例 schema 版本（v2 = 双层 must/should）')
+    parser.add_argument('--target-count', type=int, default=100,
+                        help='v2 schema 下的目标用例数（达到即停）')
 
     args = parser.parse_args()
 
@@ -602,14 +740,34 @@ def main():
         args.output = str(eval_dir / "test_cases" / f"{project_name}_auto_generated.json")
     
     # 生成
-    generate_test_suite(
-        project_dir=args.project,
-        config=config,
-        output_path=args.output,
-        mode=args.mode,
-        sample_for_review=args.review_size,
-        max_sources=args.max_sources
-    )
+    if args.schema == 'v2':
+        # v2 路径
+        cases = generate_v2_batch(
+            project_dir=args.project,
+            config=config,
+            target_count=args.target_count,
+        )
+        output = {
+            "project": args.project,
+            "version": "2.0.0-auto",
+            "schema_version": "v2",
+            "generated_at": datetime.now().isoformat(),
+            "mode": args.mode,
+            "total_cases": len(cases),
+            "cases": cases,
+        }
+        with open(args.output, 'w', encoding='utf-8') as f:
+            json.dump(output, f, ensure_ascii=False, indent=2)
+        print(f"\n生成 {len(cases)} 个 v2 用例，已保存: {args.output}")
+    else:
+        generate_test_suite(
+            project_dir=args.project,
+            config=config,
+            output_path=args.output,
+            mode=args.mode,
+            sample_for_review=args.review_size,
+            max_sources=args.max_sources
+        )
 
 if __name__ == "__main__":
     main()

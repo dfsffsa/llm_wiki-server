@@ -443,5 +443,123 @@ class ScanDerivedPagesTest(unittest.TestCase):
             self.assertIn(os.path.join("wiki", "concepts", "vd.md"), mapping["source-01.md"])
 
 
+class GenerateV2FromSourceTest(unittest.TestCase):
+    """generate_v2_from_source 构造 v2 schema 用例。"""
+
+    def test_builds_v2_case_with_must_and_should(self):
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as td:
+            raw_dir = os.path.join(td, "raw", "sources")
+            wiki_dir = os.path.join(td, "wiki")
+            os.makedirs(raw_dir)
+            os.makedirs(os.path.join(wiki_dir, "sources"))
+            os.makedirs(os.path.join(wiki_dir, "concepts"))
+
+            source_name = "source-01.md"
+            with open(os.path.join(raw_dir, source_name), "w", encoding="utf-8") as f:
+                f.write("# 源材料\n维生素D 补充 400 IU\n")
+            # 创建衍生页，让 scan_derived_pages 能找到 source-01 的候选 should
+            with open(os.path.join(wiki_dir, "concepts", "vd.md"), "w", encoding="utf-8") as f:
+                f.write('---\nsources: ["source-01.md"]\n---\n# VD\n')
+
+            # 模拟 LLM 返回
+            llm_response = '''[
+              {
+                "question": "宝宝要补多少维生素D？",
+                "category": "number",
+                "difficulty": "easy",
+                "should": ["wiki/concepts/vd.md"],
+                "keywords": ["维生素D", "剂量"],
+                "note": "考察剂量"
+              }
+            ]'''
+
+            cases = generate_test_cases.generate_v2_from_source(
+                source_path=os.path.join(raw_dir, source_name),
+                wiki_dir=wiki_dir,
+                project_dir=td,
+                llm_response=llm_response,
+                case_id_start=1,
+            )
+            self.assertEqual(len(cases), 1)
+            c = cases[0]
+            self.assertEqual(c["id"], "auto_001")
+            self.assertEqual(c["schema_version"], "v2")
+            self.assertEqual(c["expected_sources"]["must"], ["wiki/sources/source-01.md"])
+            self.assertEqual(c["expected_sources"]["should"], ["wiki/concepts/vd.md"])
+            self.assertEqual(c["source_file"], "source-01.md")
+            self.assertEqual(c["question"], "宝宝要补多少维生素D？")
+
+    def test_filters_should_not_in_candidate_list(self):
+        """LLM 自创的 should 路径不在候选衍生页中时，被过滤掉。"""
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as td:
+            raw_dir = os.path.join(td, "raw", "sources")
+            wiki_dir = os.path.join(td, "wiki")
+            os.makedirs(raw_dir)
+            os.makedirs(os.path.join(wiki_dir, "sources"))
+
+            source_name = "source-02.md"
+            with open(os.path.join(raw_dir, source_name), "w", encoding="utf-8") as f:
+                f.write("# 源材料\n")
+
+            llm_response = '''[
+              {
+                "question": "q1",
+                "category": "fact",
+                "difficulty": "easy",
+                "should": ["wiki/concepts/invented.md"],
+                "keywords": ["k"],
+                "note": "n"
+              }
+            ]'''
+
+            cases = generate_test_cases.generate_v2_from_source(
+                source_path=os.path.join(raw_dir, source_name),
+                wiki_dir=wiki_dir,
+                project_dir=td,
+                llm_response=llm_response,
+                case_id_start=1,
+            )
+            # should 被过滤为空数组，但用例仍保留
+            self.assertEqual(len(cases), 1)
+            self.assertEqual(cases[0]["expected_sources"]["should"], [])
+
+    def test_target_count_stops_early(self):
+        """generate_v2_batch 在达到 target_count 后停止。"""
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as td:
+            raw_dir = os.path.join(td, "raw", "sources")
+            wiki_dir = os.path.join(td, "wiki")
+            os.makedirs(raw_dir)
+            os.makedirs(os.path.join(wiki_dir, "sources"))
+            # 创建 5 个源文件
+            for i in range(5):
+                with open(os.path.join(raw_dir, f"s{i}.md"), "w", encoding="utf-8") as f:
+                    f.write(f"# s{i}\n")
+
+            # 用 monkey patch 替换 LLM 调用，每个源文件返回 2 个用例
+            def fake_llm(prompt, config):
+                return '''[
+                  {"question":"q1","category":"fact","difficulty":"easy","should":[],"keywords":["k"],"note":"n"},
+                  {"question":"q2","category":"scenario","difficulty":"medium","should":[],"keywords":["k"],"note":"n"}
+                ]'''
+
+            orig_call = generate_test_cases.call_llm
+            generate_test_cases.call_llm = fake_llm
+            try:
+                cases = generate_test_cases.generate_v2_batch(
+                    project_dir=td,
+                    config={},
+                    target_count=3,
+                )
+            finally:
+                generate_test_cases.call_llm = orig_call
+
+            self.assertEqual(len(cases), 3)  # 提前停止
+            self.assertEqual(cases[0]["id"], "auto_001")
+            self.assertEqual(cases[2]["id"], "auto_003")
+
+
 if __name__ == "__main__":
     unittest.main()
