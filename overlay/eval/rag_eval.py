@@ -295,6 +295,40 @@ def eval_retrieval(test_case: Dict, project_dir: str, project_id: str, token: st
         "source_hit@10": match_at_k(retrieved_files, expected_sources, k=10),
     }
 
+def summarize_v2_retrieval(retrieval_results: List[Dict]) -> Dict:
+    """汇总 v2 schema 的检索结果：双指标 + 失败列表。"""
+    total = len(retrieval_results)
+    if total == 0:
+        return {
+            "source_hit_rate@5": 0.0,
+            "source_hit_rate@10": 0.0,
+            "derived_hit_rate@5": 0.0,
+            "derived_hit_rate@10": 0.0,
+            "failures": {"source_miss@10": [], "derived_miss@10": []},
+        }
+
+    src5 = sum(1 for r in retrieval_results if r.get("source_hit@5"))
+    src10 = sum(1 for r in retrieval_results if r.get("source_hit@10"))
+
+    # derived 分母排除 should 空的（derived_hit@10 is None）
+    derived_cases = [r for r in retrieval_results if r.get("derived_hit@10") is not None]
+    der5 = sum(1 for r in derived_cases if r.get("derived_hit@5"))
+    der10 = sum(1 for r in derived_cases if r.get("derived_hit@10"))
+
+    src_miss = [r["case_id"] for r in retrieval_results if not r.get("source_hit@10")]
+    der_miss = [r["case_id"] for r in derived_cases if not r.get("derived_hit@10")]
+
+    return {
+        "source_hit_rate@5": round(src5 / total, 3),
+        "source_hit_rate@10": round(src10 / total, 3),
+        "derived_hit_rate@5": round(der5 / len(derived_cases), 3) if derived_cases else 0.0,
+        "derived_hit_rate@10": round(der10 / len(derived_cases), 3) if derived_cases else 0.0,
+        "failures": {
+            "source_miss@10": src_miss,
+            "derived_miss@10": der_miss,
+        },
+    }
+
 def eval_chat(test_case: Dict, project_dir: str, project_id: str, token: str) -> Dict:
     """评测 Chat 生成效果"""
     query = test_case['question']
@@ -373,8 +407,12 @@ def run_evaluation(project: str, test_cases_path: str, mode: str = "all", output
             print(f"  [{i+1}/{len(cases)}] {case['id']}: {case['question'][:40]}...")
             result = eval_retrieval(case, project_dir or "", project_id, DEFAULT_TOKEN)
             results["retrieval_results"].append(result)
-            status = "✓" if result["retrieval_success"] else "✗"
-            print(f"       {status} recall@K={result['recall_at_k']:.3f}, coverage={result['source_coverage']:.3f}")
+            if result.get("schema_version") == "v2":
+                src = "✓" if result["source_hit@5"] else "✗"
+                print(f"       {src} source@5={result['source_hit@5']}, source@10={result['source_hit@10']}")
+            else:
+                status = "✓" if result["retrieval_success"] else "✗"
+                print(f"       {status} recall@K={result['recall_at_k']:.3f}, coverage={result['source_coverage']:.3f}")
     
     # Chat 评测
     if mode in ["chat", "all"]:
@@ -388,16 +426,21 @@ def run_evaluation(project: str, test_cases_path: str, mode: str = "all", output
     
     # 汇总
     if results["retrieval_results"]:
-        retrieval_success = sum(1 for r in results["retrieval_results"] if r["retrieval_success"])
-        avg_recall = sum(r["recall_at_k"] for r in results["retrieval_results"]) / len(results["retrieval_results"])
-        avg_mrr = sum(r["mrr"] for r in results["retrieval_results"]) / len(results["retrieval_results"])
-        avg_coverage = sum(r["source_coverage"] for r in results["retrieval_results"]) / len(results["retrieval_results"])
-        results["summary"]["retrieval"] = {
-            "success_rate": f"{retrieval_success}/{len(cases)} ({retrieval_success/len(cases)*100:.1f}%)",
-            "avg_recall_at_k": round(avg_recall, 3),
-            "avg_mrr": round(avg_mrr, 3),
-            "avg_source_coverage": round(avg_coverage, 3)
-        }
+        # 检测 schema 版本（以第一个用例为准）
+        first = results["retrieval_results"][0]
+        if first.get("schema_version") == "v2":
+            results["summary"]["retrieval"] = summarize_v2_retrieval(results["retrieval_results"])
+        else:
+            retrieval_success = sum(1 for r in results["retrieval_results"] if r.get("retrieval_success"))
+            avg_recall = sum(r["recall_at_k"] for r in results["retrieval_results"]) / len(results["retrieval_results"])
+            avg_mrr = sum(r["mrr"] for r in results["retrieval_results"]) / len(results["retrieval_results"])
+            avg_coverage = sum(r["source_coverage"] for r in results["retrieval_results"]) / len(results["retrieval_results"])
+            results["summary"]["retrieval"] = {
+                "success_rate": f"{retrieval_success}/{len(cases)} ({retrieval_success/len(cases)*100:.1f}%)",
+                "avg_recall_at_k": round(avg_recall, 3),
+                "avg_mrr": round(avg_mrr, 3),
+                "avg_source_coverage": round(avg_coverage, 3),
+            }
     
     if results["chat_results"]:
         chat_success = sum(1 for r in results["chat_results"] if r["chat_success"])
@@ -415,10 +458,20 @@ def run_evaluation(project: str, test_cases_path: str, mode: str = "all", output
     if "retrieval" in results["summary"]:
         r = results["summary"]["retrieval"]
         print(f"\n📊 检索效果:")
-        print(f"   召回成功率: {r['success_rate']}")
-        print(f"   平均 Recall@K: {r['avg_recall_at_k']:.3f}")
-        print(f"   平均 MRR: {r['avg_mrr']:.3f}")
-        print(f"   平均来源覆盖: {r['avg_source_coverage']:.3f}")
+        if "source_hit_rate@5" in r:
+            # v2
+            print(f"   source_hit_rate@5:  {r['source_hit_rate@5']:.3f}")
+            print(f"   source_hit_rate@10: {r['source_hit_rate@10']:.3f}")
+            print(f"   derived_hit_rate@5:  {r['derived_hit_rate@5']:.3f}")
+            print(f"   derived_hit_rate@10: {r['derived_hit_rate@10']:.3f}")
+            print(f"   source_miss@10: {len(r['failures']['source_miss@10'])} 个")
+            print(f"   derived_miss@10: {len(r['failures']['derived_miss@10'])} 个")
+        else:
+            # v1
+            print(f"   召回成功率: {r['success_rate']}")
+            print(f"   平均 Recall@K: {r['avg_recall_at_k']:.3f}")
+            print(f"   平均 MRR: {r['avg_mrr']:.3f}")
+            print(f"   平均来源覆盖: {r['avg_source_coverage']:.3f}")
     
     if "chat" in results["summary"]:
         c = results["summary"]["chat"]

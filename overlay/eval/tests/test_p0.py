@@ -339,5 +339,37 @@ class EvalRetrievalV2Test(unittest.TestCase):
         self.assertNotIn("derived_hit@5", r)
 
 
+class RunEvaluationV2SummaryTest(unittest.TestCase):
+    """summarize_v2_retrieval 输出 source_hit_rate@K / derived_hit_rate@K + failures。"""
+
+    def test_summarize_v2_results(self):
+        retrieval_results = [
+            {"case_id": "c1", "schema_version": "v2",
+             "source_hit@5": True,  "source_hit@10": True,
+             "derived_hit@5": True, "derived_hit@10": True},
+            {"case_id": "c2", "schema_version": "v2",
+             "source_hit@5": True,  "source_hit@10": True,
+             "derived_hit@5": False, "derived_hit@10": True},
+            {"case_id": "c3", "schema_version": "v2",
+             "source_hit@5": False, "source_hit@10": True,
+             "derived_hit@5": None, "derived_hit@10": None},
+            {"case_id": "c4", "schema_version": "v2",
+             "source_hit@5": False, "source_hit@10": False,
+             "derived_hit@5": False, "derived_hit@10": False},
+        ]
+        s = rag_eval.summarize_v2_retrieval(retrieval_results)
+        self.assertEqual(s["source_hit_rate@5"], 0.5)
+        self.assertEqual(s["source_hit_rate@10"], 0.75)
+        self.assertEqual(s["derived_hit_rate@5"], round(1/3, 3))
+        self.assertEqual(s["derived_hit_rate@10"], round(2/3, 3))
+        self.assertEqual(s["failures"]["source_miss@10"], ["c4"])
+        self.assertEqual(s["failures"]["derived_miss@10"], ["c4"])
+
+    def test_summarize_empty(self):
+        s = rag_eval.summarize_v2_retrieval([])
+        self.assertEqual(s["source_hit_rate@5"], 0.0)
+        self.assertEqual(s["failures"]["source_miss@10"], [])
+
+
 if __name__ == "__main__":
     unittest.main()
