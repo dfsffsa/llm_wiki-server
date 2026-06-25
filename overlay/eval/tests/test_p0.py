@@ -260,5 +260,84 @@ class V2SchemaMatchTest(unittest.TestCase):
         self.assertTrue(rag_eval.is_v2_schema(v2_case))
 
 
+class EvalRetrievalV2Test(unittest.TestCase):
+    """eval_retrieval 在 v2 schema 下输出 source_hit@K / derived_hit@K。"""
+
+    def setUp(self):
+        # 用 monkey patch 替换 search_wiki，避免真实 HTTP 调用
+        self._orig_search = rag_eval.search_wiki
+        self.captured = {}
+
+        def fake_search(query, project_id, token):
+            self.captured['query'] = query
+            return {
+                "results": [
+                    {"path": "wiki/sources/foo.md", "title": "Foo", "snippet": ""},
+                    {"path": "wiki/concepts/bar.md", "title": "Bar", "snippet": ""},
+                    {"path": "wiki/scenarios/baz.md", "title": "Baz", "snippet": ""},
+                ]
+            }
+        rag_eval.search_wiki = fake_search
+
+    def tearDown(self):
+        rag_eval.search_wiki = self._orig_search
+
+    def test_v2_both_hit(self):
+        case = {
+            "id": "t1",
+            "question": "q1",
+            "expected_sources": {
+                "must": ["wiki/sources/foo.md"],
+                "should": ["wiki/concepts/bar.md"],
+            }
+        }
+        r = rag_eval.eval_retrieval(case, "/tmp", "pid", "tok")
+        self.assertTrue(r["source_hit@5"])
+        self.assertTrue(r["source_hit@10"])
+        self.assertTrue(r["derived_hit@5"])
+        self.assertTrue(r["derived_hit@10"])
+
+    def test_v2_should_miss(self):
+        case = {
+            "id": "t2",
+            "question": "q2",
+            "expected_sources": {
+                "must": ["wiki/sources/foo.md"],
+                "should": ["wiki/concepts/missing.md"],
+            }
+        }
+        r = rag_eval.eval_retrieval(case, "/tmp", "pid", "tok")
+        self.assertTrue(r["source_hit@5"])
+        self.assertFalse(r["derived_hit@5"])
+        self.assertEqual(r["should_missing"], ["wiki/concepts/missing.md"])
+
+    def test_v2_should_empty(self):
+        case = {
+            "id": "t3",
+            "question": "q3",
+            "expected_sources": {
+                "must": ["wiki/sources/foo.md"],
+                "should": [],
+            }
+        }
+        r = rag_eval.eval_retrieval(case, "/tmp", "pid", "tok")
+        self.assertTrue(r["source_hit@5"])
+        # should 空时 derived_hit 字段为 None（不计入分母）
+        self.assertIsNone(r["derived_hit@5"])
+        self.assertIsNone(r["derived_hit@10"])
+
+    def test_v1_backward_compat(self):
+        """v1 schema 仍能跑：must = expected_sources, should = []"""
+        case = {
+            "id": "t4",
+            "question": "q4",
+            "expected_sources": ["wiki/sources/foo.md"],
+        }
+        r = rag_eval.eval_retrieval(case, "/tmp", "pid", "tok")
+        self.assertTrue(r["source_hit@5"])
+        # v1 不报 derived_hit
+        self.assertNotIn("derived_hit@5", r)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -235,9 +235,8 @@ def chat_ask(question: str, project_id: str, token: str) -> Dict:
 # ============ 评测逻辑 ============
 
 def eval_retrieval(test_case: Dict, project_dir: str, project_id: str, token: str) -> Dict:
-    """评测检索效果"""
+    """评测检索效果（同时支持 v1 list schema 与 v2 {must, should} schema）。"""
     query = test_case['question']
-    expected_sources = test_case.get('expected_sources', [])
     keywords = test_case.get('keywords', [])
 
     # 调用搜索 API
@@ -245,23 +244,55 @@ def eval_retrieval(test_case: Dict, project_dir: str, project_id: str, token: st
     results = result.get('results', [])
     retrieved_files = [r.get('path', '') for r in results]
 
-    # 计算指标
+    v2 = is_v2_schema(test_case)
+    if v2:
+        es = test_case['expected_sources']
+        must_patterns = es.get('must', [])
+        should_patterns = es.get('should', [])
+
+        source_hit_5 = match_at_k(retrieved_files, must_patterns, k=5)
+        source_hit_10 = match_at_k(retrieved_files, must_patterns, k=10)
+        derived_hit_5 = match_at_k(retrieved_files, should_patterns, k=5) if should_patterns else None
+        derived_hit_10 = match_at_k(retrieved_files, should_patterns, k=10) if should_patterns else None
+
+        must_matched = matched_patterns(retrieved_files, must_patterns, k=10)
+        should_matched = matched_patterns(retrieved_files, should_patterns, k=10)
+        should_missing = [p for p in should_patterns if p not in should_matched]
+
+        return {
+            "case_id": test_case['id'],
+            "question": query,
+            "schema_version": "v2",
+            "retrieved_files": retrieved_files[:10],
+            "source_hit@5": source_hit_5,
+            "source_hit@10": source_hit_10,
+            "derived_hit@5": derived_hit_5,
+            "derived_hit@10": derived_hit_10,
+            "must_matched": must_matched,
+            "should_matched": should_matched,
+            "should_missing": should_missing,
+        }
+
+    # v1 兼容路径
+    expected_sources = test_case.get('expected_sources', [])
     source_coverage = check_source_coverage(retrieved_files, expected_sources)
     keyword_match = compute_keyword_match(results, keywords)
-
-    # 真正的 Recall@K 与 MRR
     relevant = expand_expected_sources(expected_sources, project_dir)
     recall_at_k, mrr = compute_recall_and_mrr(retrieved_files, relevant, k=10)
 
     return {
         "case_id": test_case['id'],
         "question": query,
+        "schema_version": "v1",
         "retrieved_files": retrieved_files[:5],
         "source_coverage": round(source_coverage, 3),
         "keyword_match": round(keyword_match, 3),
         "recall_at_k": round(recall_at_k, 3),
         "mrr": round(mrr, 3),
-        "retrieval_success": source_coverage >= 1.0
+        "retrieval_success": source_coverage >= 1.0,
+        # v1 也输出 source_hit 便于跨版本对比
+        "source_hit@5": match_at_k(retrieved_files, expected_sources, k=5),
+        "source_hit@10": match_at_k(retrieved_files, expected_sources, k=10),
     }
 
 def eval_chat(test_case: Dict, project_dir: str, project_id: str, token: str) -> Dict:
