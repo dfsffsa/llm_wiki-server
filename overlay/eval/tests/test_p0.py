@@ -213,5 +213,52 @@ class P06SourceCoverageSlugTest(unittest.TestCase):
             self.assertEqual(stats["matched_sources"], 1)
 
 
+class V2SchemaMatchTest(unittest.TestCase):
+    """v2 schema 双层匹配：must 与 should 分别命中判断。"""
+
+    def test_must_hit_at_k(self):
+        retrieved = ["wiki/sources/foo.md", "wiki/concepts/bar.md"]
+        must = ["wiki/sources/foo.md"]
+        should = ["wiki/concepts/bar.md"]
+        self.assertTrue(rag_eval.match_at_k(retrieved, must, k=5))
+        self.assertTrue(rag_eval.match_at_k(retrieved, should, k=5))
+
+    def test_must_miss_at_k(self):
+        retrieved = ["wiki/concepts/bar.md"]
+        must = ["wiki/sources/foo.md"]
+        should = ["wiki/concepts/bar.md"]
+        self.assertFalse(rag_eval.match_at_k(retrieved, must, k=5))
+        self.assertTrue(rag_eval.match_at_k(retrieved, should, k=5))
+
+    def test_glob_pattern(self):
+        retrieved = ["wiki/sources/崔玉涛宝贝健康公开课-01-母乳.md"]
+        must = ["wiki/sources/崔玉涛宝贝健康公开课-01-*.md"]
+        self.assertTrue(rag_eval.match_at_k(retrieved, must, k=5))
+
+    def test_k_cutoff(self):
+        retrieved = ["a.md", "b.md", "c.md", "d.md", "e.md", "f.md"]
+        must = ["f.md"]
+        self.assertFalse(rag_eval.match_at_k(retrieved, must, k=5))
+        self.assertTrue(rag_eval.match_at_k(retrieved, must, k=10))
+
+    def test_should_empty(self):
+        retrieved = ["wiki/sources/foo.md"]
+        must = ["wiki/sources/foo.md"]
+        should = []
+        self.assertFalse(rag_eval.match_at_k(retrieved, should, k=5))
+
+    def test_matched_patterns(self):
+        retrieved = ["wiki/sources/foo.md", "wiki/concepts/bar.md"]
+        must = ["wiki/sources/foo.md", "wiki/sources/missing.md"]
+        matched = rag_eval.matched_patterns(retrieved, must, k=5)
+        self.assertEqual(matched, ["wiki/sources/foo.md"])
+
+    def test_detect_v2_schema(self):
+        v1_case = {"expected_sources": ["wiki/sources/foo.md"]}
+        v2_case = {"expected_sources": {"must": ["wiki/sources/foo.md"], "should": []}}
+        self.assertFalse(rag_eval.is_v2_schema(v1_case))
+        self.assertTrue(rag_eval.is_v2_schema(v2_case))
+
+
 if __name__ == "__main__":
     unittest.main()

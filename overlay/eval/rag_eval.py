@@ -68,6 +68,35 @@ def check_source_coverage(retrieved: List[str], expected: List[str]) -> float:
     return matched / len(expected)
 
 
+def match_at_k(retrieved: List[str], patterns: List[str], k: int = 10) -> bool:
+    """patterns 中任意一个在 retrieved[:k] 中命中即返回 True。"""
+    if not patterns:
+        return False
+    retrieved_top_k = retrieved[:k]
+    for pattern in patterns:
+        regex = glob_to_regex(pattern)
+        if any(regex.match(f) for f in retrieved_top_k):
+            return True
+    return False
+
+
+def matched_patterns(retrieved: List[str], patterns: List[str], k: int = 10) -> List[str]:
+    """返回 patterns 中实际命中 retrieved[:k] 的 pattern 列表。"""
+    retrieved_top_k = retrieved[:k]
+    matched = []
+    for pattern in patterns:
+        regex = glob_to_regex(pattern)
+        if any(regex.match(f) for f in retrieved_top_k):
+            matched.append(pattern)
+    return matched
+
+
+def is_v2_schema(case: Dict) -> bool:
+    """检测 case 是否使用 v2 schema（expected_sources 是 dict 而非 list）。"""
+    es = case.get('expected_sources')
+    return isinstance(es, dict)
+
+
 def expand_expected_sources(expected: List[str], project_dir: str) -> Set[str]:
     """把 expected_sources 中的 glob 展开为项目中的实际文件路径集合"""
     relevant: Set[str] = set()
