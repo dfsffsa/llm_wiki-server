@@ -82,6 +82,32 @@ def parse_frontmatter(content: str) -> tuple:
 
     return fm, body
 
+def scan_derived_pages(wiki_dir: str) -> Dict[str, List[str]]:
+    """扫描 wiki/ 下所有 .md，根据 frontmatter `sources` 字段反向建索引。
+
+    返回 {raw_source_filename: [derived_page_relpath, ...]}
+    derived_page_relpath 形如 "wiki/concepts/vd.md"
+    """
+    mapping: Dict[str, List[str]] = {}
+    md_files = glob.glob(f"{wiki_dir}/**/*.md", recursive=True)
+    for md_file in md_files:
+        content = read_file(md_file)
+        if not content:
+            continue
+        fm, _ = parse_frontmatter(content)
+        sources = fm.get('sources', [])
+        # sources 可能是字符串数组；若为字符串则转单元素列表
+        if isinstance(sources, str):
+            sources = [sources]
+        if not isinstance(sources, list):
+            continue
+        for src in sources:
+            if not isinstance(src, str) or not src.strip():
+                continue
+            rel = os.path.relpath(md_file, os.path.dirname(wiki_dir)).replace('\\', '/')
+            mapping.setdefault(src.strip(), []).append(rel)
+    return mapping
+
 def extract_text_snippets(content: str, max_chars: int = 3000) -> List[str]:
     """提取文本片段（用于 LLM 输入）"""
     snippets = []

@@ -371,5 +371,55 @@ class RunEvaluationV2SummaryTest(unittest.TestCase):
         self.assertEqual(s["failures"]["source_miss@10"], [])
 
 
+class ScanDerivedPagesTest(unittest.TestCase):
+    """scan_derived_pages 扫描 wiki/ 下 frontmatter sources 字段，反向建索引。"""
+
+    def test_scan_finds_derived_pages(self):
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as td:
+            wiki = os.path.join(td, "wiki")
+            os.makedirs(os.path.join(wiki, "concepts"))
+            os.makedirs(os.path.join(wiki, "scenarios"))
+            # 衍生页 1：引用 source-01
+            with open(os.path.join(wiki, "concepts", "vd.md"), "w", encoding="utf-8") as f:
+                f.write('---\ntype: concept\nsources: ["source-01.md"]\n---\n# VD\n')
+            # 衍生页 2：同时引用 source-01 和 source-02
+            with open(os.path.join(wiki, "scenarios", "feed.md"), "w", encoding="utf-8") as f:
+                f.write('---\ntype: scenario\nsources: ["source-01.md", "source-02.md"]\n---\n# Feed\n')
+            # 衍生页 3：不引用 source-01
+            with open(os.path.join(wiki, "concepts", "other.md"), "w", encoding="utf-8") as f:
+                f.write('---\ntype: concept\nsources: ["source-03.md"]\n---\n# Other\n')
+
+            mapping = generate_test_cases.scan_derived_pages(wiki)
+            # source-01.md 被两个衍生页引用
+            self.assertIn("source-01.md", mapping)
+            self.assertEqual(len(mapping["source-01.md"]), 2)
+            self.assertIn(os.path.join("wiki", "concepts", "vd.md"), mapping["source-01.md"])
+            self.assertIn(os.path.join("wiki", "scenarios", "feed.md"), mapping["source-01.md"])
+
+    def test_scan_handles_no_sources_field(self):
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as td:
+            wiki = os.path.join(td, "wiki")
+            os.makedirs(os.path.join(wiki, "concepts"))
+            # 无 sources 字段的页面
+            with open(os.path.join(wiki, "concepts", "nosrc.md"), "w", encoding="utf-8") as f:
+                f.write('---\ntype: concept\ntitle: NoSrc\n---\n# NoSrc\n')
+            mapping = generate_test_cases.scan_derived_pages(wiki)
+            # 不崩，返回空 dict 或不含该页面
+            self.assertEqual(mapping, {})
+
+    def test_scan_handles_malformed_frontmatter(self):
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as td:
+            wiki = os.path.join(td, "wiki")
+            os.makedirs(os.path.join(wiki, "concepts"))
+            # 没有 frontmatter 的页面
+            with open(os.path.join(wiki, "concepts", "nofm.md"), "w", encoding="utf-8") as f:
+                f.write('# No Frontmatter\n')
+            mapping = generate_test_cases.scan_derived_pages(wiki)
+            self.assertEqual(mapping, {})
+
+
 if __name__ == "__main__":
     unittest.main()
