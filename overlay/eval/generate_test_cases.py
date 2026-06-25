@@ -121,18 +121,20 @@ def scan_derived_pages(wiki_dir: str) -> Dict[str, List[str]]:
             mapping.setdefault(src.strip(), []).append(rel)
     return mapping
 
-def generate_v2_from_source(source_path: str, wiki_dir: str, project_dir: str,
+def generate_v2_from_source(source_path: str, derived_map: Dict[str, List[str]],
                              llm_response: str, case_id_start: int) -> List[Dict]:
     """从单个源文件 + LLM 响应构造 v2 schema 用例。
 
     must 自动从源文件名推导：wiki/sources/<basename>
     should 由 LLM 从候选衍生页中选；不在候选列表中的路径被过滤。
+
+    derived_map 由调用方一次性扫描 wiki/ 得到（scan_derived_pages 的返回值），
+    避免每个源文件重复扫描。
     """
     source_basename = os.path.basename(source_path)
     must = [f"wiki/sources/{source_basename}"]
 
-    # 该源文件的所有衍生页（候选 should）
-    derived_map = scan_derived_pages(wiki_dir)
+    # 该源文件的所有衍生页（候选 should）—— derived_map 由调用方传入
     candidates = derived_map.get(source_basename, [])
 
     # 解析 LLM 响应
@@ -236,8 +238,7 @@ def generate_v2_batch(project_dir: str, config: Dict, target_count: int = 100) -
 
         cases = generate_v2_from_source(
             source_path=source_path,
-            wiki_dir=wiki_dir,
-            project_dir=project_dir,
+            derived_map=derived_map,
             llm_response=response,
             case_id_start=case_id,
         )

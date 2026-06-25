@@ -476,8 +476,7 @@ class GenerateV2FromSourceTest(unittest.TestCase):
 
             cases = generate_test_cases.generate_v2_from_source(
                 source_path=os.path.join(raw_dir, source_name),
-                wiki_dir=wiki_dir,
-                project_dir=td,
+                derived_map=generate_test_cases.scan_derived_pages(wiki_dir),
                 llm_response=llm_response,
                 case_id_start=1,
             )
@@ -516,8 +515,7 @@ class GenerateV2FromSourceTest(unittest.TestCase):
 
             cases = generate_test_cases.generate_v2_from_source(
                 source_path=os.path.join(raw_dir, source_name),
-                wiki_dir=wiki_dir,
-                project_dir=td,
+                derived_map=generate_test_cases.scan_derived_pages(wiki_dir),
                 llm_response=llm_response,
                 case_id_start=1,
             )
