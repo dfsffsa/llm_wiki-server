@@ -96,9 +96,21 @@ def scan_derived_pages(wiki_dir: str) -> Dict[str, List[str]]:
             continue
         fm, _ = parse_frontmatter(content)
         sources = fm.get('sources', [])
-        # sources 可能是字符串数组；若为字符串则转单元素列表
+        # sources 可能是字符串数组；若为字符串则可能是 fallback parser 未解析的 JSON 数组
         if isinstance(sources, str):
-            sources = [sources]
+            stripped = sources.strip()
+            if stripped.startswith('[') and stripped.endswith(']'):
+                # fallback parser 未能解析的 JSON 数组字符串
+                try:
+                    parsed = json.loads(stripped)
+                    if isinstance(parsed, list):
+                        sources = parsed
+                    else:
+                        sources = [sources]
+                except json.JSONDecodeError:
+                    sources = [sources]
+            else:
+                sources = [sources]
         if not isinstance(sources, list):
             continue
         for src in sources:

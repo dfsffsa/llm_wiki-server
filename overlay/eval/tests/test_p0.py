@@ -420,6 +420,28 @@ class ScanDerivedPagesTest(unittest.TestCase):
             mapping = generate_test_cases.scan_derived_pages(wiki)
             self.assertEqual(mapping, {})
 
+    def test_scan_handles_fallback_parser_string_sources(self):
+        """当 PyYAML 不可用时，parse_frontmatter 返回的 sources 是 JSON 数组字符串。
+        scan_derived_pages 应尝试 JSON 解析，得到正确的 source 文件名作为 key。"""
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as td:
+            wiki = os.path.join(td, "wiki")
+            os.makedirs(os.path.join(wiki, "concepts"))
+            # 直接构造 fallback parser 会产生的 frontmatter 格式
+            with open(os.path.join(wiki, "concepts", "vd.md"), "w", encoding="utf-8") as f:
+                f.write('---\nsources: ["source-01.md", "source-02.md"]\n---\n# VD\n')
+            # 强制使用 fallback parser
+            orig_yaml = generate_test_cases.yaml
+            generate_test_cases.yaml = None
+            try:
+                mapping = generate_test_cases.scan_derived_pages(wiki)
+            finally:
+                generate_test_cases.yaml = orig_yaml
+            # 应该解析出 source-01.md 和 source-02.md 作为 key
+            self.assertIn("source-01.md", mapping)
+            self.assertIn("source-02.md", mapping)
+            self.assertIn(os.path.join("wiki", "concepts", "vd.md"), mapping["source-01.md"])
+
 
 if __name__ == "__main__":
     unittest.main()
