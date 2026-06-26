@@ -21,6 +21,9 @@ llm-wiki-common = { path = "../crates/llm-wiki-common" }
 llm-wiki-auth = { path = "../auth" }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "stream"] }
 futures = "0.3"
+lettre = { version = "0.11", default-features = false, features = ["builder", "smtp-transport", "tokio1-rustls-tls"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
 [profile.release]
 codegen-units = 1

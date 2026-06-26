@@ -43,6 +43,15 @@ impl Store {
         Ok(Self { conn: Mutex::new(conn) })
     }
 
+    /// Liveness probe for the SQLite connection: `SELECT 1`. Used by the deep
+    /// `/health?deep=true` check. Returns the underlying rusqlite error on
+    /// failure (e.g. DB file gone, disk full).
+    pub fn ping(&self) -> Result<(), rusqlite::Error> {
+        let conn = self.lock();
+        conn.query_row("SELECT 1", [], |row| row.get::<_, i64>(0))?;
+        Ok(())
+    }
+
     fn lock(&self) -> std::sync::MutexGuard<'_, Connection> {
         self.conn.lock().expect("auth store mutex poisoned")
     }
@@ -334,6 +343,37 @@ impl Store {
         )?;
         Ok(())
     }
+
+    /// Atomically increment the daily chat counter **only if** it is below
+    /// `limit`. Returns `Ok(true)` if the increment happened (quota remained),
+    /// `Ok(false)` if the user is already at/over the limit (no row changed).
+    ///
+    /// Closes the TOCTOU window that `get_usage` + `increment_usage` had:
+    /// those were two separate mutex acquisitions, so concurrent chats could
+    /// both pass the check and both increment. This is one statement under
+    /// the connection mutex, so the check-and-increment is atomic.
+    ///
+    /// `limit <= 0` denies immediately and writes no row.
+    pub fn try_increment_usage(
+        &self,
+        user_id: i64,
+        date: &str,
+        limit: i64,
+    ) -> Result<bool, AuthError> {
+        if limit <= 0 {
+            return Ok(false);
+        }
+        let conn = self.lock();
+        conn.execute(
+            "INSERT INTO usage_daily (user_id, date, chat_count) VALUES (?1, ?2, 1)
+             ON CONFLICT(user_id, date) DO UPDATE SET chat_count = chat_count + 1
+             WHERE chat_count < ?3",
+            params![user_id, date, limit],
+        )?;
+        // changes(): 1 if the INSERT ran or the UPDATE's WHERE matched (quota
+        // remained); 0 if the conflict path's WHERE was false (at/over limit).
+        Ok(conn.changes() > 0)
+    }
 }
 
 fn row_to_user(row: &rusqlite::Row<'_>) -> rusqlite::Result<User> {
@@ -362,4 +402,72 @@ pub struct MessageRow {
     pub role: String,
     pub content: String,
     pub created_at: i64,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::NamedTempFile;
+
+    fn open_test_store() -> Store {
+        let f = NamedTempFile::new().unwrap();
+        Store::open(f.path()).unwrap()
+    }
+
+    fn make_user(store: &Store, email: &str) -> i64 {
+        store
+            .create_user(NewUser {
+                email,
+                password_hash: "x",
+                display_name: None,
+                is_admin: false,
+                now: 1000,
+            })
+            .unwrap()
+    }
+
+    #[test]
+    fn try_increment_allows_up_to_limit_then_denies() {
+        let store = open_test_store();
+        let uid = make_user(&store, "a@b.com");
+        let date = "2026-06-26";
+        // limit = 2: two increments succeed, third+ denied, count stays 2.
+        assert_eq!(store.try_increment_usage(uid, date, 2).unwrap(), true);
+        assert_eq!(store.try_increment_usage(uid, date, 2).unwrap(), true);
+        assert_eq!(store.try_increment_usage(uid, date, 2).unwrap(), false);
+        assert_eq!(store.try_increment_usage(uid, date, 2).unwrap(), false);
+        assert_eq!(store.get_usage(uid, date).unwrap(), 2);
+    }
+
+    #[test]
+    fn try_increment_limit_zero_denies_immediately() {
+        let store = open_test_store();
+        let uid = make_user(&store, "a@b.com");
+        assert_eq!(store.try_increment_usage(uid, "2026-06-26", 0).unwrap(), false);
+        // no row should have been written.
+        assert_eq!(store.get_usage(uid, "2026-06-26").unwrap(), 0);
+    }
+
+    #[test]
+    fn try_increment_is_independent_per_date() {
+        let store = open_test_store();
+        let uid = make_user(&store, "a@b.com");
+        assert_eq!(store.try_increment_usage(uid, "2026-06-26", 1).unwrap(), true);
+        assert_eq!(store.try_increment_usage(uid, "2026-06-27", 1).unwrap(), true);
+        // 06-26 now at limit 1 → denied; 06-27 also at limit 1 → denied.
+        assert_eq!(store.try_increment_usage(uid, "2026-06-26", 1).unwrap(), false);
+        assert_eq!(store.try_increment_usage(uid, "2026-06-27", 1).unwrap(), false);
+    }
+
+    #[test]
+    fn try_increment_does_not_overshoot_under_repeated_denials() {
+        // Repeated denials at the limit must never bump the count.
+        let store = open_test_store();
+        let uid = make_user(&store, "a@b.com");
+        let date = "2026-06-26";
+        for _ in 0..5 {
+            store.try_increment_usage(uid, date, 1).unwrap();
+        }
+        assert_eq!(store.get_usage(uid, date).unwrap(), 1);
+    }
 }

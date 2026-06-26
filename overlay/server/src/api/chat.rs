@@ -16,6 +16,11 @@ use crate::state::ServerState;
 const MAX_CONCURRENT_CHAT: usize = 8;
 static IN_FLIGHT_CHAT: AtomicUsize = AtomicUsize::new(0);
 
+/// Current number of active chat streams (for /metrics).
+pub fn in_flight_chat_count() -> usize {
+    IN_FLIGHT_CHAT.load(Ordering::Relaxed)
+}
+
 /// RAII guard reserving one chat concurrency slot. Released on drop, which
 /// happens after the stream finishes (or the client disconnects).
 struct ChatSlot;
@@ -150,18 +155,28 @@ pub fn try_handle_chat_sse(
     if let api::AuthOutcome::Cookie(user_id) = auth_outcome {
         if let Some(auth) = state.auth() {
             let date = today_utc_for_chat();
-            // NOTE: get_usage + increment_usage are two separate Store mutex
-            // acquisitions, so this is a TOCTOU window — concurrent chats
-            // from the same user can both pass the check and both increment,
-            // letting a user exceed the limit by up to (concurrency - 1).
-            // Acceptable for v1 (single browser, sequential chats). A single
-            // conditional UPSERT in store.rs would close it atomically.
-            let used = match auth.store().get_usage(user_id, &date) {
-                Ok(n) => n,
-                Err(_) => 0,
-            };
             let limit = state.daily_chat_limit() as i64;
-            if used >= limit {
+            // Atomic check-and-increment in one SQL statement (see
+            // Store::try_increment_usage): closes the TOCTOU window that
+            // separate get_usage + increment_usage had under concurrent
+            // chats. Returns false when already at/over the limit, without
+            // bumping the counter. The attempt is counted BEFORE streaming —
+            // even if streaming fails partway, the attempt counts (consistent
+            // with most LLM products).
+            let allowed = match auth.store().try_increment_usage(user_id, &date, limit) {
+                Ok(b) => b,
+                Err(e) => {
+                    eprintln!("[chat] usage check failed for user {user_id}: {e}");
+                    api::respond_json(
+                        request,
+                        503,
+                        json!({ "ok": false, "error": "quota store unavailable" }),
+                    );
+                    return;
+                }
+            };
+            if !allowed {
+                let used = auth.store().get_usage(user_id, &date).unwrap_or(limit);
                 api::respond_json(
                     request, 429,
                     json!({
@@ -174,11 +189,6 @@ pub fn try_handle_chat_sse(
                     }),
                 );
                 return;
-            }
-            // Increment BEFORE streaming — even if streaming fails partway, the
-            // attempt counts (consistent with most LLM products).
-            if let Err(e) = auth.store().increment_usage(user_id, &date) {
-                eprintln!("[chat] usage increment failed for user {user_id}: {e}");
             }
         }
     }
@@ -204,6 +214,7 @@ pub fn try_handle_chat_sse(
     };
 
     eprintln!("[chat] streaming via reqwest (no node subprocess)");
+    crate::metrics::inc_chat_requests();
     let mut responder = ChatResponder::new(request);
     // Stream the LLM completion. This blocks the worker thread for the
     // stream duration (bounded by MAX_CONCURRENT_CHAT), exactly as the old

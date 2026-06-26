@@ -28,6 +28,7 @@ struct ServerStateInner {
     config_cache: Mutex<Option<CachedAppState>>,
     auth: Option<Arc<llm_wiki_auth::AuthService>>,
     require_login: bool,
+    disable_registration: bool,
     daily_chat_limit: u32,
     public_landing_dir: Option<PathBuf>,
     /// Shared async runtime for embedding + chat streaming (reqwest). Built
@@ -47,6 +48,7 @@ impl ServerState {
                 config_cache: Mutex::new(None),
                 auth: None,
                 require_login: false,
+                disable_registration: false,
                 daily_chat_limit: 50,
                 public_landing_dir: config.public_landing_dir.clone(),
                 runtime: None,
@@ -75,6 +77,7 @@ impl ServerState {
         self,
         auth: Option<Arc<llm_wiki_auth::AuthService>>,
         require_login: bool,
+        disable_registration: bool,
         daily_chat_limit: u32,
         runtime: Option<Arc<tokio::runtime::Runtime>>,
     ) -> Self {
@@ -85,6 +88,7 @@ impl ServerState {
             config_cache: Mutex::new(None),
             auth,
             require_login,
+            disable_registration,
             daily_chat_limit,
             public_landing_dir: self.inner.public_landing_dir.clone(),
             runtime,
@@ -104,6 +108,13 @@ impl ServerState {
 
     pub fn require_login(&self) -> bool {
         self.inner.require_login
+    }
+
+    /// When true, `/auth/register` is closed (returns 403). Deploy-time kill
+    /// switch for public instances that want invite-only / operator-created
+    /// accounts.
+    pub fn disable_registration(&self) -> bool {
+        self.inner.disable_registration
     }
 
     pub fn daily_chat_limit(&self) -> u32 {

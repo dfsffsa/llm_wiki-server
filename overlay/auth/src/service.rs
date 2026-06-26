@@ -65,6 +65,16 @@ impl AuthService {
     }
 
     pub fn register(&self, input: RegisterInput<'_>) -> Result<AuthOutcome, AuthError> {
+        // Rate-limit by IP BEFORE validation/hashing — stops batch
+        // registration without burning argon2 CPU. Email is attacker-chosen
+        // and varied, so IP is the primary key. 5 per hour per IP.
+        const REG_RATE: f64 = 5.0;
+        const REG_PERIOD: f64 = 3600.0;
+        if let Some(ip) = input.ip {
+            if !self.limiter.allow(&format!("reg:{ip}"), REG_RATE, REG_PERIOD, input.now) {
+                return Err(AuthError::RateLimited);
+            }
+        }
         let email = normalize_email(input.email)?;
         validate_password(input.password)?;
         let is_admin = self
@@ -142,11 +152,26 @@ impl AuthService {
     /// Start a password-reset flow. Returns a fresh token if the email
     /// belongs to a real user, or `None` otherwise. The HTTP layer must
     /// always respond `{ok:true}` regardless to avoid email enumeration.
+    ///
+    /// `ip` is used to rate-limit reset requests per IP (3/hour) — this
+    /// throttles enumeration/abuse even for unknown emails, since the
+    /// bucket is charged before the user lookup. Pass `None` only for
+    /// trusted internal callers.
     pub fn start_password_reset(
         &self,
         email: &str,
         now: i64,
+        ip: Option<&str>,
     ) -> Result<Option<String>, AuthError> {
+        // Rate-limit by IP first, before normalize/lookup, so unknown-email
+        // probes are throttled too. 3 per hour per IP.
+        const RESET_RATE: f64 = 3.0;
+        const RESET_PERIOD: f64 = 3600.0;
+        if let Some(ip) = ip {
+            if !self.limiter.allow(&format!("reset:{ip}"), RESET_RATE, RESET_PERIOD, now) {
+                return Err(AuthError::RateLimited);
+            }
+        }
         let email = normalize_email(email)?;
         let user = match self.store.find_user_by_email(&email)? {
             Some(u) => u,
@@ -217,4 +242,83 @@ fn validate_password(p: &str) -> Result<(), AuthError> {
         return Err(AuthError::InvalidInput("密码过长".into()));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::NamedTempFile;
+
+    fn svc() -> AuthService {
+        let f = NamedTempFile::new().unwrap();
+        let store = std::sync::Arc::new(Store::open(f.path()).unwrap());
+        AuthService::new(
+            store,
+            AuthServiceConfig {
+                session_ttl_secs: 3600,
+                admin_email: None,
+                login_attempts: 25.0,
+                login_period_secs: 3600.0,
+            },
+        )
+    }
+
+    fn reg<'a>(email: &'a str, ip: &'a str) -> RegisterInput<'a> {
+        RegisterInput {
+            email,
+            password: "password1",
+            now: 1000,
+            ip: Some(ip),
+            user_agent: None,
+        }
+    }
+
+    #[test]
+    fn register_rate_limits_per_ip_after_threshold() {
+        let s = svc();
+        // 5 registrations from one IP succeed (distinct emails).
+        for i in 0..5 {
+            s.register(reg(&format!("u{i}@b.com"), "1.2.3.4")).unwrap();
+        }
+        // 6th from the same IP within the hour → RateLimited.
+        let r = s.register(reg("u99@b.com", "1.2.3.4"));
+        assert!(matches!(r, Err(AuthError::RateLimited)));
+    }
+
+    #[test]
+    fn register_different_ip_is_not_blocked() {
+        let s = svc();
+        for i in 0..5 {
+            s.register(reg(&format!("a{i}@b.com"), "1.1.1.1")).unwrap();
+        }
+        // A different IP has its own bucket and can still register.
+        let r = s.register(reg("b@b.com", "2.2.2.2"));
+        assert!(r.is_ok());
+    }
+
+    #[test]
+    fn forgot_password_rate_limits_per_ip() {
+        let s = svc();
+        // Seed a real user so start_password_reset reaches the token path.
+        s.register(reg("real@b.com", "9.9.9.9")).unwrap();
+        // 3 resets from one IP succeed (returns Some(token) each).
+        for _ in 0..3 {
+            assert!(s.start_password_reset("real@b.com", 1000, Some("5.5.5.5")).unwrap().is_some());
+        }
+        // 4th from the same IP → RateLimited.
+        let r = s.start_password_reset("real@b.com", 1000, Some("5.5.5.5"));
+        assert!(matches!(r, Err(AuthError::RateLimited)));
+    }
+
+    #[test]
+    fn forgot_password_unknown_email_still_rate_limited() {
+        // Defense: even unknown emails burn the IP bucket, so an attacker
+        // can't probe many addresses without being throttled.
+        let s = svc();
+        for _ in 0..3 {
+            let _ = s.start_password_reset("nope@b.com", 1000, Some("7.7.7.7")).unwrap();
+        }
+        let r = s.start_password_reset("nope@b.com", 1000, Some("7.7.7.7"));
+        assert!(matches!(r, Err(AuthError::RateLimited)));
+    }
 }

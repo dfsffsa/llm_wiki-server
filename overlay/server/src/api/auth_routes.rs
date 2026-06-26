@@ -28,12 +28,22 @@ pub fn handle(
     };
 
     match (method, path) {
-        (&Method::Post, "/auth/register") => handle_register(auth, headers, body, request),
+        (&Method::Post, "/auth/register") => {
+            if state.disable_registration() {
+                api::respond_json(
+                    request,
+                    403,
+                    json!({ "error": { "code": "registration_closed", "message": "注册已关闭，请联系管理员开通账号" } }),
+                );
+                return;
+            }
+            handle_register(auth, headers, body, request)
+        }
         (&Method::Post, "/auth/login") => handle_login(auth, headers, body, request),
         (&Method::Post, "/auth/logout") => handle_logout(auth, headers, request),
         (&Method::Get, "/auth/me") => handle_me(state, auth, headers, request),
         (&Method::Post, "/auth/forgot-password") => {
-            handle_forgot(auth, body, request)
+            handle_forgot(state, auth, headers, body, request)
         }
         (&Method::Post, "/auth/reset-password") => {
             handle_reset(auth, body, request)
@@ -235,16 +245,44 @@ fn handle_me(
     );
 }
 
-fn handle_forgot(auth: &std::sync::Arc<llm_wiki_auth::AuthService>, body: &str, request: Request) {
+fn handle_forgot(
+    state: &ServerState,
+    auth: &std::sync::Arc<llm_wiki_auth::AuthService>,
+    headers: &[(String, String)],
+    body: &str,
+    request: Request,
+) {
     let v = parse_json(body).unwrap_or(Value::Null);
     let email = v.get("email").and_then(Value::as_str).unwrap_or("");
     let now = now_secs();
-    // Always return ok=true regardless, to prevent email enumeration.
-    let token = auth.start_password_reset(email, now).ok().flatten();
+    // Always return ok=true regardless, to prevent email enumeration. A
+    // RateLimited result also collapses to ok:true (no token emitted), so
+    // the throttle works silently from the client's view.
+    let token = auth
+        .start_password_reset(email, now, header_lookup(headers, "x-forwarded-for"))
+        .ok()
+        .flatten();
     if let Some(t) = token {
-        // Print the reset URL to server stderr — wiring email delivery is
-        // out of scope for v1. Operators can read this from journalctl.
-        eprintln!("[auth] password reset token for {email}: {t}");
+        // Resolve SMTP config from the server config file. When configured,
+        // email the reset link; otherwise fall back to logging the token
+        // (dev/operator flow) so the feature still works without SMTP.
+        let app_state = state.load_app_state().unwrap_or(Value::Null);
+        let smtp = crate::mail::parse_smtp_config(&app_state);
+        match (smtp, state.runtime()) {
+            (Some(cfg), Some(rt)) if !cfg.public_base_url.is_empty() => {
+                let reset_url = crate::mail::build_reset_url(&cfg.public_base_url, &t);
+                // Send on the shared runtime. Errors are logged but never
+                // surfaced to the client (ok:true either way).
+                if let Err(e) = rt.block_on(crate::mail::send_password_reset(&cfg, email, &reset_url)) {
+                    eprintln!("[auth] password-reset email to {email} failed: {e}");
+                }
+            }
+            _ => {
+                // No SMTP / no public base URL — log the token for operator
+                // out-of-band delivery. Read from journalctl.
+                eprintln!("[auth] password reset token for {email}: {t} (SMTP not configured)");
+            }
+        }
     }
     api::respond_json(request, 200, json!({ "ok": true }));
 }

@@ -5,11 +5,12 @@
 mod api;
 mod config;
 mod llm;
+mod mail;
+mod metrics;
 mod server;
 mod state;
 mod static_files;
 
-use std::sync::Arc;
 use std::thread;
 
 use clap::Parser;
@@ -45,9 +46,17 @@ struct Args {
     auth_db: Option<String>,
 
     /// Require login on the lite page (browser users). Bearer token auth
-    /// for CLI/e2e is unaffected.
+    /// for CLI/e2e is unaffected. When true, anonymous (no-cookie, no-bearer)
+    /// API access is rejected even if apiConfig.allowUnauthenticated is true
+    /// in the config file — a deploy-time hard switch that can't be relaxed
+    /// by config.
     #[arg(long, env = "LLM_WIKI_REQUIRE_LOGIN", default_value_t = false)]
     require_login: bool,
+
+    /// Close public registration. When true, POST /auth/register returns 403.
+    /// Use for invite-only / operator-provisioned accounts.
+    #[arg(long, env = "LLM_WIKI_DISABLE_REGISTRATION", default_value_t = false)]
+    disable_registration: bool,
 
     /// Per-user daily chat limit (cookie-authenticated requests only).
     #[arg(long, env = "LLM_WIKI_DAILY_CHAT_LIMIT", default_value_t = 50)]
@@ -66,9 +75,25 @@ struct Args {
     /// served from here instead of upstream/dist.
     #[arg(long, env = "LLM_WIKI_PUBLIC_LANDING_DIR")]
     public_landing_dir: Option<String>,
+
+    /// Grace period (seconds) to drain in-flight requests on SIGINT/SIGTERM
+    /// before forcing exit. Long-lived SSE chats still holding a slot past
+    /// this window are cut off. Should be ≤ systemd `TimeoutStopSec`.
+    #[arg(long, env = "LLM_WIKI_DRAIN_SECS", default_value_t = 15)]
+    drain_secs: u64,
 }
 
 fn main() {
+    // Structured logging: RUST_LOG controls verbosity (default info).
+    // Format: timestamp level [request_id] message — the request_id comes
+    // from the per-request tracing span set in dispatch_request.
+    let filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"));
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_target(false)
+        .init();
+
     let args = Args::parse();
     let config = match ServerConfig::resolve(
         args.project,
@@ -78,6 +103,7 @@ fn main() {
         args.token,
         args.auth_db,
         args.require_login,
+        args.disable_registration,
         args.daily_chat_limit,
         args.admin_email,
         args.session_ttl_days,
@@ -90,20 +116,42 @@ fn main() {
         }
     };
 
-    let shutdown = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let shutdown_flag = Arc::clone(&shutdown);
+    // Graceful shutdown: on SIGINT or SIGTERM, stop accepting new requests
+    // and give in-flight work up to `drain_secs` to finish before forcing
+    // exit. tiny_http's blocking accept can't be interrupted, so the accept
+    // loop fast-rejects new connections (503) once `request_shutdown()` is
+    // called; this thread waits for the in-flight count to drain, then exits.
+    let drain_secs = args.drain_secs;
     thread::spawn(move || {
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .expect("shutdown runtime");
         rt.block_on(async {
-            if tokio::signal::ctrl_c().await.is_ok() {
-                eprintln!("\nShutting down...");
-                shutdown_flag.store(true, std::sync::atomic::Ordering::Relaxed);
-                std::process::exit(0);
+            let ctrl_c = tokio::signal::ctrl_c();
+            let mut term = tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+                .expect("install SIGTERM handler");
+            tokio::select! {
+                _ = ctrl_c => {}
+                _ = term.recv() => {}
             }
         });
+        eprintln!("\n[shutdown] signal received; draining in-flight requests (up to {drain_secs}s)...");
+        crate::api::request_shutdown();
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(drain_secs);
+        loop {
+            let in_flight = crate::api::in_flight_count();
+            if in_flight == 0 {
+                eprintln!("[shutdown] all in-flight requests drained");
+                break;
+            }
+            if std::time::Instant::now() >= deadline {
+                eprintln!("[shutdown] drain timeout reached; {in_flight} request(s) still in-flight, forcing exit");
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(200));
+        }
+        std::process::exit(0);
     });
 
     // Shared multi-thread runtime for embedding + chat streaming (reqwest).

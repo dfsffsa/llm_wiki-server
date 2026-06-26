@@ -24,5 +24,14 @@
     "model": "your-model",
     "customEndpoint": "https://api.example.com/v1/chat/completions",
     "maxContextSize": 204800
+  },
+  "smtp": {
+    "enabled": true,
+    "host": "smtp.example.com",
+    "port": 587,
+    "user": "noreply@example.com",
+    "pass": "${SMTP_PASS}",
+    "from": "LLM Wiki <noreply@example.com>",
+    "publicBaseUrl": "https://wiki.example.com"
   }
 }

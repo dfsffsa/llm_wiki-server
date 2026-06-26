@@ -85,7 +85,8 @@ llm_wiki-server/
 
 | Method | Path | Handler |
 |--------|------|---------|
-| GET | `/api/v1/health` | Health check (no auth) |
+| GET | `/api/v1/health` | Health check (no auth); `?deep=true` pings auth DB for readiness |
+| GET | `/metrics` | Prometheus text metrics (no auth): request/chat/error counters, in-flight gauges |
 | GET | `/api/v1/projects` | List projects |
 | GET | `/api/v1/projects/{id}/files` | File tree |
 | GET | `/api/v1/projects/{id}/files/content` | Read file |
@@ -112,9 +113,18 @@ When `VITE_BACKEND=http`, Vite aliases redirect upstream imports to overlay:
 |----------|---------|
 | `LLM_WIKI_PROJECT` | Wiki project root (contains `wiki/`, `raw/`, `.llm-wiki/`) |
 | `LLM_WIKI_API_TOKEN` | API auth token (must match VITE_API_TOKEN at build time) |
-| `LLM_WIKI_CONFIG` | JSON config file with llmConfig, projects[], etc. |
+| `LLM_WIKI_CONFIG` | JSON config file with llmConfig, embeddingConfig, smtp, projects[], etc. |
 | `LLM_WIKI_STATIC` | Static UI directory (typically `upstream/dist`) |
 | `LLM_WIKI_BIND` | Server listen address (default `127.0.0.1:8080`) |
+| `LLM_WIKI_AUTH_DB` | SQLite path for auth/history/usage. Unset → multi-user mode off |
+| `LLM_WIKI_REQUIRE_LOGIN` | Force cookie/bearer auth (reject anonymous even if `allowUnauthenticated:true`) |
+| `LLM_WIKI_DISABLE_REGISTRATION` | Close public `/auth/register` (403) — invite-only |
+| `LLM_WIKI_DAILY_CHAT_LIMIT` | Per-user daily chat quota (cookie auth only; default 50) |
+| `LLM_WIKI_DRAIN_SECS` | Graceful-shutdown drain window before forcing exit (default 15) |
+| `LLM_WIKI_ADMIN_EMAIL` | Email auto-marked `is_admin` on registration |
+| `LLM_WIKI_SESSION_TTL_DAYS` | Session cookie lifetime (default 30) |
+| `LLM_WIKI_PUBLIC_LANDING_DIR` | Public landing page dir (login/register/reset HTML) |
+| `RUST_LOG` | tracing log level (default `info`; e.g. `debug,llm_wiki_server=trace`) |
 
 ## Wiki Project Structure
 
@@ -266,6 +276,7 @@ If any of these fail, the corresponding `docs/` section is the next place to loo
 - [docs/开发与测试.md](docs/开发与测试.md) — Build, test, and FAQ
 - [docs/上游同步.md](docs/上游同步.md) — Submodule sync principles
 - [docs/日常运维.md](docs/日常运维.md) — Daily operations
+- [docs/备份与恢复.md](./docs/备份与恢复.md) — **Backup & recovery** (auth DB hot backup, wiki rsync, restore drill)
 - [docs/远端服务器ingest.md](./docs/远端服务器ingest.md) — **Remote ingest runbook** (do ingest on ECS, agent-friendly quick start)
 - [docs/部署-低配ECS一键脚本.md](./docs/部署-低配ECS一键脚本.md) — **Low-spec ECS runbook** (deploy-ecs.sh / sync-artifacts.sh, pitfalls, ssh config)
 - [docs/低配机交叉编译CLI.md](./docs/低配机交叉编译CLI.md) — musl cross-compile details

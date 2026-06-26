@@ -8,7 +8,7 @@ mod runtime;
 mod search;
 
 use std::collections::{BTreeMap, VecDeque};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
@@ -25,6 +25,25 @@ const MAX_IN_FLIGHT_REQUESTS: usize = 64;
 
 static IN_FLIGHT_REQUESTS: AtomicUsize = AtomicUsize::new(0);
 static RATE_LIMIT: OnceLock<Mutex<VecDeque<Instant>>> = OnceLock::new();
+static SHUTDOWN: AtomicBool = AtomicBool::new(false);
+
+/// Mark the server as shutting down. New requests are rejected with 503 so
+/// in-flight work can drain. Set by the SIGINT/SIGTERM handler in main.
+pub fn request_shutdown() {
+    SHUTDOWN.store(true, Ordering::Release);
+}
+
+/// True once shutdown has been requested. The accept loop checks this to
+/// fast-reject new connections instead of enqueueing more work.
+pub fn is_shutting_down() -> bool {
+    SHUTDOWN.load(Ordering::Acquire)
+}
+
+/// Number of requests currently being handled (each holds a `RequestSlot`).
+/// Used by the drain loop to wait for in-flight work to finish before exit.
+pub fn in_flight_count() -> usize {
+    IN_FLIGHT_REQUESTS.load(Ordering::Relaxed)
+}
 
 pub struct ApiResponse {
     pub status: u16,
@@ -73,6 +92,18 @@ pub fn handle_request(
 ) -> ApiResponse {
     let (path, query) = split_url(url);
     if path == "/health" || path == format!("{API_PREFIX}/health") {
+        // ?deep=true pings the auth DB (if configured) so a load balancer /
+        // readiness probe can tell "process up" from "actually serving".
+        let deep = parse_query(query).get("deep").map(|v| v == "true").unwrap_or(false);
+        let mut auth_db = json!(null);
+        if deep {
+            if let Some(auth) = state.auth() {
+                auth_db = match auth.store().ping() {
+                    Ok(()) => json!("ok"),
+                    Err(e) => json!({ "error": e.to_string() }),
+                };
+            }
+        }
         return ok(json!({
             "ok": true,
             "status": "running",
@@ -83,6 +114,8 @@ pub fn handle_request(
             "tokenSource": state.api_token_source(),
             "enabled": state.api_enabled(),
             "allowUnauthenticated": state.api_allow_unauthenticated(),
+            "shuttingDown": is_shutting_down(),
+            "authDb": auth_db,
         }));
     }
     if !path.starts_with(API_PREFIX) {
@@ -286,7 +319,10 @@ pub(crate) fn authorize(
     }
 
     // 2) Bearer token / query token — existing path (CLI, e2e, internal).
-    if !state.api_auth_required() {
+    //    `require_login` is a deploy-time hard switch: when true, anonymous
+    //    access is forbidden even if the config file set
+    //    `apiConfig.allowUnauthenticated: true`. Cookie/bearer still work.
+    if !state.api_auth_required() && !state.require_login() {
         return Some(AuthOutcome::Anonymous);
     }
     let Some(token) = state.api_token() else {

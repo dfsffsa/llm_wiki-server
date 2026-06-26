@@ -17,7 +17,7 @@ pub fn run(
     runtime: Option<Arc<tokio::runtime::Runtime>>,
 ) -> Result<(), String> {
     let state = ServerState::from_config(&config)
-        .with_auth(auth, config.require_login, config.daily_chat_limit, runtime);
+        .with_auth(auth, config.require_login, config.disable_registration, config.daily_chat_limit, runtime);
     let static_dir = config.static_dir.clone();
     let bind = config.bind.clone();
     let project = config.project.display().to_string();
@@ -36,6 +36,12 @@ pub fn run(
     let static_dir = static_dir.map(Arc::new);
 
     for request in server.incoming_requests() {
+        // During shutdown, fast-reject new connections so in-flight work can
+        // drain instead of queuing more.
+        if api::is_shutting_down() {
+            api::respond_error(request, 503, "Server is shutting down");
+            continue;
+        }
         let method = request.method().clone();
         let url = request.url().to_string();
         if api::should_rate_limit(&method, &url) && !api::allow_request() {
@@ -68,13 +74,40 @@ fn dispatch_request(
 ) {
     let method = request.method().clone();
     let url = request.url().to_string();
+    let (path, _) = api::split_url(&url);
+
+    // Per-request tracing span. The request_id propagates into every log
+    // line emitted while handling this request, so a single request's
+    // trace is grep-able in the journal. Also counted as a metric.
+    let request_id = uuid::Uuid::new_v4().simple().to_string();
+    let span = tracing::info_span!("request", request_id = %request_id, %method, path = %path);
+    let _enter = span.enter();
+    tracing::info!("dispatch");
+    crate::metrics::inc_requests();
 
     if method == Method::Options {
         api::respond_options(request);
         return;
     }
 
-    let (path, _) = api::split_url(&url);
+    // /metrics: Prometheus text exposition. Public (no auth) — the metric
+    // set is non-sensitive counts/gauges. Scrapers have no bearer token.
+    if method == Method::Get && path == "/metrics" {
+        let body = crate::metrics::render(
+            api::in_flight_count(),
+            api::chat::in_flight_chat_count(),
+            api::is_shutting_down(),
+        );
+        let mut resp = tiny_http::Response::from_string(body)
+            .with_status_code(tiny_http::StatusCode(200));
+        resp.add_header(
+            tiny_http::Header::from_bytes("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
+                .unwrap(),
+        );
+        let _ = request.respond(resp);
+        return;
+    }
+
     let is_api = path == "/health" || path.starts_with(API_PREFIX);
     // Auth static assets (GET /auth/*.css|js) are served from the public
     // landing dir, not the auth API. Exclude them so they fall through to
@@ -141,6 +174,10 @@ fn dispatch_request(
         }
 
         let response = api::handle_request(&state, &method, &url, &body, &headers);
+        if response.status >= 500 {
+            crate::metrics::inc_errors();
+            tracing::warn!(status = response.status, "request failed");
+        }
         api::respond_json(request, response.status, response.body);
         return;
     }
