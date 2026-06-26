@@ -276,6 +276,7 @@ If any of these fail, the corresponding `docs/` section is the next place to loo
 - [docs/开发与测试.md](docs/开发与测试.md) — Build, test, and FAQ
 - [docs/上游同步.md](docs/上游同步.md) — Submodule sync principles
 - [docs/日常运维.md](docs/日常运维.md) — Daily operations
+- [docs/邮件配置-SMTP-Resend.md](./docs/邮件配置-SMTP-Resend.md) — **SMTP email** (Resend signup, SPF/DKIM/DMARC, smtp config, troubleshooting)
 - [docs/备份与恢复.md](./docs/备份与恢复.md) — **Backup & recovery** (auth DB hot backup, wiki rsync, restore drill)
 - [docs/远端服务器ingest.md](./docs/远端服务器ingest.md) — **Remote ingest runbook** (do ingest on ECS, agent-friendly quick start)
 - [docs/部署-低配ECS一键脚本.md](./docs/部署-低配ECS一键脚本.md) — **Low-spec ECS runbook** (deploy-ecs.sh / sync-artifacts.sh, pitfalls, ssh config)
