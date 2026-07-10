@@ -1,0 +1,2445 @@
+{
+  "project": "/home/ab/overseas-github/llm_wiki_projects/ParentingBooks",
+  "version": "2.0.0-auto",
+  "schema_version": "v2",
+  "generated_at": "2026-06-25T18:14:15.934223",
+  "mode": "auto",
+  "total_cases": 100,
+  "cases": [
+    {
+      "id": "auto_001",
+      "schema_version": "v2",
+      "question": "初乳和成熟乳在蛋白质含量上有什么区别？母乳中的免疫球蛋白A是如何帮助宝宝抵御疾病的？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-01-母乳，给宝宝近乎完美的营养.md"
+        ],
+        "should": [
+          "wiki/concepts/初乳的特点与价值.md",
+          "wiki/concepts/成熟乳成分动态调整.md"
+        ]
+      },
+      "keywords": [
+        "初乳",
+        "成熟乳",
+        "蛋白质含量",
+        "免疫球蛋白A",
+        "IgA"
+      ],
+      "note": "考察初乳和成熟乳的蛋白质含量对比，以及IgA的免疫作用机制",
+      "source_file": "崔玉涛宝贝健康公开课-01-母乳，给宝宝近乎完美的营养.md"
+    },
+    {
+      "id": "auto_002",
+      "schema_version": "v2",
+      "question": "2个月的宝宝纯母乳喂养，生长发育正常，还需要额外补充什么营养素来预防佝偻病？为什么预防佝偻病要补充维生素D而不是直接补钙？",
+      "category": "scenario",
+      "difficulty": "hard",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-01-母乳，给宝宝近乎完美的营养.md"
+        ],
+        "should": [
+          "wiki/scenarios/纯母乳喂养宝宝营养补充.md",
+          "wiki/entities/维生素D.md",
+          "wiki/concepts/婴儿维生素D补充指南.md"
+        ]
+      },
+      "keywords": [
+        "佝偻病预防",
+        "维生素D",
+        "纯母乳喂养",
+        "补钙",
+        "营养补充"
+      ],
+      "note": "考察纯母乳喂养宝宝的维生素D补充必要性，以及钙吸收的原理",
+      "source_file": "崔玉涛宝贝健康公开课-01-母乳，给宝宝近乎完美的营养.md"
+    },
+    {
+      "id": "auto_003",
+      "schema_version": "v2",
+      "question": "张佳的宝宝经检查确定是母乳性黄疸，医生建议停喂母乳至少3天。停喂母乳可能会带来哪些风险？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-02-4位妈妈母乳喂养的困惑.md"
+        ],
+        "should": [
+          "wiki/entities/母乳性黄疸.md"
+        ]
+      },
+      "keywords": [
+        "母乳性黄疸",
+        "停喂母乳",
+        "风险",
+        "乳汁减少",
+        "乳腺发炎"
+      ],
+      "note": "考察用户对母乳性黄疸处理方式可能带来的副作用的理解",
+      "source_file": "崔玉涛宝贝健康公开课-02-4位妈妈母乳喂养的困惑.md"
+    },
+    {
+      "id": "auto_004",
+      "schema_version": "v2",
+      "question": "秦璐的儿子快4个月大了，一直纯母乳喂养，但宝宝拒绝乳胶奶嘴。有什么方法可以让宝宝逐渐适应奶瓶喂养？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-02-4位妈妈母乳喂养的困惑.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝拒绝奶瓶喂养.md",
+          "wiki/concepts/奶瓶喂养过渡技巧.md"
+        ]
+      },
+      "keywords": [
+        "拒绝奶瓶",
+        "乳胶奶嘴",
+        "纯母乳喂养",
+        "适应奶瓶",
+        "过渡方法"
+      ],
+      "note": "考察用户对宝宝拒绝奶瓶喂养的解决方案的了解",
+      "source_file": "崔玉涛宝贝健康公开课-02-4位妈妈母乳喂养的困惑.md"
+    },
+    {
+      "id": "auto_005",
+      "schema_version": "v2",
+      "question": "宝宝胃食道反流导致的吐奶通常在什么时候开始出现，什么时候最为严重？",
+      "category": "number",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-03-怎样应对宝宝吐奶？.md"
+        ],
+        "should": [
+          "wiki/entities/胃食道反流.md"
+        ]
+      },
+      "keywords": [
+        "胃食道反流",
+        "出生后",
+        "时间",
+        "最为严重",
+        "2个月"
+      ],
+      "note": "测试对胃食道反流发展时间线的掌握，属于数值型问题",
+      "source_file": "崔玉涛宝贝健康公开课-03-怎样应对宝宝吐奶？.md"
+    },
+    {
+      "id": "auto_006",
+      "schema_version": "v2",
+      "question": "宝宝吃完奶后，家长应该采取什么体位来帮助减少吐奶？具体要保持多久？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-03-怎样应对宝宝吐奶？.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿体位管理.md",
+          "wiki/scenarios/宝宝吐奶应对.md"
+        ]
+      },
+      "keywords": [
+        "吃奶后",
+        "体位",
+        "抬高",
+        "右侧卧",
+        "减少吐奶",
+        "30分钟"
+      ],
+      "note": "测试实际场景中宝宝喂奶后的正确护理体位操作",
+      "source_file": "崔玉涛宝贝健康公开课-03-怎样应对宝宝吐奶？.md"
+    },
+    {
+      "id": "auto_007",
+      "schema_version": "v2",
+      "question": "宝宝每次喝完配方粉后还意犹未尽，下一餐应该怎么办？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-04-配方粉喂养的热点问题.md"
+        ],
+        "should": [
+          "wiki/scenarios/配方粉宝宝便秘怎么办.md",
+          "wiki/concepts/配方粉冲调方法与注意事项.md"
+        ]
+      },
+      "keywords": [
+        "意犹未尽",
+        "冲调量",
+        "配方粉量"
+      ],
+      "note": "测试用户是否能根据场景找到正确的冲调量调整方法",
+      "source_file": "崔玉涛宝贝健康公开课-04-配方粉喂养的热点问题.md"
+    },
+    {
+      "id": "auto_008",
+      "schema_version": "v2",
+      "question": "婴儿配方粉开封后建议在多长时间内用完？",
+      "category": "number",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-04-配方粉喂养的热点问题.md"
+        ],
+        "should": [
+          "wiki/entities/婴儿配方粉.md",
+          "wiki/concepts/婴儿配方粉喂养指南.md"
+        ]
+      },
+      "keywords": [
+        "开封",
+        "4周",
+        "保质期"
+      ],
+      "note": "测试用户对配方粉保存期限的掌握程度",
+      "source_file": "崔玉涛宝贝健康公开课-04-配方粉喂养的热点问题.md"
+    },
+    {
+      "id": "auto_009",
+      "schema_version": "v2",
+      "question": "4个月大的宝宝最近两周奶量从每天700-800毫升骤降到不到300毫升，宝宝喝几口奶就会停下，经询问得知两周前家长开始用奶瓶喂橙汁。最可能的原因是什么？应该怎么处理？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-05-宝宝不爱喝配方粉的常见诱因.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝厌奶怎么办.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-05-宝宝不爱喝配方粉的常见诱因.md"
+        ]
+      },
+      "keywords": [
+        "厌奶",
+        "奶瓶喂果汁",
+        "橙汁",
+        "奶量下降",
+        "4个月"
+      ],
+      "note": "测试用户对宝宝厌奶场景的原因识别和处理方法的掌握",
+      "source_file": "崔玉涛宝贝健康公开课-05-宝宝不爱喝配方粉的常见诱因.md"
+    },
+    {
+      "id": "auto_010",
+      "schema_version": "v2",
+      "question": "宝宝出现配方粉耐受不良的表现（如呕吐、体重增长缓慢）时，首先应该采取什么措施？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-05-宝宝不爱喝配方粉的常见诱因.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿配方粉不耐受.md",
+          "wiki/concepts/深度水解配方粉.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-05-宝宝不爱喝配方粉的常见诱因.md"
+        ]
+      },
+      "keywords": [
+        "配方粉耐受不良",
+        "水解蛋白配方粉",
+        "蛋白质",
+        "牛奶蛋白"
+      ],
+      "note": "测试用户对配方粉不耐受处理原则的理解",
+      "source_file": "崔玉涛宝贝健康公开课-05-宝宝不爱喝配方粉的常见诱因.md"
+    },
+    {
+      "id": "auto_011",
+      "schema_version": "v2",
+      "question": "8个月宝宝轮状病毒肠炎治愈后已经2周了还在腹泻，应该怎么处理？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-06-特殊配方粉：帮助宝宝度过特殊时期.md"
+        ],
+        "should": [
+          "wiki/entities/轮状病毒性肠炎.md",
+          "wiki/entities/无乳糖配方粉.md",
+          "wiki/entities/乳糖不耐受.md"
+        ]
+      },
+      "keywords": [
+        "轮状病毒",
+        "腹泻不止",
+        "乳糖酶",
+        "无乳糖配方粉",
+        "改换配方粉"
+      ],
+      "note": "测试用户是否能理解轮状病毒感染后出现乳糖不耐受的处理方式",
+      "source_file": "崔玉涛宝贝健康公开课-06-特殊配方粉：帮助宝宝度过特殊时期.md"
+    },
+    {
+      "id": "auto_012",
+      "schema_version": "v2",
+      "question": "苯丙酮尿症宝宝为什么不能吃普通婴幼儿配方粉？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-06-特殊配方粉：帮助宝宝度过特殊时期.md"
+        ],
+        "should": [
+          "wiki/entities/苯丙酮尿症.md",
+          "wiki/concepts/特殊配方粉.md"
+        ]
+      },
+      "keywords": [
+        "苯丙酮尿症",
+        "酶缺乏",
+        "苯丙氨酸",
+        "代谢产物",
+        "脑萎缩",
+        "智力低下"
+      ],
+      "note": "测试用户对苯丙酮尿症病因及普通配方粉危害的理解",
+      "source_file": "崔玉涛宝贝健康公开课-06-特殊配方粉：帮助宝宝度过特殊时期.md"
+    },
+    {
+      "id": "auto_013",
+      "schema_version": "v2",
+      "question": "我的宝宝之前每天能喝800多毫升配方奶，但自从5个月添加果汁后，现在每天只能喝400毫升左右，体重增长也变慢了，这是怎么回事？应该怎么办？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-07-辅食添加，需要耐心等待.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝厌奶怎么办.md",
+          "wiki/concepts/婴儿味觉发育与厌奶关系.md"
+        ]
+      },
+      "keywords": [
+        "厌奶",
+        "果汁",
+        "味觉发育",
+        "配方奶减少",
+        "解决方案"
+      ],
+      "note": "考察用户是否能理解过早添加果汁导致味觉发育过早、进而引起厌奶的因果关系，以及掌握将果汁混入配方粉中逐步脱敏的处理方法",
+      "source_file": "崔玉涛宝贝健康公开课-07-辅食添加，需要耐心等待.md"
+    },
+    {
+      "id": "auto_014",
+      "schema_version": "v2",
+      "question": "根据中国营养学会的指南，宝宝应该在多大时开始添加辅食？具体有哪些信号说明宝宝已经准备好可以添加辅食了？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-07-辅食添加，需要耐心等待.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿辅食添加时机与信号.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-07-辅食添加，需要耐心等待.md"
+        ]
+      },
+      "keywords": [
+        "辅食添加时机",
+        "6月龄",
+        "辅食添加信号",
+        "体重标准"
+      ],
+      "note": "考察用户对官方指南中辅食添加起始月龄的掌握，以及对宝宝准备好吃辅食的体征信号的了解",
+      "source_file": "崔玉涛宝贝健康公开课-07-辅食添加，需要耐心等待.md"
+    },
+    {
+      "id": "auto_015",
+      "schema_version": "v2",
+      "question": "宝宝第一次添加辅食应该选在什么时间最合适？为什么建议选择这个时间？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-08-第一次添加辅食怎么做？.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝第一次添加辅食怎么做.md"
+        ]
+      },
+      "keywords": [
+        "第一次添加辅食",
+        "时间选择",
+        "上午9点"
+      ],
+      "note": "验证用户是否了解首次添加辅食的最佳时间选择及其背后的原因",
+      "source_file": "崔玉涛宝贝健康公开课-08-第一次添加辅食怎么做？.md"
+    },
+    {
+      "id": "auto_016",
+      "schema_version": "v2",
+      "question": "冲调米粉时，米粉和温开水的比例是多少？建议的水温是多少度？",
+      "category": "fact",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-08-第一次添加辅食怎么做？.md"
+        ],
+        "should": [
+          "wiki/concepts/首次添加辅食操作指南.md"
+        ]
+      },
+      "keywords": [
+        "米粉冲调",
+        "比例",
+        "水温"
+      ],
+      "note": "验证用户对辅食冲调具体参数的记忆",
+      "source_file": "崔玉涛宝贝健康公开课-08-第一次添加辅食怎么做？.md"
+    },
+    {
+      "id": "auto_017",
+      "schema_version": "v2",
+      "question": "美国一对父母带11个月的孩子在比萨店吃饭时，为什么不帮助孩子把面条吃进去？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-09-辅食：快乐吃，健康吃.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿积极进食环境营造.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-09-辅食：快乐吃，健康吃.md"
+        ]
+      },
+      "keywords": [
+        "美国父母",
+        "11个月",
+        "比萨店",
+        "不帮助",
+        "尊重孩子",
+        "享受吃饭"
+      ],
+      "note": "测试用户对材料中美国父母育儿场景的理解，考察场景型问题的理解能力",
+      "source_file": "崔玉涛宝贝健康公开课-09-辅食：快乐吃，健康吃.md"
+    },
+    {
+      "id": "auto_018",
+      "schema_version": "v2",
+      "question": "为什么医生特别强调不能给孩子吃葡萄糖？",
+      "category": "concept",
+      "difficulty": "hard",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-09-辅食：快乐吃，健康吃.md"
+        ],
+        "should": [
+          "wiki/lessons/婴儿不宜添加葡萄糖水.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-09-辅食：快乐吃，健康吃.md"
+        ]
+      },
+      "keywords": [
+        "葡萄糖",
+        "单糖",
+        "双糖",
+        "胰岛素",
+        "胰腺",
+        "血糖",
+        "糖尿病"
+      ],
+      "note": "测试用户对葡萄糖危害机制的理解，属于概念型深度问题",
+      "source_file": "崔玉涛宝贝健康公开课-09-辅食：快乐吃，健康吃.md"
+    },
+    {
+      "id": "auto_019",
+      "schema_version": "v2",
+      "question": "8个月宝宝突然开始拒绝吃辅食，把喂到嘴里的食物吐出来，这种现象正常吗？应该怎么处理？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-10-添加辅食后，宝宝怎么老不长？.md"
+        ],
+        "should": [
+          "wiki/sources/崔玉涛宝贝健康公开课-10-添加辅食后，宝宝怎么老不长？.md"
+        ]
+      },
+      "keywords": [
+        "拒绝辅食",
+        "味觉发育",
+        "8个月",
+        "吐出来"
+      ],
+      "note": "测试用户对宝宝味觉发育阶段的理解及应对能力",
+      "source_file": "崔玉涛宝贝健康公开课-10-添加辅食后，宝宝怎么老不长？.md"
+    },
+    {
+      "id": "auto_020",
+      "schema_version": "v2",
+      "question": "宝宝味觉发育变化的月龄通常在出生后多少个月？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-10-添加辅食后，宝宝怎么老不长？.md"
+        ],
+        "should": [
+          "wiki/sources/崔玉涛宝贝健康公开课-10-添加辅食后，宝宝怎么老不长？.md"
+        ]
+      },
+      "keywords": [
+        "味觉发育",
+        "月龄",
+        "7-8个月"
+      ],
+      "note": "测试用户对宝宝味觉发育时间节点的掌握",
+      "source_file": "崔玉涛宝贝健康公开课-10-添加辅食后，宝宝怎么老不长？.md"
+    },
+    {
+      "id": "auto_021",
+      "schema_version": "v2",
+      "question": "2012年9月1日起，中华人民共和国卫生部对婴儿配方食品中牛初乳的使用有什么规定？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-11-营养素的特殊与平常.md"
+        ],
+        "should": [
+          "wiki/entities/牛初乳与婴儿喂养.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-11-营养素的特殊与平常.md"
+        ]
+      },
+      "keywords": [
+        "牛初乳",
+        "卫生部",
+        "2012年9月1日",
+        "婴儿配方食品",
+        "禁止"
+      ],
+      "note": "测试用户对牛初乳法规的了解，答案明确可从材料中找到",
+      "source_file": "崔玉涛宝贝健康公开课-11-营养素的特殊与平常.md"
+    },
+    {
+      "id": "auto_022",
+      "schema_version": "v2",
+      "question": "一个6个月宝宝从出生15天起每天服用钙和多种维生素制剂，现经常便秘，但尿量正常没有缺水表现。根据文中案例分析，可能是什么原因导致的便秘？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-11-营养素的特殊与平常.md"
+        ],
+        "should": [
+          "wiki/entities/牛初乳与婴儿喂养.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-11-营养素的特殊与平常.md"
+        ]
+      },
+      "keywords": [
+        "钙",
+        "便秘",
+        "维生素",
+        "钙皂",
+        "脂肪酸",
+        "6个月宝宝"
+      ],
+      "note": "测试用户理解营养素过量补充的副作用，需要综合文中冬冬案例和营养素相互作用原理",
+      "source_file": "崔玉涛宝贝健康公开课-11-营养素的特殊与平常.md"
+    },
+    {
+      "id": "auto_023",
+      "schema_version": "v2",
+      "question": "纯母乳喂养的宝宝需要额外补充哪些营养素？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-12-微量营养素补充不是必做功课.md"
+        ],
+        "should": [
+          "wiki/scenarios/纯母乳喂养宝宝营养补充.md"
+        ]
+      },
+      "keywords": [
+        "纯母乳喂养",
+        "维生素D",
+        "维生素K",
+        "铁",
+        "营养补充"
+      ],
+      "note": "考察对母乳喂养宝宝营养补充要点的理解",
+      "source_file": "崔玉涛宝贝健康公开课-12-微量营养素补充不是必做功课.md"
+    },
+    {
+      "id": "auto_024",
+      "schema_version": "v2",
+      "question": "为什么说婴儿微量营养素检测结果可能不准确？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-12-微量营养素补充不是必做功课.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿微量营养素检测的局限性.md"
+        ]
+      },
+      "keywords": [
+        "微量营养素检测",
+        "检测误差",
+        "血液稀释",
+        "采样问题"
+      ],
+      "note": "考察对微量营养素检测局限性原因的理解",
+      "source_file": "崔玉涛宝贝健康公开课-12-微量营养素补充不是必做功课.md"
+    },
+    {
+      "id": "auto_025",
+      "schema_version": "v2",
+      "question": "宝宝出现枕秃后，家长最应该怎么做？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-13-枕秃并不一定是缺钙.md"
+        ],
+        "should": [
+          "wiki/lessons/枕秃不等于缺钙.md",
+          "wiki/entities/枕秃.md"
+        ]
+      },
+      "keywords": [
+        "枕秃",
+        "处理方式",
+        "营养素",
+        "药物",
+        "耐心等待"
+      ],
+      "note": "考察家长面对枕秃问题时的正确应对方式",
+      "source_file": "崔玉涛宝贝健康公开课-13-枕秃并不一定是缺钙.md"
+    },
+    {
+      "id": "auto_026",
+      "schema_version": "v2",
+      "question": "佝偻病的真正原因是什么？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-13-枕秃并不一定是缺钙.md"
+        ],
+        "should": [
+          "wiki/entities/佝偻病.md",
+          "wiki/lessons/枕秃不等于缺钙.md"
+        ]
+      },
+      "keywords": [
+        "佝偻病原因",
+        "维生素D",
+        "缺钙"
+      ],
+      "note": "考察对佝偻病病因的正确理解，纠正缺钙的错误认知",
+      "source_file": "崔玉涛宝贝健康公开课-13-枕秃并不一定是缺钙.md"
+    },
+    {
+      "id": "auto_027",
+      "schema_version": "v2",
+      "question": "宝宝补钙和维生素D的正确方式是什么？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-14-“吃得好”也会营养不良吗？.md"
+        ],
+        "should": [
+          "wiki/concepts/微量营养素补充常见误区.md",
+          "wiki/scenarios/婴儿生长过快与营养需求.md"
+        ]
+      },
+      "keywords": [
+        "补钙",
+        "维生素D",
+        "母乳喂养",
+        "配方粉",
+        "误区"
+      ],
+      "note": "考察用户对婴儿补钙和维生素D正确方式的理解，属于概念型问题",
+      "source_file": "崔玉涛宝贝健康公开课-14-“吃得好”也会营养不良吗？.md"
+    },
+    {
+      "id": "auto_028",
+      "schema_version": "v2",
+      "question": "小辉被诊断出锌缺乏后，医生要求停用钙和维生素D并服用葡萄糖酸锌口服液，具体用量是多少？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-14-“吃得好”也会营养不良吗？.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿锌缺乏识别与补充.md"
+        ]
+      },
+      "keywords": [
+        "葡萄糖酸锌口服液",
+        "用量",
+        "锌缺乏",
+        "小辉"
+      ],
+      "note": "考察用户对案例中锌缺乏治疗具体用药剂量的记忆，属于数值型问题",
+      "source_file": "崔玉涛宝贝健康公开课-14-“吃得好”也会营养不良吗？.md"
+    },
+    {
+      "id": "auto_029",
+      "schema_version": "v2",
+      "question": "10个月的乐乐前面4颗小牙已长出，爸爸妈妈每天给他吃3顿接近大人但软烂的食物。最近他大便次数增加，大便中常可见未消化的食物，体重增长速度也有所减缓。请问乐乐出现这种情况的主要原因是什么？应该如何改进？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-15-会吃东西的条件：长出磨牙＋学会咀嚼.md"
+        ],
+        "should": [
+          "wiki/sources/崔玉涛宝贝健康公开课-15-会吃东西的条件：长出磨牙＋学会咀嚼.md"
+        ]
+      },
+      "keywords": [
+        "乐乐",
+        "10个月",
+        "咀嚼",
+        "磨牙",
+        "消化吸收",
+        "块状食物"
+      ],
+      "note": "考察用户对材料中案例分析能力的理解：磨牙未萌出时不能有效咀嚼块状食物，需先训练咀嚼动作。",
+      "source_file": "崔玉涛宝贝健康公开课-15-会吃东西的条件：长出磨牙＋学会咀嚼.md"
+    },
+    {
+      "id": "auto_030",
+      "schema_version": "v2",
+      "question": "孩子咀嚼能力需要具备哪两个前提条件？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-15-会吃东西的条件：长出磨牙＋学会咀嚼.md"
+        ],
+        "should": [
+          "wiki/sources/崔玉涛宝贝健康公开课-15-会吃东西的条件：长出磨牙＋学会咀嚼.md"
+        ]
+      },
+      "keywords": [
+        "咀嚼能力",
+        "前提条件",
+        "磨牙",
+        "咀嚼动作"
+      ],
+      "note": "考察用户对咀嚼能力核心概念的理解：磨牙存在和有效的咀嚼动作缺一不可。",
+      "source_file": "崔玉涛宝贝健康公开课-15-会吃东西的条件：长出磨牙＋学会咀嚼.md"
+    },
+    {
+      "id": "auto_031",
+      "schema_version": "v2",
+      "question": "宝宝吃完辅食后，大便里能看到完整的菜叶，这说明是消化问题还是吸收问题？应该怎么训练宝宝的咀嚼能力？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-16-消化、吸收，不同难题不同处理.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿消化问题与吸收问题鉴别.md",
+          "wiki/lessons/婴儿咀嚼能力培养方法.md"
+        ]
+      },
+      "keywords": [
+        "大便菜叶",
+        "消化问题",
+        "吸收问题",
+        "咀嚼能力训练"
+      ],
+      "note": "测试用户能否根据大便中是否出现原始食物来判断是消化问题还是吸收问题，并了解咀嚼能力训练方法",
+      "source_file": "崔玉涛宝贝健康公开课-16-消化、吸收，不同难题不同处理.md"
+    },
+    {
+      "id": "auto_032",
+      "schema_version": "v2",
+      "question": "导致宝宝排便困难的原因有哪些？如何通过培养肠道菌群来改善？",
+      "category": "concept",
+      "difficulty": "hard",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-16-消化、吸收，不同难题不同处理.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿肠道菌群建立.md",
+          "wiki/concepts/定时排便习惯培养.md"
+        ]
+      },
+      "keywords": [
+        "排便困难",
+        "肠道菌群",
+        "败解不好",
+        "益生菌",
+        "定时排便"
+      ],
+      "note": "测试用户对排便困难原因的理解，以及对肠道菌群建立和定时排便习惯培养方法的掌握",
+      "source_file": "崔玉涛宝贝健康公开课-16-消化、吸收，不同难题不同处理.md"
+    },
+    {
+      "id": "auto_033",
+      "schema_version": "v2",
+      "question": "1岁半的男宝宝吃饭时特别活跃，根本安静不下来，爸爸妈妈少量多次喂、追着喂、边玩边喂都不管用。这种情况应该怎么处理？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-17-愉快饥饿：最好的开胃药.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝吃饭像打仗怎么办.md",
+          "wiki/concepts/愉快饥饿疗法.md"
+        ]
+      },
+      "keywords": [
+        "1岁半",
+        "吃饭不安静",
+        "少量多次喂养",
+        "追着喂",
+        "边玩边喂",
+        "愉快饥饿疗法"
+      ],
+      "note": "测试用户对场景型问题的解决方案掌握程度，需要能够综合运用愉快饥饿疗法的原理来解决实际场景问题",
+      "source_file": "崔玉涛宝贝健康公开课-17-愉快饥饿：最好的开胃药.md"
+    },
+    {
+      "id": "auto_034",
+      "schema_version": "v2",
+      "question": "为什么少量多次喂养会使孩子丧失对吃饭的兴趣？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-17-愉快饥饿：最好的开胃药.md"
+        ],
+        "should": [
+          "wiki/concepts/强迫喂养危害.md",
+          "wiki/concepts/愉快饥饿疗法.md"
+        ]
+      },
+      "keywords": [
+        "少量多次喂养",
+        "饥饿刺激",
+        "胃酸分泌",
+        "吃饭兴趣",
+        "进食习惯"
+      ],
+      "note": "测试用户对喂养方式与生理机制关系的理解，需要能从材料中找到原理解释",
+      "source_file": "崔玉涛宝贝健康公开课-17-愉快饥饿：最好的开胃药.md"
+    },
+    {
+      "id": "auto_035",
+      "schema_version": "v2",
+      "question": "孩子两顿饭之间饿了想吃东西，家长应该怎么做才是正确的？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-18-如何应对挑食宝宝？.md"
+        ],
+        "should": [
+          "wiki/concepts/愉快饥饿疗法.md"
+        ]
+      },
+      "keywords": [
+        "两顿饭中间",
+        "零食",
+        "愉快饥饿疗法",
+        "分散注意力"
+      ],
+      "note": "考察家长对'愉快饥饿疗法'具体操作的理解，特别是面对孩子喊饿时的应对方式",
+      "source_file": "崔玉涛宝贝健康公开课-18-如何应对挑食宝宝？.md"
+    },
+    {
+      "id": "auto_036",
+      "schema_version": "v2",
+      "question": "为什么孩子1岁以前要吃混合食物，而不是把饭菜肉分开喂？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-18-如何应对挑食宝宝？.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿混合食物喂养策略.md"
+        ]
+      },
+      "keywords": [
+        "混合食物",
+        "1岁",
+        "均衡营养",
+        "偏食",
+        "挑食"
+      ],
+      "note": "考察家长对混合食物喂养目的和时机的理解，知道太早分着吃可能导致的问题",
+      "source_file": "崔玉涛宝贝健康公开课-18-如何应对挑食宝宝？.md"
+    },
+    {
+      "id": "auto_037",
+      "schema_version": "v2",
+      "question": "孩子吃饭不好时，家长可以采取哪种方式帮助他建立好的进食习惯？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-18-如何应对挑食宝宝？.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿积极进食环境营造.md"
+        ]
+      },
+      "keywords": [
+        "鼓励",
+        "进步奖",
+        "降低预期值",
+        "饥饿感"
+      ],
+      "note": "考察家长对非强制性引导方法的理解，避免采用责备或强制规定量的方式",
+      "source_file": "崔玉涛宝贝健康公开课-18-如何应对挑食宝宝？.md"
+    },
+    {
+      "id": "auto_038",
+      "schema_version": "v2",
+      "question": "为什么说6个月内的宝宝不是完全不会生病？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-19-A+方案预防宝宝感冒.md"
+        ],
+        "should": [
+          "wiki/entities/婴儿上呼吸道感染.md",
+          "wiki/scenarios/预防婴儿感冒.md"
+        ]
+      },
+      "keywords": [
+        "6个月",
+        "抗体",
+        "感冒病毒",
+        "上呼吸道感染"
+      ],
+      "note": "测试用户对抗体传递和感冒病毒多样性的理解",
+      "source_file": "崔玉涛宝贝健康公开课-19-A+方案预防宝宝感冒.md"
+    },
+    {
+      "id": "auto_039",
+      "schema_version": "v2",
+      "question": "2岁的孩子刚上幼儿园，秋天开始频繁感冒，几乎每个月都发烧，这种情况下家长应该怎么做？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-19-A+方案预防宝宝感冒.md"
+        ],
+        "should": [
+          "wiki/scenarios/婴儿入园后反复感冒.md",
+          "wiki/concepts/婴儿穿衣过多与着凉.md",
+          "wiki/concepts/主动饮水训练.md",
+          "wiki/concepts/婴儿冷空气适应训练.md"
+        ]
+      },
+      "keywords": [
+        "幼儿园",
+        "频繁感冒",
+        "穿衣",
+        "喝水",
+        "户外活动"
+      ],
+      "note": "测试用户对入园后反复感冒综合应对方案的理解，包括穿衣、饮水和户外活动三个方面",
+      "source_file": "崔玉涛宝贝健康公开课-19-A+方案预防宝宝感冒.md"
+    },
+    {
+      "id": "auto_040",
+      "schema_version": "v2",
+      "question": "宝宝刚接种完疫苗后出现发热，这种发热是否说明接种成功了？应该如何处理？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-20-哪些原因会引起宝宝发热？.md"
+        ],
+        "should": [
+          "wiki/entities/疫苗相关性发热.md",
+          "wiki/entities/儿童发热.md"
+        ]
+      },
+      "keywords": [
+        "预防接种后发热",
+        "疫苗相关性发热",
+        "体温",
+        "处理方法"
+      ],
+      "note": "测试家长对疫苗接种后发热的认知和处理方式，属于真实场景需求",
+      "source_file": "崔玉涛宝贝健康公开课-20-哪些原因会引起宝宝发热？.md"
+    },
+    {
+      "id": "auto_041",
+      "schema_version": "v2",
+      "question": "儿童体温超过多少度应视为发热？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-20-哪些原因会引起宝宝发热？.md"
+        ],
+        "should": [
+          "wiki/entities/儿童发热.md"
+        ]
+      },
+      "keywords": [
+        "儿童体温",
+        "发热标准",
+        "38℃"
+      ],
+      "note": "测试对儿童发热基本定义的了解程度，属于简单事实型问题",
+      "source_file": "崔玉涛宝贝健康公开课-20-哪些原因会引起宝宝发热？.md"
+    },
+    {
+      "id": "auto_042",
+      "schema_version": "v2",
+      "question": "宝宝发烧2天后，妈妈发现退烧药的效果不如刚开始好了，但孩子精神状态还可以。这种情况可能是什么原因导致的？妈妈应该采取什么措施？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-22-高烧，需要有效退热.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝发烧怎么办.md",
+          "wiki/concepts/儿童发热护理指南.md"
+        ]
+      },
+      "keywords": [
+        "发烧几天",
+        "退烧药不管用",
+        "水分",
+        "体内水分减少",
+        "食欲减退"
+      ],
+      "note": "测试用户对发烧进程中出现退烧药效果下降的综合原因分析能力，以及对补水重要性的理解",
+      "source_file": "崔玉涛宝贝健康公开课-22-高烧，需要有效退热.md"
+    },
+    {
+      "id": "auto_043",
+      "schema_version": "v2",
+      "question": "为什么建议在孩子体温达到38.5℃以上时才服用退烧药？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-22-高烧，需要有效退热.md"
+        ],
+        "should": [
+          "wiki/concepts/儿童退热药物.md"
+        ]
+      },
+      "keywords": [
+        "38.5℃",
+        "退烧药",
+        "起作用时间",
+        "20-30分钟",
+        "避免体温过高"
+      ],
+      "note": "测试用户对退烧药使用时机及原因的理解",
+      "source_file": "崔玉涛宝贝健康公开课-22-高烧，需要有效退热.md"
+    },
+    {
+      "id": "auto_044",
+      "schema_version": "v2",
+      "question": "小明妈妈在小明出现低热（37.7℃）时立即给他服用了退热药物，这种做法可能带来什么后果？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-23-一分为二看发热.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝发烧怎么办.md",
+          "wiki/concepts/儿童发热的双重性.md"
+        ]
+      },
+      "keywords": [
+        "过早使用退热剂",
+        "保护作用",
+        "延长疾病过程",
+        "发热益处"
+      ],
+      "note": "考察对不当使用退热药物后果的理解，结合小明实际案例",
+      "source_file": "崔玉涛宝贝健康公开课-23-一分为二看发热.md"
+    },
+    {
+      "id": "auto_045",
+      "schema_version": "v2",
+      "question": "在孩子发热期间，家长需要密切观察哪些异常表现？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-23-一分为二看发热.md"
+        ],
+        "should": [
+          "wiki/concepts/儿童发热的双重性.md",
+          "wiki/scenarios/宝宝发烧怎么办.md"
+        ]
+      },
+      "keywords": [
+        "脸色苍白",
+        "呼吸增快",
+        "恶心呕吐腹泻",
+        "神志改变",
+        "惊厥",
+        "异常表现"
+      ],
+      "note": "考察对发热期间需观察症状的掌握",
+      "source_file": "崔玉涛宝贝健康公开课-23-一分为二看发热.md"
+    },
+    {
+      "id": "auto_046",
+      "schema_version": "v2",
+      "question": "宝宝高热后又吐又泻，精神变差，不肯喝水，家长应该怎么办？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-24-高烧、腹泻防脱水.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝高热呕吐腹泻后如何补水.md",
+          "wiki/concepts/儿童脱水症状识别.md",
+          "wiki/concepts/儿童脱水家庭补液.md"
+        ]
+      },
+      "keywords": [
+        "高热",
+        "呕吐",
+        "腹泻",
+        "补水",
+        "口服补液"
+      ],
+      "note": "测试家长对高热呕吐腹泻场景的处理能力，考察是否了解少量多次补液的原则",
+      "source_file": "崔玉涛宝贝健康公开课-24-高烧、腹泻防脱水.md"
+    },
+    {
+      "id": "auto_047",
+      "schema_version": "v2",
+      "question": "儿童脱水时会有哪些典型症状表现？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-24-高烧、腹泻防脱水.md"
+        ],
+        "should": [
+          "wiki/concepts/儿童脱水症状识别.md",
+          "wiki/concepts/儿童脱水.md"
+        ]
+      },
+      "keywords": [
+        "脱水症状",
+        "哭时无泪",
+        "口腔干燥",
+        "尿色",
+        "皮肤弹性"
+      ],
+      "note": "测试家长对脱水典型症状的识别能力",
+      "source_file": "崔玉涛宝贝健康公开课-24-高烧、腹泻防脱水.md"
+    },
+    {
+      "id": "auto_048",
+      "schema_version": "v2",
+      "question": "为什么说孩子咳嗽是好事而不是坏事？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-25-正确认识咳嗽.md"
+        ],
+        "should": [
+          "wiki/concepts/咳嗽防御机制.md",
+          "wiki/concepts/儿童咳嗽.md"
+        ]
+      },
+      "keywords": [
+        "咳嗽",
+        "防御机制",
+        "好事"
+      ],
+      "note": "考察用户对咳嗽本质的理解，属于中等难度概念题",
+      "source_file": "崔玉涛宝贝健康公开课-25-正确认识咳嗽.md"
+    },
+    {
+      "id": "auto_049",
+      "schema_version": "v2",
+      "question": "孩子不发烧了，为什么咳嗽却反而加重了？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-25-正确认识咳嗽.md"
+        ],
+        "should": [
+          "wiki/lessons/咳嗽护理常见误区.md",
+          "wiki/scenarios/宝宝咳嗽怎么办.md"
+        ]
+      },
+      "keywords": [
+        "发烧",
+        "咳嗽",
+        "黏膜修复"
+      ],
+      "note": "考察家长对咳嗽和发烧关系的理解，属于场景应用题",
+      "source_file": "崔玉涛宝贝健康公开课-25-正确认识咳嗽.md"
+    },
+    {
+      "id": "auto_050",
+      "schema_version": "v2",
+      "question": "孩子腹泻期间，有些家长认为让孩子饿着不吃饭就不会拉了，这种做法正确吗？为什么？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-26-问诊腹泻.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝腹泻期间怎么吃.md",
+          "wiki/lessons/腹泻禁食误区.md"
+        ]
+      },
+      "keywords": [
+        "腹泻禁食",
+        "禁食误区",
+        "不吃不喝",
+        "排泄",
+        "病菌排出"
+      ],
+      "note": "测试用户对腹泻期间饮食误区的理解，尤其是禁食能否帮助腹泻恢复",
+      "source_file": "崔玉涛宝贝健康公开课-26-问诊腹泻.md"
+    },
+    {
+      "id": "auto_051",
+      "schema_version": "v2",
+      "question": "腹泻的传染途径主要有哪些？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-26-问诊腹泻.md"
+        ],
+        "should": [
+          "wiki/sources/崔玉涛宝贝健康公开课-26-问诊腹泻.md"
+        ]
+      },
+      "keywords": [
+        "腹泻传染",
+        "经口传播",
+        "粪口传染",
+        "呼吸道传染"
+      ],
+      "note": "测试用户对腹泻传播途径的掌握程度",
+      "source_file": "崔玉涛宝贝健康公开课-26-问诊腹泻.md"
+    },
+    {
+      "id": "auto_052",
+      "schema_version": "v2",
+      "question": "为什么孩子在急性腹泻后还会持续腹泻很长时间？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-27-对付迟迟不好的腹泻.md"
+        ],
+        "should": [
+          "wiki/concepts/乳糖不耐受.md"
+        ]
+      },
+      "keywords": [
+        "急性腹泻",
+        "持续腹泻",
+        "乳糖不耐受",
+        "乳糖酶"
+      ],
+      "note": "测试用户对乳糖不耐受概念的理解",
+      "source_file": "崔玉涛宝贝健康公开课-27-对付迟迟不好的腹泻.md"
+    },
+    {
+      "id": "auto_053",
+      "schema_version": "v2",
+      "question": "8个月的冬冬患轮状病毒性胃肠炎后，使用抗生素治疗但腹泻持续3周不好转，大便含奶瓣。此时应该采取什么喂养措施？",
+      "category": "scenario",
+      "difficulty": "hard",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-27-对付迟迟不好的腹泻.md"
+        ],
+        "should": [
+          "wiki/entities/冬冬.md",
+          "wiki/concepts/乳糖不耐受.md"
+        ]
+      },
+      "keywords": [
+        "冬冬",
+        "轮状病毒",
+        "抗生素",
+        "不含乳糖配方粉",
+        "乳糖不耐受"
+      ],
+      "note": "测试用户在复杂场景下对乳糖不耐受治疗方案的实际应用能力",
+      "source_file": "崔玉涛宝贝健康公开课-27-对付迟迟不好的腹泻.md"
+    },
+    {
+      "id": "auto_054",
+      "schema_version": "v2",
+      "question": "幼儿急疹出疹后可以给孩子洗澡吗？需要注意什么？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-28-虚张声势的幼儿急疹.md"
+        ],
+        "should": [
+          "wiki/entities/幼儿急疹.md",
+          "wiki/concepts/幼儿急疹护理指南.md"
+        ]
+      },
+      "keywords": [
+        "幼儿急疹",
+        "出疹",
+        "洗澡",
+        "护理"
+      ],
+      "note": "测试用户对幼儿急疹出疹期护理的了解，材料中明确指出幼儿急疹'既不怕风也不怕水'，可以正常洗澡，注意不要穿过多衣服。",
+      "source_file": "崔玉涛宝贝健康公开课-28-虚张声势的幼儿急疹.md"
+    },
+    {
+      "id": "auto_055",
+      "schema_version": "v2",
+      "question": "幼儿急疹和风疹、麻疹在出疹时机上有什么最大的区别？",
+      "category": "fact",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-28-虚张声势的幼儿急疹.md"
+        ],
+        "should": [
+          "wiki/entities/幼儿急疹.md",
+          "wiki/concepts/儿童常见出疹性疾病鉴别.md"
+        ]
+      },
+      "keywords": [
+        "幼儿急疹",
+        "风疹",
+        "麻疹",
+        "出疹",
+        "高热"
+      ],
+      "note": "测试用户对幼儿急疹与其他出疹性疾病鉴别点的掌握，材料明确指出'幼儿急疹为高热后出疹，而其他三种疾病则是高热时出疹'。",
+      "source_file": "崔玉涛宝贝健康公开课-28-虚张声势的幼儿急疹.md"
+    },
+    {
+      "id": "auto_056",
+      "schema_version": "v2",
+      "question": "我家宝宝8个月，从4个月开始长湿疹，现在吃辅食后越来越严重，怀疑是过敏，请问这种情况下需要带宝宝去查过敏原吗？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-30-恼人的湿疹.md"
+        ],
+        "should": [
+          "wiki/sources/崔玉涛宝贝健康公开课-30-恼人的湿疹.md",
+          "wiki/entities/婴儿湿疹.md"
+        ]
+      },
+      "keywords": [
+        "过敏原检测",
+        "婴幼儿",
+        "湿疹检查时机",
+        "1岁以内"
+      ],
+      "note": "测试用户是否能理解过敏原检测的适用条件（需要症状持续至少半年且年龄满1岁），并做出正确的就医决策",
+      "source_file": "崔玉涛宝贝健康公开课-30-恼人的湿疹.md"
+    },
+    {
+      "id": "auto_057",
+      "schema_version": "v2",
+      "question": "湿疹和痱子在触摸时有什么本质区别？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-30-恼人的湿疹.md"
+        ],
+        "should": [
+          "wiki/sources/崔玉涛宝贝健康公开课-30-恼人的湿疹.md",
+          "wiki/entities/婴儿湿疹.md"
+        ]
+      },
+      "keywords": [
+        "湿疹触摸",
+        "痱子触摸",
+        "光滑粗糙",
+        "脱屑"
+      ],
+      "note": "测试用户对湿疹基本特征（皮肤粗糙脱屑）的理解，区分湿疹与痱子的关键鉴别点",
+      "source_file": "崔玉涛宝贝健康公开课-30-恼人的湿疹.md"
+    },
+    {
+      "id": "auto_058",
+      "schema_version": "v2",
+      "question": "宝宝第一次出现喘息时，家长应该如何应对？是否应该长期使用止喘药物？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-31-喘，不等于哮喘.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝喘息发作怎么办.md",
+          "wiki/lessons/喘不等于哮喘.md"
+        ]
+      },
+      "keywords": [
+        "喘息首次发作",
+        "止喘药物",
+        "长期用药"
+      ],
+      "note": "考察家长对喘息发作处理和用药时机的理解，结合案例说明喘≠哮喘，不应盲目长期用药",
+      "source_file": "崔玉涛宝贝健康公开课-31-喘，不等于哮喘.md"
+    },
+    {
+      "id": "auto_059",
+      "schema_version": "v2",
+      "question": "3岁以下的婴幼儿要诊断为哮喘，需要满足哪些具体条件？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-31-喘，不等于哮喘.md"
+        ],
+        "should": [
+          "wiki/entities/婴幼儿哮喘.md",
+          "wiki/lessons/喘不等于哮喘.md"
+        ]
+      },
+      "keywords": [
+        "婴幼儿哮喘",
+        "诊断标准",
+        "3岁以下"
+      ],
+      "note": "考察婴幼儿哮喘的诊断标准，需要同时满足喘息次数、过敏史和家族史三个条件",
+      "source_file": "崔玉涛宝贝健康公开课-31-喘，不等于哮喘.md"
+    },
+    {
+      "id": "auto_060",
+      "schema_version": "v2",
+      "question": "孩子哮喘症状控制后还需要继续用药吗？家长擅自停药会有什么风险？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-32-预防哮喘，从居家环境开始.md"
+        ],
+        "should": [
+          "wiki/concepts/哮喘缓解期治疗.md",
+          "wiki/lessons/哮喘缓解期见好就收误区.md"
+        ]
+      },
+      "keywords": [
+        "哮喘缓解期",
+        "预防发作",
+        "停药风险",
+        "必可酮",
+        "普米克"
+      ],
+      "note": "测试家长对哮喘缓解期需要长期用药的理解，以及见好就收的误区",
+      "source_file": "崔玉涛宝贝健康公开课-32-预防哮喘，从居家环境开始.md"
+    },
+    {
+      "id": "auto_061",
+      "schema_version": "v2",
+      "question": "轻症哮喘患儿需要持续吸入必可酮或普米克多长时间？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-32-预防哮喘，从居家环境开始.md"
+        ],
+        "should": [
+          "wiki/entities/必可酮.md",
+          "wiki/concepts/哮喘缓解期治疗.md"
+        ]
+      },
+      "keywords": [
+        "轻症哮喘",
+        "持续吸入",
+        "3-6个月",
+        "必可酮",
+        "普米克"
+      ],
+      "note": "测试对哮喘缓解期治疗疗程的数值记忆",
+      "source_file": "崔玉涛宝贝健康公开课-32-预防哮喘，从居家环境开始.md"
+    },
+    {
+      "id": "auto_062",
+      "schema_version": "v2",
+      "question": "宝宝添加辅食时，应该如何观察是否对某种食物过敏或有不耐受反应？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-33-食物不耐受？还是食物过敏？.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿食物过敏管理.md",
+          "wiki/concepts/食物不耐受与食物过敏鉴别.md"
+        ]
+      },
+      "keywords": [
+        "辅食添加",
+        "观察期",
+        "3天",
+        "食物过敏",
+        "不耐受"
+      ],
+      "note": "考察用户在实际育儿场景中应用辅食添加原则的能力",
+      "source_file": "崔玉涛宝贝健康公开课-33-食物不耐受？还是食物过敏？.md"
+    },
+    {
+      "id": "auto_063",
+      "schema_version": "v2",
+      "question": "食物不耐受和食物过敏在免疫反应机制上有什么区别？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-33-食物不耐受？还是食物过敏？.md"
+        ],
+        "should": [
+          "wiki/concepts/食物不耐受与食物过敏鉴别.md",
+          "wiki/entities/食物过敏.md",
+          "wiki/entities/食物不耐受.md"
+        ]
+      },
+      "keywords": [
+        "免疫反应",
+        "IgE",
+        "肥大细胞",
+        "组织胺",
+        "非生理性反应"
+      ],
+      "note": "考察用户对两种不同免疫机制的理解深度",
+      "source_file": "崔玉涛宝贝健康公开课-33-食物不耐受？还是食物过敏？.md"
+    },
+    {
+      "id": "auto_064",
+      "schema_version": "v2",
+      "question": "为什么孩子第一次吃新食物不会出现过敏症状，但第二次吃同样的食物就可能出现过敏？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-34-有关过敏的其他问题和预防建议.md"
+        ],
+        "should": [
+          "wiki/concepts/IgE介导过敏的致敏与发作机制.md",
+          "wiki/entities/免疫球蛋白E.md"
+        ]
+      },
+      "keywords": [
+        "致敏",
+        "IgE",
+        "肥大细胞",
+        "过敏原",
+        "第二次"
+      ],
+      "note": "测试用户对过敏两个阶段（致敏和过敏）的理解，以及IgE在其中的作用",
+      "source_file": "崔玉涛宝贝健康公开课-34-有关过敏的其他问题和预防建议.md"
+    },
+    {
+      "id": "auto_065",
+      "schema_version": "v2",
+      "question": "4个月的宝宝刚添加米粉，吃完后嘴巴周围发红，但没有其他症状，这是过敏吗？家长应该如何判断和应对？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-34-有关过敏的其他问题和预防建议.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝吃东西后嘴巴周围发红怎么办.md",
+          "wiki/concepts/IgE介导过敏的致敏与发作机制.md"
+        ]
+      },
+      "keywords": [
+        "嘴巴周围发红",
+        "第一次",
+        "新食物",
+        "过敏症状"
+      ],
+      "note": "测试用户将过敏知识应用于实际场景的能力，理解为何第一次吃新食物不会真正过敏",
+      "source_file": "崔玉涛宝贝健康公开课-34-有关过敏的其他问题和预防建议.md"
+    },
+    {
+      "id": "auto_066",
+      "schema_version": "v2",
+      "question": "5岁的强强因为小便次数明显增多被妈妈带到诊室看病，医生检查后发现他频繁排尿的原因是什么？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-35-宝宝为何尿频？.md"
+        ],
+        "should": [
+          "wiki/entities/强强.md",
+          "wiki/entities/包皮垢.md",
+          "wiki/entities/阴茎头炎.md"
+        ]
+      },
+      "keywords": [
+        "强强",
+        "包皮垢",
+        "阴茎头",
+        "排尿感"
+      ],
+      "note": "测试用户能否从故事场景中理解强强尿频的医学原因，即包皮垢刺激阴茎头神经末梢产生排尿感",
+      "source_file": "崔玉涛宝贝健康公开课-35-宝宝为何尿频？.md"
+    },
+    {
+      "id": "auto_067",
+      "schema_version": "v2",
+      "question": "男婴大约几岁时，包皮的部分内面会逐渐与阴茎头分离形成小囊？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-35-宝宝为何尿频？.md"
+        ],
+        "should": [
+          "wiki/concepts/男婴包皮发育特点.md"
+        ]
+      },
+      "keywords": [
+        "男婴",
+        "包皮",
+        "阴茎头",
+        "分离",
+        "年龄"
+      ],
+      "note": "测试用户对男婴包皮正常发育过程关键时间节点的掌握",
+      "source_file": "崔玉涛宝贝健康公开课-35-宝宝为何尿频？.md"
+    },
+    {
+      "id": "auto_068",
+      "schema_version": "v2",
+      "question": "女宝宝小阴唇粘连如果不严重，可以等到什么时候自行分开？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-36-女宝宝：小阴唇粘连.md"
+        ],
+        "should": [
+          "wiki/entities/女婴小阴唇粘连.md"
+        ]
+      },
+      "keywords": [
+        "小阴唇粘连",
+        "自行分开",
+        "青春期",
+        "雌性激素"
+      ],
+      "note": "考察对材料中非紧急处理方式的知识掌握",
+      "source_file": "崔玉涛宝贝健康公开课-36-女宝宝：小阴唇粘连.md"
+    },
+    {
+      "id": "auto_069",
+      "schema_version": "v2",
+      "question": "1岁女宝宝尿布前端总是湿的，但排尿本身没有延迟，可能是什么原因？家长应该如何初步应对？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-36-女宝宝：小阴唇粘连.md"
+        ],
+        "should": [
+          "wiki/entities/女婴小阴唇粘连.md",
+          "wiki/entities/女婴外阴日常护理.md"
+        ]
+      },
+      "keywords": [
+        "女宝宝",
+        "排尿后尿布湿",
+        "小阴唇粘连",
+        "小兜",
+        "观察"
+      ],
+      "note": "考察将症状与疾病关联的临床推理能力，同时覆盖日常护理知识",
+      "source_file": "崔玉涛宝贝健康公开课-36-女宝宝：小阴唇粘连.md"
+    },
+    {
+      "id": "auto_070",
+      "schema_version": "v2",
+      "question": "为什么女宝宝比男宝宝更容易患泌尿系感染？",
+      "category": "fact",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-37-女宝宝发生了泌尿系感染.md"
+        ],
+        "should": [
+          "wiki/entities/女婴泌尿系感染.md"
+        ]
+      },
+      "keywords": [
+        "女宝宝泌尿系感染原因",
+        "女孩尿道特点",
+        "发病率对比"
+      ],
+      "note": "考察材料中关于女婴泌尿系感染易感原因的知识点",
+      "source_file": "崔玉涛宝贝健康公开课-37-女宝宝发生了泌尿系感染.md"
+    },
+    {
+      "id": "auto_071",
+      "schema_version": "v2",
+      "question": "3岁女宝宝小英频繁排尿但每次只尿一点，这种现象可能是什么原因？家长应该如何应对？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-37-女宝宝发生了泌尿系感染.md"
+        ],
+        "should": [
+          "wiki/scenarios/女宝宝排尿异常怎么办.md",
+          "wiki/lessons/泌尿系感染后心理依赖需要时间纠正.md",
+          "wiki/concepts/心理依赖性排尿.md"
+        ]
+      },
+      "keywords": [
+        "小英频繁排尿",
+        "泌尿系感染治愈后表现",
+        "心理依赖排尿纠正方法"
+      ],
+      "note": "考察将案例场景与解决方案结合的实用知识",
+      "source_file": "崔玉涛宝贝健康公开课-37-女宝宝发生了泌尿系感染.md"
+    },
+    {
+      "id": "auto_072",
+      "schema_version": "v2",
+      "question": "宝宝4个月大，为了让他夜间睡得更长，妈妈在奶中添加了婴儿营养米粉，但最近出现了大便干燥、排便困难的情况。这种情况应该如何处理？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-38-“便事”的烦恼.md"
+        ],
+        "should": []
+      },
+      "keywords": [
+        "米粉",
+        "便秘",
+        "大便干燥",
+        "婴儿",
+        "添加方法"
+      ],
+      "note": "测试用户是否能理解米粉添加到奶中可能导致便秘的场景，以及正确的米粉添加原则",
+      "source_file": "崔玉涛宝贝健康公开课-38-“便事”的烦恼.md"
+    },
+    {
+      "id": "auto_073",
+      "schema_version": "v2",
+      "question": "医学上是如何定义婴儿便秘的？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-38-“便事”的烦恼.md"
+        ],
+        "should": []
+      },
+      "keywords": [
+        "便秘",
+        "定义",
+        "大便干燥",
+        "排便次数少"
+      ],
+      "note": "测试用户对便秘基本概念的理解",
+      "source_file": "崔玉涛宝贝健康公开课-38-“便事”的烦恼.md"
+    },
+    {
+      "id": "auto_074",
+      "schema_version": "v2",
+      "question": "哪些新生儿更容易出现髋关节发育不良？",
+      "category": "fact",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-39-走不稳？查查髋关节.md"
+        ],
+        "should": [
+          "wiki/entities/髋关节发育不良.md",
+          "wiki/entities/臀位.md"
+        ]
+      },
+      "keywords": [
+        "髋关节发育不良",
+        "高危因素",
+        "臀位",
+        "头胎",
+        "女性"
+      ],
+      "note": "测试用户对髋关节发育不良高危人群的了解程度，包括头胎、女性、臀位生产、家族史等关键因素",
+      "source_file": "崔玉涛宝贝健康公开课-39-走不稳？查查髋关节.md"
+    },
+    {
+      "id": "auto_075",
+      "schema_version": "v2",
+      "question": "宝宝1岁多走路看起来有点瘸，两条腿运动不对称，这是怎么回事？应该怎么办？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-39-走不稳？查查髋关节.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝走路姿势不对称怎么办.md",
+          "wiki/entities/髋关节发育不良.md"
+        ]
+      },
+      "keywords": [
+        "走路瘸",
+        "双腿不对称",
+        "髋关节发育不良",
+        "检查"
+      ],
+      "note": "测试用户对走路姿势异常场景的理解和处理方式，关联案例中18个月薇薇的情况",
+      "source_file": "崔玉涛宝贝健康公开课-39-走不稳？查查髋关节.md"
+    },
+    {
+      "id": "auto_076",
+      "schema_version": "v2",
+      "question": "孩子得了暂时性髋关节滑囊炎，医生开的布洛芬混悬液（美林）和扶他林乳剂，这两种药可以一起用吗？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-40-髋关节滑囊炎.md"
+        ],
+        "should": [
+          "wiki/entities/暂时性髋关节滑囊炎.md",
+          "wiki/scenarios/宝宝走路姿势不对称怎么办.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-40-髋关节滑囊炎.md"
+        ]
+      },
+      "keywords": [
+        "布洛芬",
+        "扶他林",
+        "非激素类抗炎镇痛药物",
+        "暂时性髋关节滑囊炎",
+        "治疗用药"
+      ],
+      "note": "测试用户对暂时性髋关节滑囊炎治疗药物的了解，验证是否能从材料中找到美林就是布洛芬的说明，以及两种药物的联合使用方案",
+      "source_file": "崔玉涛宝贝健康公开课-40-髋关节滑囊炎.md"
+    },
+    {
+      "id": "auto_077",
+      "schema_version": "v2",
+      "question": "暂时性髋关节滑囊炎和成人的滑囊炎在发病原因上有什么区别？",
+      "category": "concept",
+      "difficulty": "hard",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-40-髋关节滑囊炎.md"
+        ],
+        "should": [
+          "wiki/entities/暂时性髋关节滑囊炎.md",
+          "wiki/entities/髋关节滑囊.md"
+        ]
+      },
+      "keywords": [
+        "小儿滑囊炎",
+        "发病原因",
+        "病毒感染",
+        "超敏反应",
+        "成人滑囊炎"
+      ],
+      "note": "测试用户对小儿暂时性髋关节滑囊炎特殊发病机制的理解，材料明确指出与成人滑囊炎的不同点在于可能与病毒感染后的超敏反应有关",
+      "source_file": "崔玉涛宝贝健康公开课-40-髋关节滑囊炎.md"
+    },
+    {
+      "id": "auto_078",
+      "schema_version": "v2",
+      "question": "案例中的家长在2天内换了3家医院，这种做法导致了什么问题？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-42-带孩子看病的4项提醒.md"
+        ],
+        "should": [
+          "wiki/scenarios/带孩子看病的正确方式.md",
+          "wiki/lessons/频繁换医院的危害.md"
+        ]
+      },
+      "keywords": [
+        "频繁换医院",
+        "三家医院",
+        "病情变化",
+        "诊断偏差"
+      ],
+      "note": "测试用户是否理解频繁更换就诊医院的危害，认识到这样做会导致医生无法准确了解病情变化",
+      "source_file": "崔玉涛宝贝健康公开课-42-带孩子看病的4项提醒.md"
+    },
+    {
+      "id": "auto_079",
+      "schema_version": "v2",
+      "question": "孩子发烧时，家长应该怎么判断病情的严重程度？是不是烧得越高病情就越重？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-43-关于带孩子看病的7条建议.md"
+        ],
+        "should": [
+          "wiki/concepts/儿童病情轻重判断标准.md",
+          "wiki/concepts/儿童就医病情描述指南.md"
+        ]
+      },
+      "keywords": [
+        "发烧",
+        "病情轻重",
+        "难受",
+        "体温",
+        "判断标准"
+      ],
+      "note": "测试家长是否理解不能仅凭体温高低判断病情严重程度，应关注孩子是否'难受'",
+      "source_file": "崔玉涛宝贝健康公开课-43-关于带孩子看病的7条建议.md"
+    },
+    {
+      "id": "auto_080",
+      "schema_version": "v2",
+      "question": "孩子患消化道疾病时，为什么不建议喝普通配方粉？应该选择什么替代品？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-43-关于带孩子看病的7条建议.md"
+        ],
+        "should": [
+          "wiki/concepts/儿童生病饮食护理.md"
+        ]
+      },
+      "keywords": [
+        "消化道疾病",
+        "配方粉",
+        "乳糖",
+        "不含乳糖配方粉",
+        "清淡饮食"
+      ],
+      "note": "测试家长是否理解消化道疾病时奶中的乳糖会加重腹泻，以及替代方案",
+      "source_file": "崔玉涛宝贝健康公开课-43-关于带孩子看病的7条建议.md"
+    },
+    {
+      "id": "auto_081",
+      "schema_version": "v2",
+      "question": "孩子发烧时，泰诺林和美林可以交替使用吗？具体应该怎么交替使用？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-44-退热药，混搭用.md"
+        ],
+        "should": [
+          "wiki/concepts/儿童退热药物.md",
+          "wiki/concepts/退热药交替使用指南.md",
+          "wiki/entities/泰诺林.md",
+          "wiki/entities/美林.md"
+        ]
+      },
+      "keywords": [
+        "泰诺林",
+        "美林",
+        "交替使用",
+        "间隔时间",
+        "对乙酰氨基酚",
+        "布洛芬"
+      ],
+      "note": "测试用户对退热药交替使用方法的理解，要求能够准确回答两种药物的间隔时间要求",
+      "source_file": "崔玉涛宝贝健康公开课-44-退热药，混搭用.md"
+    },
+    {
+      "id": "auto_082",
+      "schema_version": "v2",
+      "question": "对乙酰氨基酚（如泰诺林）和布洛芬（如美林）给儿童退热时，每次用量和用药间隔分别是多少？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-44-退热药，混搭用.md"
+        ],
+        "should": [
+          "wiki/entities/对乙酰氨基酚.md",
+          "wiki/entities/布洛芬.md",
+          "wiki/concepts/儿童退热药物.md"
+        ]
+      },
+      "keywords": [
+        "对乙酰氨基酚",
+        "布洛芬",
+        "用量",
+        "间隔",
+        "毫克每千克",
+        "泰诺林",
+        "美林"
+      ],
+      "note": "测试用户对退热药剂量和用药间隔的掌握程度，考察数值记忆准确性",
+      "source_file": "崔玉涛宝贝健康公开课-44-退热药，混搭用.md"
+    },
+    {
+      "id": "auto_083",
+      "schema_version": "v2",
+      "question": "2岁的静静患有疱疹性咽颊炎，医生为什么没有给她开抗生素？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-45-有炎症一定要用消炎药吗？.md"
+        ],
+        "should": [
+          "wiki/entities/静静.md",
+          "wiki/concepts/炎症与感染的区别.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-45-有炎症一定要用消炎药吗？.md"
+        ]
+      },
+      "keywords": [
+        "静静",
+        "疱疹性咽颊炎",
+        "病毒感染",
+        "抗生素",
+        "自愈"
+      ],
+      "note": "考察用户理解病毒感染与细菌感染的区别，以及抗生素的适用范围",
+      "source_file": "崔玉涛宝贝健康公开课-45-有炎症一定要用消炎药吗？.md"
+    },
+    {
+      "id": "auto_084",
+      "schema_version": "v2",
+      "question": "为什么使用抗生素治疗细菌感染时必须保证足够的疗程？",
+      "category": "concept",
+      "difficulty": "hard",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-45-有炎症一定要用消炎药吗？.md"
+        ],
+        "should": [
+          "wiki/concepts/细菌耐药性形成机制.md",
+          "wiki/concepts/抗生素足量足疗程原则.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-45-有炎症一定要用消炎药吗？.md"
+        ]
+      },
+      "keywords": [
+        "抗生素",
+        "疗程",
+        "细菌",
+        "耐药性",
+        "彻底杀死"
+      ],
+      "note": "考察用户对细菌耐药性产生机制的理解，以及足量足疗程使用抗生素的重要性",
+      "source_file": "崔玉涛宝贝健康公开课-45-有炎症一定要用消炎药吗？.md"
+    },
+    {
+      "id": "auto_085",
+      "schema_version": "v2",
+      "question": "10个月的宝宝因腹泻出现脱水症状，医生建议住院接受持续静脉输液。根据材料分析，医生做出这个建议的依据是什么？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-46-输液，有必要吗？.md"
+        ],
+        "should": [
+          "wiki/entities/宝宝.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-46-输液，有必要吗？.md"
+        ]
+      },
+      "keywords": [
+        "脱水",
+        "静脉输液",
+        "腹泻",
+        "尿量减少",
+        "口干"
+      ],
+      "note": "测试用户对案例中宝宝脱水情况的理解，以及对静脉输液适应症的掌握",
+      "source_file": "崔玉涛宝贝健康公开课-46-输液，有必要吗？.md"
+    },
+    {
+      "id": "auto_086",
+      "schema_version": "v2",
+      "question": "静脉输液治疗应遵循的基本原则是什么？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-46-输液，有必要吗？.md"
+        ],
+        "should": [
+          "wiki/concepts/静脉输液治疗原则.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-46-输液，有必要吗？.md"
+        ]
+      },
+      "keywords": [
+        "输液原则",
+        "先快后慢",
+        "先盐后糖",
+        "见尿给钾"
+      ],
+      "note": "测试用户对静脉输液治疗核心原则的记忆",
+      "source_file": "崔玉涛宝贝健康公开课-46-输液，有必要吗？.md"
+    },
+    {
+      "id": "auto_087",
+      "schema_version": "v2",
+      "question": "2岁的强强出现了高热、呕吐、腹泻的症状，使用大人服用的止泻药后腹泻止住了，但又开始发烧和呕吐，这说明什么问题？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-47-止泻药先别急着吃！.md"
+        ],
+        "should": [
+          "wiki/entities/强强_腹泻.md",
+          "wiki/concepts/儿童腹泻的病理机制.md"
+        ]
+      },
+      "keywords": [
+        "强强",
+        "止泻药",
+        "发烧",
+        "呕吐",
+        "细菌性肠炎"
+      ],
+      "note": "考察用户对单纯止泻危害的理解，结合具体案例场景",
+      "source_file": "崔玉涛宝贝健康公开课-47-止泻药先别急着吃！.md"
+    },
+    {
+      "id": "auto_088",
+      "schema_version": "v2",
+      "question": "为什么说腹泻是一种有益的过程？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-47-止泻药先别急着吃！.md"
+        ],
+        "should": [
+          "wiki/concepts/儿童腹泻的病理机制.md"
+        ]
+      },
+      "keywords": [
+        "腹泻",
+        "有益",
+        "肠道",
+        "毒素",
+        "排出"
+      ],
+      "note": "考察用户对腹泻本质的理解，答案明确来源于材料",
+      "source_file": "崔玉涛宝贝健康公开课-47-止泻药先别急着吃！.md"
+    },
+    {
+      "id": "auto_089",
+      "schema_version": "v2",
+      "question": "3岁的遥遥因猩红热需要服用羟氨苄青霉素，医生要求每天服用3次且每次间隔8小时，连续服用10天。为什么需要严格间隔8小时服药，而不是一次服用大剂量？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-49-一份药物说明书，一种健康好习惯.md"
+        ],
+        "should": [
+          "wiki/entities/遥遥_猩红热.md",
+          "wiki/concepts/药物代谢动力学.md"
+        ]
+      },
+      "keywords": [
+        "药物浓度",
+        "间隔8小时",
+        "血中浓度",
+        "细菌"
+      ],
+      "note": "考察药物代谢动力学中维持血药浓度的重要性，属于场景型问题",
+      "source_file": "崔玉涛宝贝健康公开课-49-一份药物说明书，一种健康好习惯.md"
+    },
+    {
+      "id": "auto_090",
+      "schema_version": "v2",
+      "question": "一般急性感染的抗生素治疗疗程为多少天？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-49-一份药物说明书，一种健康好习惯.md"
+        ],
+        "should": [
+          "wiki/concepts/药物疗程.md"
+        ]
+      },
+      "keywords": [
+        "抗生素疗程",
+        "急性感染",
+        "7-10天"
+      ],
+      "note": "考察数值型记忆问题，直接来自原文",
+      "source_file": "崔玉涛宝贝健康公开课-49-一份药物说明书，一种健康好习惯.md"
+    },
+    {
+      "id": "auto_091",
+      "schema_version": "v2",
+      "question": "家长发现刚满月的宝宝两只眼睛明显往内聚，好像出现了\"对眼\"，需要担心吗？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-50-斜视.md"
+        ],
+        "should": [
+          "wiki/entities/对眼.md",
+          "wiki/entities/散视.md",
+          "wiki/entities/婴儿斜视.md"
+        ]
+      },
+      "keywords": [
+        "对眼",
+        "满月宝宝",
+        "眼睛往内聚",
+        "散视"
+      ],
+      "note": "测试家长是否能理解婴儿早期散视现象的正常性，以及真性斜视与生理性散视的区别",
+      "source_file": "崔玉涛宝贝健康公开课-50-斜视.md"
+    },
+    {
+      "id": "auto_092",
+      "schema_version": "v2",
+      "question": "婴儿的视力从出生到6-7个月大时会提高到多少？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-50-斜视.md"
+        ],
+        "should": [
+          "wiki/concepts/婴儿视觉发育.md"
+        ]
+      },
+      "keywords": [
+        "婴儿视力",
+        "6-7个月",
+        "视力提高",
+        "0.4"
+      ],
+      "note": "测试对婴儿视觉发育关键时间节点和数值的掌握",
+      "source_file": "崔玉涛宝贝健康公开课-50-斜视.md"
+    },
+    {
+      "id": "auto_093",
+      "schema_version": "v2",
+      "question": "孩子呕吐后，家长应该等多久才能尝试少量喂水？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-51-呕吐.md"
+        ],
+        "should": [
+          "wiki/scenarios/儿童呕吐护理.md",
+          "wiki/concepts/儿童呕吐补液原则.md"
+        ]
+      },
+      "keywords": [
+        "呕吐后",
+        "喂水",
+        "禁食禁水",
+        "时间间隔",
+        "少量多次"
+      ],
+      "note": "考察家长对呕吐后正确补水时机的理解，避免过早喂水导致再次呕吐",
+      "source_file": "崔玉涛宝贝健康公开课-51-呕吐.md"
+    },
+    {
+      "id": "auto_094",
+      "schema_version": "v2",
+      "question": "如何判断呕吐的孩子是否出现了脱水？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-51-呕吐.md"
+        ],
+        "should": [
+          "wiki/scenarios/儿童呕吐护理.md",
+          "wiki/concepts/儿童呕吐补液原则.md"
+        ]
+      },
+      "keywords": [
+        "脱水",
+        "脱水表现",
+        "排尿",
+        "尿量",
+        "皮肤弹性",
+        "囟门凹陷"
+      ],
+      "note": "验证家长对脱水症状的识别能力，包括尿量、口腔、皮肤等方面的观察要点",
+      "source_file": "崔玉涛宝贝健康公开课-51-呕吐.md"
+    },
+    {
+      "id": "auto_095",
+      "schema_version": "v2",
+      "question": "3个月大的宝宝在清醒时偶尔揪自己的耳朵，但精神状态良好，没有发热或明显哭闹，这种情况家长应该如何应对？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-52-揪耳朵.md"
+        ],
+        "should": [
+          "wiki/entities/婴儿揪耳朵.md",
+          "wiki/concepts/婴儿出牙与耳部不适.md"
+        ]
+      },
+      "keywords": [
+        "揪耳朵",
+        "观察",
+        "发热",
+        "3个月"
+      ],
+      "note": "测试家长对婴儿揪耳朵何时需要就医、何时可以观察的场景判断能力",
+      "source_file": "崔玉涛宝贝健康公开课-52-揪耳朵.md"
+    },
+    {
+      "id": "auto_096",
+      "schema_version": "v2",
+      "question": "婴儿揪耳朵一定是中耳炎的表现吗？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-52-揪耳朵.md"
+        ],
+        "should": [
+          "wiki/entities/婴儿揪耳朵.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-52-揪耳朵.md"
+        ]
+      },
+      "keywords": [
+        "揪耳朵",
+        "中耳炎",
+        "特异表现"
+      ],
+      "note": "测试家长对揪耳朵常见原因的错误认知的纠正",
+      "source_file": "崔玉涛宝贝健康公开课-52-揪耳朵.md"
+    },
+    {
+      "id": "auto_097",
+      "schema_version": "v2",
+      "question": "孩子得了手足口病，嘴里有溃疡疼痛不愿意喝水，家长应该先怎么处理？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-53-手足口病.md"
+        ],
+        "should": [
+          "wiki/concepts/手足口病护理.md"
+        ]
+      },
+      "keywords": [
+        "手足口病",
+        "口腔溃疡",
+        "喝水",
+        "疼痛",
+        "护理"
+      ],
+      "note": "测试家长对口腔疼痛导致脱水风险的处理能力",
+      "source_file": "崔玉涛宝贝健康公开课-53-手足口病.md"
+    },
+    {
+      "id": "auto_098",
+      "schema_version": "v2",
+      "question": "手足口病的皮疹为什么被称为'四不像疹子'？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-53-手足口病.md"
+        ],
+        "should": [
+          "wiki/entities/手足口病.md",
+          "wiki/concepts/四不像疹子.md"
+        ]
+      },
+      "keywords": [
+        "四不像疹子",
+        "手足口病",
+        "皮疹特点"
+      ],
+      "note": "验证对皮疹特征概念的理解",
+      "source_file": "崔玉涛宝贝健康公开课-53-手足口病.md"
+    },
+    {
+      "id": "auto_099",
+      "schema_version": "v2",
+      "question": "肾病综合征的核心病理问题是什么？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-54-肾病综合征.md"
+        ],
+        "should": [
+          "wiki/entities/儿童肾病综合征.md",
+          "wiki/sources/崔玉涛宝贝健康公开课-54-肾病综合征.md"
+        ]
+      },
+      "keywords": [
+        "肾病综合征",
+        "核心问题",
+        "滤过膜",
+        "蛋白漏出"
+      ],
+      "note": "验证用户对肾病综合征基本病理机制的理解",
+      "source_file": "崔玉涛宝贝健康公开课-54-肾病综合征.md"
+    },
+    {
+      "id": "auto_100",
+      "schema_version": "v2",
+      "question": "孩子正在服用激素治疗肾病综合征期间，可以接种流感疫苗吗？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/崔玉涛宝贝健康公开课-54-肾病综合征.md"
+        ],
+        "should": [
+          "wiki/entities/强的松.md",
+          "wiki/entities/儿童肾病综合征.md"
+        ]
+      },
+      "keywords": [
+        "激素治疗",
+        "肾病综合征",
+        "疫苗接种",
+        "预防感染"
+      ],
+      "note": "测试用户在实际治疗场景中对疫苗接种禁忌的认知",
+      "source_file": "崔玉涛宝贝健康公开课-54-肾病综合征.md"
+    }
+  ]
+}
