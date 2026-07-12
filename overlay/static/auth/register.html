@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录 - DocuChat</title>
+  <title>注册 - DocuChat</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -43,48 +43,43 @@
         <a href="/" class="text-3xl font-bold text-white mb-12">DocuChat</a>
         
         <h1 class="text-4xl font-bold text-white mb-6">
-          欢迎回到<br>DocuChat
+          开始你的<br>知识之旅
         </h1>
         <p class="text-primary-100 text-lg mb-12">
-          登录后开始你的AI知识库之旅
+          免费注册，立即体验AI知识库的强大功能
         </p>
         
-        <!-- 特性列表 -->
-        <div class="space-y-6">
-          <div class="flex items-center">
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-              <span class="text-2xl">🤖</span>
-            </div>
-            <div>
-              <h3 class="text-white font-semibold">AI智能问答</h3>
-              <p class="text-primary-200 text-sm">自然语言提问，精准回答</p>
-            </div>
-          </div>
-          
-          <div class="flex items-center">
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-              <span class="text-2xl">🔍</span>
-            </div>
-            <div>
-              <h3 class="text-white font-semibold">全文搜索</h3>
-              <p class="text-primary-200 text-sm">毫秒级检索，快速定位</p>
-            </div>
-          </div>
-          
-          <div class="flex items-center">
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-              <span class="text-2xl">🕸️</span>
-            </div>
-            <div>
-              <h3 class="text-white font-semibold">知识图谱</h3>
-              <p class="text-primary-200 text-sm">可视化关联，发现新知</p>
-            </div>
+        <!-- 套餐预览 -->
+        <div class="bg-white/10 rounded-2xl p-6 backdrop-blur-sm">
+          <h3 class="text-white font-semibold mb-4">免费版包含：</h3>
+          <ul class="space-y-3">
+            <li class="flex items-center text-primary-100">
+              <svg class="w-5 h-5 text-accent-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              每天3个AI问题
+            </li>
+            <li class="flex items-center text-primary-100">
+              <svg class="w-5 h-5 text-accent-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              全文搜索
+            </li>
+            <li class="flex items-center text-primary-100">
+              <svg class="w-5 h-5 text-accent-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              知识图谱
+            </li>
+          </ul>
+          <div class="mt-4 pt-4 border-t border-white/20">
+            <p class="text-primary-200 text-sm">需要更多功能？<a href="/pricing" class="text-white hover:underline">查看专业版</a></p>
           </div>
         </div>
       </div>
     </div>
     
-    <!-- 右侧：登录表单 -->
+    <!-- 右侧：注册表单 -->
     <div class="w-full lg:w-1/2 flex items-center justify-center p-8">
       <div class="w-full max-w-md">
         <!-- 移动端Logo -->
@@ -94,12 +89,12 @@
         
         <!-- 标题 -->
         <div class="mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-2">登录账号</h2>
-          <p class="text-gray-600">还没有账号？ <a href="/register" class="text-primary-600 hover:text-primary-700 font-medium">免费注册</a></p>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">创建账号</h2>
+          <p class="text-gray-600">已有账号？ <a href="/login" class="text-primary-600 hover:text-primary-700 font-medium">立即登录</a></p>
         </div>
         
-        <!-- 登录表单 -->
-        <form id="login-form" class="space-y-5">
+        <!-- 注册表单 -->
+        <form id="register-form" class="space-y-5">
           <!-- 邮箱 -->
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700 mb-1">邮箱地址</label>
@@ -123,19 +118,46 @@
               name="password" 
               required 
               minlength="8"
-              autocomplete="current-password"
+              autocomplete="new-password"
               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
-              placeholder="••••••••"
+              placeholder="至少8位字符"
+            >
+            <p class="mt-1 text-xs text-gray-500">密码至少需要8个字符</p>
+          </div>
+          
+          <!-- 确认密码 -->
+          <div>
+            <label for="confirm-password" class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+            <input 
+              type="password" 
+              id="confirm-password" 
+              name="confirm-password" 
+              required 
+              minlength="8"
+              autocomplete="new-password"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              placeholder="再次输入密码"
             >
           </div>
           
-          <!-- 忘记密码 -->
-          <div class="flex items-center justify-end">
-            <a href="/reset-password" class="text-sm text-primary-600 hover:text-primary-700">忘记密码？</a>
+          <!-- 服务条款 -->
+          <div class="flex items-start">
+            <input 
+              type="checkbox" 
+              id="terms" 
+              required
+              class="mt-1 h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+            >
+            <label for="terms" class="ml-2 text-sm text-gray-600">
+              我已阅读并同意 <a href="/terms" class="text-primary-600 hover:underline">服务条款</a> 和 <a href="/privacy" class="text-primary-600 hover:underline">隐私政策</a>
+            </label>
           </div>
           
           <!-- 错误提示 -->
           <div id="error-message" class="hidden bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm" role="alert"></div>
+          
+          <!-- 成功提示 -->
+          <div id="success-message" class="hidden bg-green-50 text-green-600 px-4 py-3 rounded-xl text-sm" role="alert"></div>
           
           <!-- 提交按钮 -->
           <button 
@@ -143,8 +165,8 @@
             id="submit-btn"
             class="w-full bg-primary-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span id="btn-text">登录</span>
-            <span id="btn-loading" class="hidden">登录中...</span>
+            <span id="btn-text">创建账号</span>
+            <span id="btn-loading" class="hidden">注册中...</span>
           </button>
         </form>
         
@@ -155,38 +177,56 @@
           <div class="flex-1 border-t border-gray-200"></div>
         </div>
         
-        <!-- 社交登录（可选） -->
+        <!-- 社交注册（可选） -->
         <div class="space-y-3">
           <button class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
             <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12c0-5.523-4.477-10-10-10z"/>
             </svg>
-            <span class="text-gray-700 font-medium">使用微信登录</span>
+            <span class="text-gray-700 font-medium">使用微信注册</span>
           </button>
         </div>
         
         <!-- 底部链接 -->
         <div class="mt-8 text-center text-sm text-gray-500">
-          登录即表示你同意我们的 <a href="/terms" class="text-primary-600 hover:underline">服务条款</a> 和 <a href="/privacy" class="text-primary-600 hover:underline">隐私政策</a>
+          已有账号？ <a href="/login" class="text-primary-600 hover:underline">立即登录</a>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const form = document.getElementById('login-form');
+    const form = document.getElementById('register-form');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm-password');
+    const termsCheckbox = document.getElementById('terms');
     const submitBtn = document.getElementById('submit-btn');
     const btnText = document.getElementById('btn-text');
     const btnLoading = document.getElementById('btn-loading');
     const errorDiv = document.getElementById('error-message');
+    const successDiv = document.getElementById('success-message');
     
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      // 清除错误
+      // 清除提示
       errorDiv.classList.add('hidden');
+      successDiv.classList.add('hidden');
+      
+      // 验证密码匹配
+      if (passwordInput.value !== confirmPasswordInput.value) {
+        errorDiv.textContent = '两次输入的密码不一致';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+      
+      // 验证服务条款
+      if (!termsCheckbox.checked) {
+        errorDiv.textContent = '请同意服务条款和隐私政策';
+        errorDiv.classList.remove('hidden');
+        return;
+      }
       
       // 显示加载状态
       submitBtn.disabled = true;
@@ -194,7 +234,7 @@
       btnLoading.classList.remove('hidden');
       
       try {
-        const response = await fetch('/auth/login', {
+        const response = await fetch('/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -206,11 +246,17 @@
         const data = await response.json();
         
         if (!response.ok) {
-          throw new Error(data.error || '登录失败');
+          throw new Error(data.error || '注册失败');
         }
         
-        // 登录成功，跳转到问答页
-        window.location.href = '/lite/';
+        // 注册成功
+        successDiv.textContent = '注册成功！正在跳转到登录页面...';
+        successDiv.classList.remove('hidden');
+        
+        // 2秒后跳转到登录页
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
         
       } catch (error) {
         errorDiv.textContent = error.message;

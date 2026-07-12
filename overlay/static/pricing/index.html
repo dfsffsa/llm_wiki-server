@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>定价 - DocuChat</title>
+  <meta name="description" content="DocuChat定价方案，选择适合你的AI知识库套餐。">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            },
+            accent: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              300: '#6ee7b7',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+    .animation-delay-200 { animation-delay: 0.2s; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 antialiased">
+  <!-- 导航栏 -->
+  <nav class="bg-white border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <a href="/" class="text-2xl font-bold text-primary-600">DocuChat</a>
+        <div class="flex items-center space-x-4">
+          <a href="/" class="text-gray-600 hover:text-primary-600 transition-colors">首页</a>
+          <a href="/login" class="text-gray-600 hover:text-primary-600 transition-colors">登录</a>
+          <a href="/register" class="bg-primary-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-primary-700 transition-colors">免费试用</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 定价区 -->
+  <section class="py-16 md:py-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12 animate-fade-in-up">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">选择适合你的方案</h1>
+        <p class="text-gray-600 text-lg">简单透明的定价，无隐藏费用</p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <!-- 免费版 -->
+        <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-200 animate-fade-in-up">
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">免费版</h2>
+          <p class="text-gray-500 mb-6">适合个人轻度使用</p>
+          <div class="mb-6">
+            <span class="text-5xl font-bold text-gray-900">$0</span>
+            <span class="text-gray-500">/永久</span>
+          </div>
+          <ul class="space-y-4 mb-8">
+            <li class="flex items-start">
+              <svg class="w-6 h-6 text-accent-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-gray-600"><strong class="text-gray-900">每天3个</strong> AI问题</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="w-6 h-6 text-accent-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-gray-600">全文搜索</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="w-6 h-6 text-accent-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-gray-600">知识图谱</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="w-6 h-6 text-accent-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-gray-600">社区支持</span>
+            </li>
+          </ul>
+          <a href="/register" class="block text-center py-3 px-6 border-2 border-primary-600 text-primary-600 rounded-xl font-semibold hover:bg-primary-50 transition-colors">
+            免费开始
+          </a>
+        </div>
+        
+        <!-- 专业版 -->
+        <div class="bg-white rounded-2xl p-8 shadow-lg border-2 border-primary-500 relative animate-fade-in-up animation-delay-200">
+          <div class="absolute -top-4 left-1/2 -translate-x-1/2">
+            <span class="bg-primary-600 text-white text-sm font-semibold px-4 py-1 rounded-full">最受欢迎</span>
+          </div>
+          <h2 class="text-xl font-semibold text-gray-900 mb-2">专业版</h2>
+          <p class="text-gray-500 mb-6">适合重度使用和专业需求</p>
+          <div class="mb-6">
+            <span class="text-5xl font-bold text-gray-900">$19</span>
+            <span class="text-gray-500">/月</span>
+          </div>
+          <ul class="space-y-4 mb-8">
+            <li class="flex items-start">
+              <svg class="w-6 h-6 text-accent-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-gray-600"><strong class="text-gray-900">无限</strong> AI问题</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="w-6 h-6 text-accent-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-gray-600">高级搜索（语义理解）</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="w-6 h-6 text-accent-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-gray-600">优先支持（24小时响应）</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="w-6 h-6 text-accent-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-gray-600">导出对话记录</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="w-6 h-6 text-accent-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-gray-600">更多存储空间</span>
+            </li>
+          </ul>
+          <a href="/register" class="block text-center py-3 px-6 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/30">
+            立即订阅
+          </a>
+        </div>
+      </div>
+      
+      <!-- 功能对比表 -->
+      <div class="mt-16 max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">功能对比</h2>
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">功能</th>
+                <th class="px-6 py-4 text-center text-sm font-semibold text-gray-900">免费版</th>
+                <th class="px-6 py-4 text-center text-sm font-semibold text-primary-600">专业版</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600">AI问答</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-600">每天3个</td>
+                <td class="px-6 py-4 text-center text-sm text-primary-600 font-medium">无限</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600">全文搜索</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-600">✓</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-600">✓</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600">知识图谱</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-600">✓</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-600">✓</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600">语义搜索</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-400">-</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-600">✓</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600">导出功能</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-400">-</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-600">✓</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600">支持</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-600">社区</td>
+                <td class="px-6 py-4 text-center text-sm text-primary-600 font-medium">优先（24h）</td>
+              </tr>
+              <tr>
+                <td class="px-6 py-4 text-sm text-gray-600">存储空间</td>
+                <td class="px-6 py-4 text-center text-sm text-gray-600">100MB</td>
+                <td class="px-6 py-4 text-center text-sm text-primary-600 font-medium">10GB</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="py-16 bg-white">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">常见问题</h2>
+      
+      <div class="space-y-4">
+        <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
+          <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
+            <span class="font-medium text-gray-900">可以随时取消订阅吗？</span>
+            <svg class="faq-icon w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div class="faq-content hidden px-6 pb-4 text-gray-600">
+            可以。您可以在账户设置中随时取消订阅。取消后，当前订阅周期仍有效，到期后自动降级为免费版，不会产生额外费用。
+          </div>
+        </div>
+        
+        <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
+          <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
+            <span class="font-medium text-gray-900">支持哪些支付方式？</span>
+            <svg class="faq-icon w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div class="faq-content hidden px-6 pb-4 text-gray-600">
+            我们支持信用卡（Visa、MasterCard、American Express）和 PayPal。所有支付通过Stripe处理，确保安全可靠。
+          </div>
+        </div>
+        
+        <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
+          <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
+            <span class="font-medium text-gray-900">有年付优惠吗？</span>
+            <svg class="faq-icon w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div class="faq-content hidden px-6 pb-4 text-gray-600">
+            目前仅提供月付方案。未来可能会推出年付优惠，敬请期待。
+          </div>
+        </div>
+        
+        <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
+          <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
+            <span class="font-medium text-gray-900">专业版可以退款吗？</span>
+            <svg class="faq-icon w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div class="faq-content hidden px-6 pb-4 text-gray-600">
+            订阅后7天内如果您不满意，可以联系我们申请全额退款。
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="bg-gray-900 text-gray-400 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <a href="/" class="text-2xl font-bold text-white">DocuChat</a>
+      <p class="mt-4 text-sm">© 2024 DocuChat. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    // FAQ折叠
+    document.querySelectorAll('.faq-toggle').forEach(button => {
+      button.addEventListener('click', () => {
+        const faqItem = button.closest('.faq-item');
+        const content = faqItem.querySelector('.faq-content');
+        const icon = faqItem.querySelector('.faq-icon');
+        
+        content.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+      });
+    });
+  </script>
+</body>
+</html>
