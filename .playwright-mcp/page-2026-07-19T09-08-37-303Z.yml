@@ -1,0 +1,28 @@
+- generic [active] [ref=f16e1]:
+  - generic [ref=f16e6]:
+    - generic [ref=f16e15]:
+      - generic [ref=f16e16]:
+        - paragraph [ref=f16e17]: Welcome to Onyx
+        - paragraph [ref=f16e18]: Your open source AI platform for work
+      - button "Continue with Google" [ref=f16e19] [cursor=pointer]
+      - paragraph [ref=f16e31]: or
+      - generic [ref=f16e33]:
+        - generic [ref=f16e34]:
+          - generic [ref=f16e36] [cursor=pointer]:
+            - generic "Email Address" [ref=f16e41]
+            - textbox "Email Address" [ref=f16e43]:
+              - /placeholder: email@yourcompany.com
+          - generic [ref=f16e46] [cursor=pointer]:
+            - generic "Password" [ref=f16e51]
+            - textbox "Password" [ref=f16e54]
+        - button "Sign In" [disabled] [ref=f16e55]
+    - generic [ref=f16e61]:
+      - text: New to Onyx?
+      - link "Create an Account" [ref=f16e62] [cursor=pointer]:
+        - /url: /auth/signup
+  - alert [ref=f16e63]
+  - iframe [ref=f16e66]:
+    - generic [ref=f17e6]:
+      - text: 由
+      - strong [ref=f17e7]: reCAPTCHA
+      - text: 提供保护

@@ -1,0 +1,21 @@
+- generic [ref=f3e6]:
+  - generic [ref=f3e15]:
+    - generic [ref=f3e16]:
+      - paragraph [ref=f3e17]: Welcome to Onyx
+      - paragraph [ref=f3e18]: Your open source AI platform for work
+    - button "Continue with Google" [ref=f3e19] [cursor=pointer]
+    - paragraph [ref=f3e31]: or
+    - generic [ref=f3e33]:
+      - generic [ref=f3e34]:
+        - generic [ref=f3e36] [cursor=pointer]:
+          - generic "Email Address" [ref=f3e41]
+          - textbox "Email Address" [ref=f3e43]:
+            - /placeholder: email@yourcompany.com
+        - generic [ref=f3e46] [cursor=pointer]:
+          - generic "Password" [ref=f3e51]
+          - textbox "Password" [ref=f3e54]
+      - button "Sign In" [disabled] [ref=f3e55]
+  - generic [ref=f3e61]:
+    - text: New to Onyx?
+    - link "Create an Account" [ref=f3e62] [cursor=pointer]:
+      - /url: /auth/signup

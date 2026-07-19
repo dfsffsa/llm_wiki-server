@@ -1,0 +1,1131 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Skip to content" [ref=e4] [cursor=pointer]:
+      - /url: "#start-of-content"
+    - banner [ref=e6]:
+      - heading "Navigation Menu" [level=2] [ref=e7]
+      - generic [ref=e8]:
+        - link "Homepage" [ref=e10] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e13]:
+          - navigation "Global" [ref=e16]:
+            - list [ref=e17]:
+              - listitem [ref=e18]:
+                - button "Platform" [ref=e20] [cursor=pointer]
+              - listitem [ref=e23]:
+                - button "Solutions" [ref=e25] [cursor=pointer]
+              - listitem [ref=e28]:
+                - button "Resources" [ref=e30] [cursor=pointer]
+              - listitem [ref=e33]:
+                - button "Open Source" [ref=e35] [cursor=pointer]
+              - listitem [ref=e38]:
+                - button "Enterprise" [ref=e40] [cursor=pointer]
+              - listitem [ref=e43]:
+                - link "Pricing" [ref=e44] [cursor=pointer]:
+                  - /url: https://github.com/pricing
+          - generic [ref=e46]:
+            - button "Search or jump to…" [ref=e49] [cursor=pointer]
+            - link "Sign in" [ref=e54] [cursor=pointer]:
+              - /url: /login?return_to=https%3A%2F%2Fgithub.com%2Fonyx-dot-app%2Fonyx
+            - link "Sign up" [ref=e55] [cursor=pointer]:
+              - /url: /signup?ref_cta=Sign+up&ref_loc=header+logged+out&ref_page=%2F%3Cuser-name%3E%2F%3Crepo-name%3E&source=header-repo&source_repo=onyx-dot-app%2Fonyx
+            - button "Appearance settings" [ref=e58] [cursor=pointer]
+  - main [ref=e62]:
+    - generic [ref=e63]:
+      - generic [ref=e64]:
+        - generic [ref=e66]:
+          - link "onyx-dot-app" [ref=e70] [cursor=pointer]:
+            - /url: /onyx-dot-app
+          - generic [ref=e71]: /
+          - strong [ref=e72]:
+            - link "onyx" [ref=e73] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx
+          - generic [ref=e74]: Public
+        - generic [ref=e75]:
+          - list:
+            - listitem [ref=e76]:
+              - link "You must be signed in to change notification settings" [ref=e77] [cursor=pointer]:
+                - /url: /login?return_to=%2Fonyx-dot-app%2Fonyx
+                - text: Notifications
+            - listitem [ref=e80]:
+              - link "Fork 4.3k" [ref=e81] [cursor=pointer]:
+                - /url: /login?return_to=%2Fonyx-dot-app%2Fonyx
+                - text: Fork
+                - generic "4,260" [ref=e84]: 4.3k
+            - listitem [ref=e85]:
+              - link "You must be signed in to star a repository" [ref=e87] [cursor=pointer]:
+                - /url: /login?return_to=%2Fonyx-dot-app%2Fonyx
+                - text: Star
+                - generic "30967 users starred this repository" [ref=e90]: 31k
+      - navigation "Repository" [ref=e91]:
+        - list [ref=e92]:
+          - listitem [ref=e93]:
+            - link "Code" [ref=e94] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx
+          - listitem [ref=e98]:
+            - link "Issues 143" [ref=e99] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/issues
+              - generic [ref=e103]: Issues
+              - generic "143" [ref=e104]
+          - listitem [ref=e105]:
+            - link "Pull requests 347" [ref=e106] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/pulls
+              - generic [ref=e109]: Pull requests
+              - generic "347" [ref=e110]
+          - listitem [ref=e111]:
+            - link "Discussions" [ref=e112] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/discussions
+          - listitem [ref=e116]:
+            - link "Actions" [ref=e117] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/actions
+          - listitem [ref=e121]:
+            - link "Projects" [ref=e122] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/projects
+          - listitem [ref=e126]:
+            - link "Security and quality 3" [ref=e127] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/security
+              - generic [ref=e130]: Security and quality
+              - generic "3" [ref=e131]
+          - listitem [ref=e132]
+        - button "Additional navigation options" [ref=e136] [cursor=pointer]
+    - generic [ref=e149]:
+      - heading "onyx-dot-app/onyx" [level=1] [ref=e151]
+      - generic [ref=e152]:
+        - generic [ref=e155]:
+          - generic [ref=e156]:
+            - generic [ref=e157]:
+              - button "main branch" [ref=e159] [cursor=pointer]:
+                - generic [ref=e160]: main
+              - generic [ref=e168]:
+                - link [ref=e169] [cursor=pointer]:
+                  - /url: /onyx-dot-app/onyx/branches
+                  - generic [ref=e172]:
+                    - strong [ref=e173]: "1747"
+                    - text: Branches
+                - link [ref=e174] [cursor=pointer]:
+                  - /url: /onyx-dot-app/onyx/tags
+                  - generic [ref=e177]:
+                    - strong [ref=e178]: "2233"
+                    - text: Tags
+            - generic [ref=e179]:
+              - combobox "Go to file" [ref=e187]
+              - button "Code" [ref=e188] [cursor=pointer]
+          - generic [ref=e191]:
+            - generic [ref=e192]:
+              - heading "Folders and files" [level=2] [ref=e193]
+              - table "Folders and files" [ref=e194]:
+                - rowgroup:
+                  - row "Name Last commit message Last commit date":
+                    - columnheader "Name"
+                    - columnheader "Last commit message"
+                    - columnheader "Last commit date"
+                - rowgroup [ref=e195]:
+                  - row [ref=e196]:
+                    - 'cell "Latest commit mvanhorn commits by mvanhorn fix: lowercase model name when deriving OpenSearch index name (#12299) Open commit details success Commit d4e043f · Jul 18, 2026yesterday History 9,191 Commits" [ref=e197]':
+                      - generic [ref=e198]:
+                        - heading "Latest commit" [level=2] [ref=e199]
+                        - generic [ref=e200]:
+                          - generic [ref=e202]:
+                            - link [ref=e203] [cursor=pointer]:
+                              - /url: /mvanhorn
+                              - img "mvanhorn" [ref=e204]
+                            - link "commits by mvanhorn" [ref=e205] [cursor=pointer]:
+                              - /url: /onyx-dot-app/onyx/commits?author=mvanhorn
+                              - text: mvanhorn
+                          - generic [ref=e206]:
+                            - generic [ref=e208]:
+                              - 'link "fix: lowercase model name when deriving OpenSearch index name (" [ref=e209] [cursor=pointer]':
+                                - /url: /onyx-dot-app/onyx/commit/d4e043fad76b2cfbf3bb98e5567d61941f4554f2
+                              - link "#12299" [ref=e210] [cursor=pointer]:
+                                - /url: https://github.com/onyx-dot-app/onyx/pull/12299
+                              - link ")" [ref=e211] [cursor=pointer]:
+                                - /url: /onyx-dot-app/onyx/commit/d4e043fad76b2cfbf3bb98e5567d61941f4554f2
+                            - button "Open commit details" [ref=e212] [cursor=pointer]
+                            - button "success" [ref=e215] [cursor=pointer]
+                        - generic [ref=e218]:
+                          - generic [ref=e220]:
+                            - link "Commit d4e043f" [ref=e221] [cursor=pointer]:
+                              - /url: /onyx-dot-app/onyx/commit/d4e043fad76b2cfbf3bb98e5567d61941f4554f2
+                              - text: d4e043f
+                            - text: ·
+                            - generic "Jul 18, 2026, 09:10 GMT+8" [ref=e222]: Jul 18, 2026yesterday
+                          - generic [ref=e223]:
+                            - heading "History" [level=2] [ref=e224]
+                            - link "9,191 Commits" [ref=e225] [cursor=pointer]:
+                              - /url: /onyx-dot-app/onyx/commits/main/
+                  - row [ref=e228]:
+                    - cell [ref=e229]:
+                      - link ".claude, (Directory)" [ref=e236] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/.claude
+                        - text: .claude
+                    - cell [ref=e237]:
+                      - generic [ref=e239]:
+                        - 'link "feat(claude): enable security-guidance plugin for the repo (" [ref=e240] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/ab0cd4a621ec915260069f76d576bb5c8209341e
+                        - link "#11438" [ref=e241] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/11438
+                        - link ")" [ref=e242] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/ab0cd4a621ec915260069f76d576bb5c8209341e
+                    - cell "May 28, 20262 months ago" [ref=e243]
+                  - row [ref=e245]:
+                    - cell [ref=e246]:
+                      - link ".cursor, (Directory)" [ref=e253] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/.cursor
+                        - text: .cursor
+                    - cell [ref=e254]:
+                      - generic [ref=e256]:
+                        - 'link "feat(devcontainer): CLAUDE.md overlay + Playwright e2e bootstrap docs (" [ref=e257] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/2c3a048c7c8290bed22204a0621fa826c53e249a
+                        - link "…" [ref=e258] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/11658
+                    - cell "Jun 4, 2026last month" [ref=e259]
+                  - row [ref=e261]:
+                    - cell [ref=e262]:
+                      - link ".devcontainer, (Directory)" [ref=e269] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/.devcontainer
+                        - text: .devcontainer
+                    - cell [ref=e270]:
+                      - 'link "chore(dev): upgrade devcontainer image and automate future upgrade PRs (" [ref=e273] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/712ea15b9cb755e0a78c141a7d3c15f906121875
+                    - cell "Jul 7, 20262 weeks ago" [ref=e274]
+                  - row [ref=e276]:
+                    - cell [ref=e277]:
+                      - link ".github, (Directory)" [ref=e284] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/.github
+                        - text: .github
+                    - cell [ref=e285]:
+                      - generic [ref=e287]:
+                        - 'link "test(search): connector-filter scope-decision eval suite (" [ref=e288] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/8777823689924f6bb294a3b65c75423671e4c2a3
+                        - link "#12331" [ref=e289] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/12331
+                        - link ")" [ref=e290] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/8777823689924f6bb294a3b65c75423671e4c2a3
+                    - cell "Jul 18, 20262 days ago" [ref=e291]
+                  - row [ref=e293]:
+                    - cell [ref=e294]:
+                      - link ".greptile, (Directory)" [ref=e301] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/.greptile
+                        - text: .greptile
+                    - cell [ref=e302]:
+                      - generic [ref=e304]:
+                        - 'link "chore(tools): add" [ref=e305] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/2590abb5644f001344ff8aa15d8fff6b232668b9
+                        - code [ref=e306]:
+                          - link "duo-onyx" [ref=e307] [cursor=pointer]:
+                            - /url: /onyx-dot-app/onyx/commit/2590abb5644f001344ff8aa15d8fff6b232668b9
+                        - link "to greptile" [ref=e308] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/2590abb5644f001344ff8aa15d8fff6b232668b9
+                        - code [ref=e309]:
+                          - link "includeAuthors" [ref=e310] [cursor=pointer]:
+                            - /url: /onyx-dot-app/onyx/commit/2590abb5644f001344ff8aa15d8fff6b232668b9
+                        - link "(" [ref=e311] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/2590abb5644f001344ff8aa15d8fff6b232668b9
+                        - link "#13062" [ref=e312] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/13062
+                        - link ")" [ref=e313] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/2590abb5644f001344ff8aa15d8fff6b232668b9
+                    - cell "Jul 16, 20263 days ago" [ref=e314]
+                  - row [ref=e316]:
+                    - cell [ref=e317]:
+                      - link ".vscode, (Directory)" [ref=e324] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/.vscode
+                        - text: .vscode
+                    - cell [ref=e325]:
+                      - 'link "feat(reindex): reindex-port flow — copy & re-embed live chunks into t…" [ref=e328] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/cba40dab125b61dd2cd289de7d93ae8aa7dfd229
+                    - cell "Jul 6, 20262 weeks ago" [ref=e329]
+                  - row [ref=e331]:
+                    - cell [ref=e332]:
+                      - link "backend, (Directory)" [ref=e339] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/backend
+                        - text: backend
+                    - cell [ref=e340]:
+                      - generic [ref=e342]:
+                        - 'link "fix: lowercase model name when deriving OpenSearch index name (" [ref=e343] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/d4e043fad76b2cfbf3bb98e5567d61941f4554f2
+                        - link "#12299" [ref=e344] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/12299
+                        - link ")" [ref=e345] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/d4e043fad76b2cfbf3bb98e5567d61941f4554f2
+                    - cell "Jul 18, 2026yesterday" [ref=e346]
+                  - row [ref=e348]:
+                    - cell [ref=e349]:
+                      - link "cli, (Directory)" [ref=e356] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/cli
+                        - text: cli
+                    - cell [ref=e357]:
+                      - generic [ref=e359]:
+                        - 'link "fix(cli): preserve symbols for govulncheck (" [ref=e360] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/2849c51d0f08b69ab8e9d999c82cfa03c581087c
+                        - link "#12787" [ref=e361] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/12787
+                        - link ")" [ref=e362] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/2849c51d0f08b69ab8e9d999c82cfa03c581087c
+                    - cell "Jul 9, 20262 weeks ago" [ref=e363]
+                  - row [ref=e365]:
+                    - cell [ref=e366]:
+                      - link "contributor_ip_assignment, (Directory)" [ref=e373] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/contributor_ip_assignment
+                        - text: contributor_ip_assignment
+                    - cell [ref=e374]:
+                      - generic [ref=e376]:
+                        - 'link "docs(readme): README and Contrib (" [ref=e377] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/4a50bfc7aeeb88b3d113d892c0c00e5a27c92fc2
+                        - link "#9829" [ref=e378] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/9829
+                        - link ")" [ref=e379] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/4a50bfc7aeeb88b3d113d892c0c00e5a27c92fc2
+                    - cell "Apr 2, 20264 months ago" [ref=e380]
+                  - row [ref=e382]:
+                    - cell [ref=e383]:
+                      - link "deployment, (Directory)" [ref=e390] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/deployment
+                        - text: deployment
+                    - cell [ref=e391]:
+                      - 'link "feat(metrics): MCP server/client metrics + DB-snapshot connector stat…" [ref=e394] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/148565b74a84850d7ce905de8daa4ba0c3bd4c8c
+                    - cell "Jul 18, 2026yesterday" [ref=e395]
+                  - row [ref=e397]:
+                    - cell [ref=e398]:
+                      - link "desktop, (Directory)" [ref=e405] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/desktop
+                        - text: desktop
+                    - cell [ref=e406]:
+                      - generic [ref=e408]:
+                        - 'link "feat(desktop): add --version flag (" [ref=e409] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/445fc9ca88153b6f1027a02318cb80e66dd92e2a
+                        - link "#13152" [ref=e410] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/13152
+                        - link ")" [ref=e411] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/445fc9ca88153b6f1027a02318cb80e66dd92e2a
+                    - cell "Jul 18, 2026yesterday" [ref=e412]
+                  - row [ref=e414]:
+                    - cell [ref=e415]:
+                      - link "docs, (Directory)" [ref=e422] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/docs
+                        - text: docs
+                    - cell [ref=e423]:
+                      - 'link "feat(metrics): MCP server/client metrics + DB-snapshot connector stat…" [ref=e426] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/148565b74a84850d7ce905de8daa4ba0c3bd4c8c
+                    - cell "Jul 18, 2026yesterday" [ref=e427]
+                  - row [ref=e429]:
+                    - cell [ref=e430]:
+                      - link "examples, (Directory)" [ref=e437] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/examples
+                        - text: examples
+                    - cell [ref=e438]:
+                      - generic [ref=e440]:
+                        - 'link "chore(deps-dev): bump @tailwindcss/postcss from 4.3.1 to 4.3.2 (" [ref=e441] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/a00119a3a903b22713562273c293790eaecb9abb
+                        - link "#12775" [ref=e442] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/12775
+                        - link ")" [ref=e443] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/a00119a3a903b22713562273c293790eaecb9abb
+                    - cell "Jul 10, 2026last week" [ref=e444]
+                  - row [ref=e446]:
+                    - cell [ref=e447]:
+                      - link "extensions/chrome, (Directory)" [ref=e454] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/extensions/chrome
+                        - text: extensions/chrome
+                    - cell [ref=e455]:
+                      - generic [ref=e457]:
+                        - 'link "chore(fmt): fix" [ref=e458] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/48dff20bae84e69f541be4a95f0d0bc3343701d6
+                        - code [ref=e459]:
+                          - link "oxfmt" [ref=e460] [cursor=pointer]:
+                            - /url: /onyx-dot-app/onyx/commit/48dff20bae84e69f541be4a95f0d0bc3343701d6
+                        - link "at HEAD (" [ref=e461] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/48dff20bae84e69f541be4a95f0d0bc3343701d6
+                        - link "#11102" [ref=e462] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/11102
+                        - link ")" [ref=e463] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/48dff20bae84e69f541be4a95f0d0bc3343701d6
+                    - cell "May 15, 20262 months ago" [ref=e464]
+                  - row [ref=e466]:
+                    - cell [ref=e467]:
+                      - link "loadtest, (Directory)" [ref=e474] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/loadtest
+                        - text: loadtest
+                    - cell [ref=e475]:
+                      - 'link "feat(helm): configurable api-server worker/threadpool concurrency + l…" [ref=e478] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/b3ea53311b9978dd9051f8214c407a0825268bde
+                    - cell "Jun 26, 20263 weeks ago" [ref=e479]
+                  - row [ref=e481]:
+                    - cell [ref=e482]:
+                      - link "mobile, (Directory)" [ref=e489] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/mobile
+                        - text: mobile
+                    - cell [ref=e490]:
+                      - 'link "feat(auth): remove AUTH_TYPE and the AuthType enum, serve multi_tenant (" [ref=e493] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/9a9ad1e101c411b662db0f0ac67d0b0a8e9e9fd0
+                    - cell "Jul 17, 20262 days ago" [ref=e494]
+                  - row [ref=e496]:
+                    - cell [ref=e497]:
+                      - link "profiling, (Directory)" [ref=e504] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/profiling
+                        - text: profiling
+                    - cell [ref=e505]:
+                      - 'link "chore(grafana): Dedup redundant dashboard in `profiling/grafana/dashb…" [ref=e508] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/b7c771532c8e3311779957b94d1c0e3ec6ac8ecf
+                    - cell "May 19, 20262 months ago" [ref=e509]
+                  - row [ref=e511]:
+                    - cell [ref=e512]:
+                      - link "tools/ods, (Directory)" [ref=e519] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/tools/ods
+                        - text: tools/ods
+                    - cell [ref=e520]:
+                      - 'link "refactor(ods): standardize deploy-target resolution across deploy sub…" [ref=e523] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/d79fbd970cdd5c3b6e5e73264f021df1aff0b68e
+                    - cell "Jul 14, 2026last week" [ref=e524]
+                  - row [ref=e526]:
+                    - cell [ref=e527]:
+                      - link "web, (Directory)" [ref=e534] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/web
+                        - text: web
+                    - cell [ref=e535]:
+                      - generic [ref=e537]:
+                        - 'link "fix(craft): preserve stale skill refresh ordering (" [ref=e538] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/660011f261d65ae1ca8979cc1de0c4d2184c6eb5
+                        - link "#13157" [ref=e539] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/13157
+                        - link ")" [ref=e540] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/660011f261d65ae1ca8979cc1de0c4d2184c6eb5
+                    - cell "Jul 18, 2026yesterday" [ref=e541]
+                  - row [ref=e543]:
+                    - cell [ref=e544]:
+                      - link "widget, (Directory)" [ref=e551] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/tree/main/widget
+                        - text: widget
+                    - cell [ref=e552]:
+                      - generic [ref=e554]:
+                        - 'link "chore(deps): bump dompurify from 3.4.8 to 3.4.11 (" [ref=e555] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/f2d5e51c580c0eba3d3d17c84cf9c079dfddafe6
+                        - link "#12940" [ref=e556] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/12940
+                        - link ")" [ref=e557] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/f2d5e51c580c0eba3d3d17c84cf9c079dfddafe6
+                    - cell "Jul 14, 2026last week" [ref=e558]
+                  - row [ref=e560]:
+                    - cell [ref=e561]:
+                      - link ".git-blame-ignore-revs, (File)" [ref=e568] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/.git-blame-ignore-revs
+                        - text: .git-blame-ignore-revs
+                    - cell [ref=e569]:
+                      - generic [ref=e571]:
+                        - 'link "chore(blame): ignore ruff formatting change (" [ref=e572] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/c9d4c186dd754c70f3ae3d799828387d0eb7861c
+                        - link "#9345" [ref=e573] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/9345
+                        - link ")" [ref=e574] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/c9d4c186dd754c70f3ae3d799828387d0eb7861c
+                    - cell "Mar 25, 20264 months ago" [ref=e575]
+                  - row [ref=e577]:
+                    - cell [ref=e578]:
+                      - link ".gitignore, (File)" [ref=e585] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/.gitignore
+                        - text: .gitignore
+                    - cell [ref=e586]:
+                      - generic [ref=e588]:
+                        - 'link "feat(claude): enable security-guidance plugin for the repo (" [ref=e589] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/ab0cd4a621ec915260069f76d576bb5c8209341e
+                        - link "#11438" [ref=e590] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/11438
+                        - link ")" [ref=e591] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/ab0cd4a621ec915260069f76d576bb5c8209341e
+                    - cell "May 28, 20262 months ago" [ref=e592]
+                  - row [ref=e594]:
+                    - cell [ref=e595]:
+                      - link ".kanban.toml, (File)" [ref=e602] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/.kanban.toml
+                        - text: .kanban.toml
+                    - cell [ref=e603]:
+                      - generic [ref=e605]:
+                        - 'link "chore(devcontainer): plumb GH_TOKEN and add vscode tasks (" [ref=e606] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/8825158238dbf6bbe19548f1afc0ef79d0a4792f
+                        - link "#10762" [ref=e607] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/10762
+                        - link ")" [ref=e608] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/8825158238dbf6bbe19548f1afc0ef79d0a4792f
+                    - cell "May 5, 20262 months ago" [ref=e609]
+                  - row [ref=e611]:
+                    - cell [ref=e612]:
+                      - link ".mcp.json, (File)" [ref=e619] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/.mcp.json
+                        - text: .mcp.json
+                    - cell [ref=e620]:
+                      - generic [ref=e622]:
+                        - 'link "chore(dev): add sentry MCP entry (" [ref=e623] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/11554205b81c112e80ba18a2049ab0c702aa4f69
+                        - link "#12702" [ref=e624] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/12702
+                        - link ")" [ref=e625] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/11554205b81c112e80ba18a2049ab0c702aa4f69
+                    - cell "Jul 7, 20262 weeks ago" [ref=e626]
+                  - row [ref=e628]:
+                    - cell [ref=e629]:
+                      - link ".oxfmtrc.json, (File)" [ref=e636] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/.oxfmtrc.json
+                        - text: .oxfmtrc.json
+                    - cell [ref=e637]:
+                      - generic [ref=e639]:
+                        - 'link "chore(devtools): migrate from prettier to oxfmt (" [ref=e640] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/61272ba215ead2c8b1e68c98c2a0a8c401f04153
+                        - link "#11040" [ref=e641] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/11040
+                        - link ")" [ref=e642] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/61272ba215ead2c8b1e68c98c2a0a8c401f04153
+                    - cell "May 14, 20262 months ago" [ref=e643]
+                  - row [ref=e645]:
+                    - cell [ref=e646]:
+                      - link ".pre-commit-config.yaml, (File)" [ref=e653] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/.pre-commit-config.yaml
+                        - text: .pre-commit-config.yaml
+                    - cell [ref=e654]:
+                      - generic [ref=e656]:
+                        - 'link "feat(mcp): group/public access control for MCP servers [Mirror of" [ref=e657] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/b3b1497d6826b547b82b9d9bb294ec5497c2c426
+                        - link "#12227" [ref=e658] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/12227
+                    - cell "Jul 16, 20263 days ago" [ref=e659]
+                  - row [ref=e661]:
+                    - cell [ref=e662]:
+                      - link ".python-version, (File)" [ref=e669] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/.python-version
+                        - text: .python-version
+                    - cell [ref=e670]:
+                      - generic [ref=e672]:
+                        - 'link "build: upgrade Python from 3.11 to 3.13 (" [ref=e673] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/8ffafb0c8a30699642cca62d0b776337eb045f6c
+                        - link "#11721" [ref=e674] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/11721
+                        - link ")" [ref=e675] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/8ffafb0c8a30699642cca62d0b776337eb045f6c
+                    - cell "Jun 4, 2026last month" [ref=e676]
+                  - row [ref=e678]:
+                    - cell [ref=e679]:
+                      - link ".secretsignore, (File)" [ref=e686] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/.secretsignore
+                        - text: .secretsignore
+                    - cell [ref=e687]:
+                      - generic [ref=e689]:
+                        - 'link "fix: drive resourcekey usage when following shortcuts (" [ref=e690] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/203fc8b5223f73ae24d38de1a24223e15e3606b7
+                        - link "#12446" [ref=e691] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/12446
+                        - link ")" [ref=e692] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/203fc8b5223f73ae24d38de1a24223e15e3606b7
+                    - cell "Jun 26, 20263 weeks ago" [ref=e693]
+                  - row [ref=e695]:
+                    - cell [ref=e696]:
+                      - link "AGENTS.md, (File)" [ref=e703] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/AGENTS.md
+                        - text: AGENTS.md
+                    - cell [ref=e704]:
+                      - 'link "docs(agents): recommend playwright bootstrap admin credentials in AGE…" [ref=e707] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/d88be7f66732f099f1ca9240453bc4e3be2e68cd
+                    - cell "Jul 10, 2026last week" [ref=e708]
+                  - row [ref=e710]:
+                    - cell [ref=e711]:
+                      - link "CLAUDE.md, (Symlink to file)" [ref=e718] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/CLAUDE.md
+                        - text: CLAUDE.md
+                    - cell [ref=e719]:
+                      - generic [ref=e721]:
+                        - 'link "chore(devtools): CLAUDE.md.template -> AGENTS.md (" [ref=e722] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/97b44b530e23315c8782452e870804e7a8c83adc
+                        - link "#8197" [ref=e723] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/8197
+                        - link ")" [ref=e724] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/97b44b530e23315c8782452e870804e7a8c83adc
+                    - cell "Feb 6, 20265 months ago" [ref=e725]
+                  - row [ref=e727]:
+                    - cell [ref=e728]:
+                      - link "CONTRIBUTING.md, (File)" [ref=e735] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/CONTRIBUTING.md
+                        - text: CONTRIBUTING.md
+                    - cell [ref=e736]:
+                      - 'link "chore(model-server): build on a Docker Hardened Image (full distroles…" [ref=e739] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/b21ea7f2f13b85789fffec98cd10ece5e29ba117
+                    - cell "Jul 10, 2026last week" [ref=e740]
+                  - row [ref=e742]:
+                    - cell [ref=e743]:
+                      - link "LICENSE, (File)" [ref=e750] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/LICENSE
+                        - text: LICENSE
+                    - cell [ref=e751]:
+                      - generic [ref=e753]:
+                        - 'link "chore: License update (No change, just touchup) (" [ref=e754] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/dea5be21856b3cbe2e2d9dc0166c37982b052545
+                        - link "#8460" [ref=e755] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/8460
+                        - link ")" [ref=e756] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/dea5be21856b3cbe2e2d9dc0166c37982b052545
+                    - cell "Feb 14, 20265 months ago" [ref=e757]
+                  - row [ref=e759]:
+                    - cell [ref=e760]:
+                      - link "Makefile, (File)" [ref=e767] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/Makefile
+                        - text: Makefile
+                    - cell [ref=e768]:
+                      - generic [ref=e770]:
+                        - 'link "chore(craft): kind image refresh tooling for local dev (" [ref=e771] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/4661e0330c7a8be5d73ea4127a31a9c6bbcfe72b
+                        - link "#12034" [ref=e772] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/12034
+                        - link ")" [ref=e773] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/4661e0330c7a8be5d73ea4127a31a9c6bbcfe72b
+                    - cell "Jun 13, 2026last month" [ref=e774]
+                  - row [ref=e776]:
+                    - cell [ref=e777]:
+                      - link "README.md, (File)" [ref=e784] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/README.md
+                        - text: README.md
+                    - cell [ref=e785]:
+                      - generic [ref=e787]:
+                        - link "Update README (" [ref=e788] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/7f2a4a488e1d36e06a4bbfc2b06ce6ca9408b8d2
+                        - link "#10843" [ref=e789] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/10843
+                        - link ")" [ref=e790] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/7f2a4a488e1d36e06a4bbfc2b06ce6ca9408b8d2
+                    - cell "May 6, 20262 months ago" [ref=e791]
+                  - row [ref=e793]:
+                    - cell [ref=e794]:
+                      - link "README.zh-CN.md, (File)" [ref=e801] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/README.zh-CN.md
+                        - text: README.zh-CN.md
+                    - cell [ref=e802]:
+                      - generic [ref=e804]:
+                        - link "Chinese README (" [ref=e805] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/76f69d08eb677bbfa8611dc448f9b9aa6d1898f4
+                        - link "#10624" [ref=e806] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/10624
+                        - link ")" [ref=e807] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/76f69d08eb677bbfa8611dc448f9b9aa6d1898f4
+                    - cell "Apr 26, 20263 months ago" [ref=e808]
+                  - row [ref=e810]:
+                    - cell [ref=e811]:
+                      - link "SECURITY.md, (File)" [ref=e818] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/SECURITY.md
+                        - text: SECURITY.md
+                    - cell [ref=e819]:
+                      - generic [ref=e821]:
+                        - 'link "docs: add SECURITY.md for vulnerability reporting (" [ref=e822] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/7eaaa19f0645e1da7ed18ca607369e6237ce2715
+                        - link "#11134" [ref=e823] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/11134
+                        - link ")" [ref=e824] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/7eaaa19f0645e1da7ed18ca607369e6237ce2715
+                    - cell "May 16, 20262 months ago" [ref=e825]
+                  - row [ref=e827]:
+                    - cell [ref=e828]:
+                      - link "bun.lock, (File)" [ref=e835] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/bun.lock
+                        - text: bun.lock
+                    - cell [ref=e836]:
+                      - 'link "chore(deps-dev): bump @typescript/native-preview from 7.0.0-dev.20260…" [ref=e839] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/efeb72acb5e63044b282c5e2168b41982339540f
+                    - cell "Jul 14, 2026last week" [ref=e840]
+                  - row [ref=e842]:
+                    - cell [ref=e843]:
+                      - link "ct.yaml, (File)" [ref=e850] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/ct.yaml
+                        - text: ct.yaml
+                    - cell [ref=e851]:
+                      - generic [ref=e853]:
+                        - 'link "chore(helm): update code-interpreter chart repo URL to python-sandbox (" [ref=e854] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/bd9d1bfa279a6ad9dbaea6eaa93777cccf116437
+                        - link "…" [ref=e855] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/8625
+                    - cell "Feb 21, 20265 months ago" [ref=e856]
+                  - row [ref=e858]:
+                    - cell [ref=e859]:
+                      - link "cubic.yaml, (File)" [ref=e866] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/cubic.yaml
+                        - text: cubic.yaml
+                    - cell [ref=e867]:
+                      - generic [ref=e869]:
+                        - 'link "chore: edit" [ref=e870] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/50dde0be1a3210ca041e330f62a0df0439d89764
+                        - code [ref=e871]:
+                          - link "AGENTS.md" [ref=e872] [cursor=pointer]:
+                            - /url: /onyx-dot-app/onyx/commit/50dde0be1a3210ca041e330f62a0df0439d89764
+                        - link "and" [ref=e873] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/50dde0be1a3210ca041e330f62a0df0439d89764
+                        - code [ref=e874]:
+                          - link "CLAUDE.md" [ref=e875] [cursor=pointer]:
+                            - /url: /onyx-dot-app/onyx/commit/50dde0be1a3210ca041e330f62a0df0439d89764
+                        - link "files (" [ref=e876] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/50dde0be1a3210ca041e330f62a0df0439d89764
+                        - link "#9486" [ref=e877] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/9486
+                        - link ")" [ref=e878] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/50dde0be1a3210ca041e330f62a0df0439d89764
+                    - cell "Mar 20, 20264 months ago" [ref=e879]
+                  - row [ref=e881]:
+                    - cell [ref=e882]:
+                      - link "docker-bake.hcl, (File)" [ref=e889] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/docker-bake.hcl
+                        - text: docker-bake.hcl
+                    - cell [ref=e890]:
+                      - generic [ref=e892]:
+                        - 'link "feat(ci): consume ECR pull-through cache for CI base images (" [ref=e893] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/033938f78f6caf3a99532cff2b6f25ab19166998
+                        - link "#11600" [ref=e894] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/11600
+                        - link ")" [ref=e895] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/033938f78f6caf3a99532cff2b6f25ab19166998
+                    - cell "Jun 3, 2026last month" [ref=e896]
+                  - row [ref=e898]:
+                    - cell [ref=e899]:
+                      - link "package.json, (File)" [ref=e906] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/package.json
+                        - text: package.json
+                    - cell [ref=e907]:
+                      - 'link "chore(deps-dev): bump @typescript/native-preview from 7.0.0-dev.20260…" [ref=e910] [cursor=pointer]':
+                        - /url: /onyx-dot-app/onyx/commit/efeb72acb5e63044b282c5e2168b41982339540f
+                    - cell "Jul 14, 2026last week" [ref=e911]
+                  - row [ref=e913]:
+                    - cell [ref=e914]:
+                      - link "pyproject.toml, (File)" [ref=e921] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/pyproject.toml
+                        - text: pyproject.toml
+                    - cell [ref=e922]:
+                      - generic [ref=e924]:
+                        - 'link "chore(deps): upgrade ruff: 0.12.0->0.15.21 (" [ref=e925] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/0a512a99d9b1416efed23690205a523e6814d300
+                        - link "#12929" [ref=e926] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/12929
+                        - link ")" [ref=e927] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/0a512a99d9b1416efed23690205a523e6814d300
+                    - cell "Jul 16, 20264 days ago" [ref=e928]
+                  - row [ref=e930]:
+                    - cell [ref=e931]:
+                      - link "uv.lock, (File)" [ref=e938] [cursor=pointer]:
+                        - /url: /onyx-dot-app/onyx/blob/main/uv.lock
+                        - text: uv.lock
+                    - cell [ref=e939]:
+                      - generic [ref=e941]:
+                        - 'link "chore(deps): upgrade ruff: 0.12.0->0.15.21 (" [ref=e942] [cursor=pointer]':
+                          - /url: /onyx-dot-app/onyx/commit/0a512a99d9b1416efed23690205a523e6814d300
+                        - link "#12929" [ref=e943] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx/pull/12929
+                        - link ")" [ref=e944] [cursor=pointer]:
+                          - /url: /onyx-dot-app/onyx/commit/0a512a99d9b1416efed23690205a523e6814d300
+                    - cell "Jul 16, 20264 days ago" [ref=e945]
+            - generic [ref=e948]:
+              - generic [ref=e949]:
+                - heading "Repository files navigation" [level=2] [ref=e950]
+                - navigation "Repository files" [ref=e951]:
+                  - list [ref=e952]:
+                    - listitem [ref=e953]:
+                      - link "README" [ref=e954] [cursor=pointer]:
+                        - /url: "#"
+                    - listitem [ref=e956]:
+                      - link "Contributing" [ref=e957] [cursor=pointer]:
+                        - /url: "#"
+                    - listitem [ref=e959]:
+                      - link "License" [ref=e960] [cursor=pointer]:
+                        - /url: "#"
+                    - listitem [ref=e962]:
+                      - link "Security" [ref=e963] [cursor=pointer]:
+                        - /url: "#"
+                - button "Outline" [ref=e965] [cursor=pointer]
+              - article [ref=e969]:
+                - paragraph
+                - generic [ref=e970]:
+                  - heading [level=2] [ref=e971]:
+                    - link [ref=e972] [cursor=pointer]:
+                      - /url: https://www.onyx.app/?utm_source=onyx_repo&utm_medium=github&utm_campaign=readme
+                  - link "Permalink:" [ref=e974] [cursor=pointer]:
+                    - /url: "#-----"
+                - paragraph [ref=e977]:
+                  - link [ref=e978] [cursor=pointer]:
+                    - /url: https://discord.gg/TDJ59cGV2X
+                    - img "Discord" [ref=e979]
+                  - link [ref=e980] [cursor=pointer]:
+                    - /url: https://docs.onyx.app/?utm_source=onyx_repo&utm_medium=github&utm_campaign=readme
+                    - img "Documentation" [ref=e981]
+                  - link [ref=e982] [cursor=pointer]:
+                    - /url: https://www.onyx.app/?utm_source=onyx_repo&utm_medium=github&utm_campaign=readme
+                    - img "Documentation" [ref=e983]
+                  - link [ref=e984] [cursor=pointer]:
+                    - /url: https://github.com/onyx-dot-app/onyx/blob/main/LICENSE
+                    - img "License" [ref=e985]
+                - paragraph [ref=e986]:
+                  - link [ref=e987] [cursor=pointer]:
+                    - /url: https://trendshift.io/repositories/12516
+                    - img "onyx-dot-app/onyx | Trendshift" [ref=e988]
+                - generic [ref=e989]:
+                  - heading "Onyx - The Open Source AI Platform" [level=1] [ref=e990]
+                  - 'link "Permalink: Onyx - The Open Source AI Platform" [ref=e991] [cursor=pointer]':
+                    - /url: "#onyx---the-open-source-ai-platform"
+                - paragraph [ref=e994]:
+                  - strong [ref=e995]:
+                    - link "Onyx" [ref=e996] [cursor=pointer]:
+                      - /url: https://www.onyx.app/?utm_source=onyx_repo&utm_medium=github&utm_campaign=readme
+                  - text: is the application layer for LLMs - bringing a feature-rich interface that can be easily hosted by anyone. Onyx enables LLMs through advanced capabilities like RAG, web search, code execution, file creation, deep research and more.
+                - paragraph [ref=e997]: Connect your applications with over 50+ indexing based connectors provided out of the box or via MCP.
+                - generic [ref=e998]:
+                  - paragraph [ref=e999]: Tip
+                  - paragraph [ref=e1002]: "Deploy with a single command:"
+                  - generic [ref=e1003]:
+                    - code [ref=e1005]: curl -fsSL https://onyx.app/install_onyx.sh | bash
+                    - button "Copy code to clipboard" [ref=e1007] [cursor=pointer]
+                - paragraph [ref=e1011]:
+                  - link [ref=e1013] [cursor=pointer]:
+                    - /url: https://github.com/onyx-dot-app/onyx/releases/download/v3.0.0/Onyx.gif
+                    - img "Onyx Chat Silent Demo" [ref=e1014]
+                - separator [ref=e1015]
+                - generic [ref=e1016]:
+                  - heading "⭐ Features" [level=2] [ref=e1017]
+                  - 'link "Permalink: ⭐ Features" [ref=e1018] [cursor=pointer]':
+                    - /url: "#-features"
+                - list [ref=e1021]:
+                  - listitem [ref=e1022]:
+                    - strong [ref=e1023]: "🔍 Agentic RAG:"
+                    - text: Get best in class search and answer quality based on hybrid index + AI Agents for information retrieval
+                    - list [ref=e1024]:
+                      - listitem [ref=e1025]: Benchmark to release soon!
+                  - listitem [ref=e1026]:
+                    - strong [ref=e1027]: "🔬 Deep Research:"
+                    - text: Get in depth reports with a multi-step research flow.
+                    - list [ref=e1028]:
+                      - listitem [ref=e1029]:
+                        - text: Top of
+                        - link "leaderboard" [ref=e1030] [cursor=pointer]:
+                          - /url: https://github.com/onyx-dot-app/onyx_deep_research_bench
+                        - text: as of Feb 2026.
+                  - listitem [ref=e1031]:
+                    - strong [ref=e1032]: "🤖 Custom Agents:"
+                    - text: Build AI Agents with unique instructions, knowledge, and actions.
+                  - listitem [ref=e1033]:
+                    - strong [ref=e1034]: "🌍 Web Search:"
+                    - text: Browse the web to get up to date information.
+                    - list [ref=e1035]:
+                      - listitem [ref=e1036]: Supports Serper, Google PSE, Brave, SearXNG, and others.
+                      - listitem [ref=e1037]: Comes with an in house web crawler and support for Firecrawl/Exa.
+                  - listitem [ref=e1038]:
+                    - strong [ref=e1039]: "📄 Artifacts:"
+                    - text: Generate documents, graphics, and other downloadable artifacts.
+                  - listitem [ref=e1040]:
+                    - strong [ref=e1041]:
+                      - generic [ref=e1042]: ▶️
+                      - text: "Actions & MCP:"
+                    - text: Let Onyx agents interact with external applications, comes with flexible Auth options.
+                  - listitem [ref=e1043]:
+                    - strong [ref=e1044]: "💻 Code Execution:"
+                    - text: Execute code in a sandbox to analyze data, render graphs, or modify files.
+                  - listitem [ref=e1045]:
+                    - strong [ref=e1046]: "🎙️ Voice Mode:"
+                    - text: Chat with Onyx via text-to-speech and speech-to-text.
+                  - listitem [ref=e1047]:
+                    - strong [ref=e1048]: "🎨 Image Generation:"
+                    - text: Generate images based on user prompts.
+                - paragraph [ref=e1049]: Onyx supports all major LLM providers, both self-hosted (like Ollama, LiteLLM, vLLM, etc.) and proprietary (like Anthropic, OpenAI, Gemini, etc.).
+                - paragraph [ref=e1050]:
+                  - text: To learn more - check out our
+                  - link "docs" [ref=e1051] [cursor=pointer]:
+                    - /url: https://docs.onyx.app/welcome?utm_source=onyx_repo&utm_medium=github&utm_campaign=readme
+                  - text: "!"
+                - separator [ref=e1052]
+                - generic [ref=e1053]:
+                  - heading "🚀 Deployment Modes" [level=2] [ref=e1054]
+                  - 'link "Permalink: 🚀 Deployment Modes" [ref=e1055] [cursor=pointer]':
+                    - /url: "#-deployment-modes"
+                - blockquote [ref=e1058]:
+                  - paragraph [ref=e1059]:
+                    - text: Onyx supports deployments in Docker, Kubernetes, Helm/Terraform and provides guides for major cloud providers. Detailed deployment guides found
+                    - link "here" [ref=e1060] [cursor=pointer]:
+                      - /url: https://docs.onyx.app/deployment/overview
+                    - text: .
+                - paragraph [ref=e1061]: "Onyx supports two separate deployment options: standard and lite."
+                - generic [ref=e1062]:
+                  - heading "Onyx Lite" [level=4] [ref=e1063]
+                  - 'link "Permalink: Onyx Lite" [ref=e1064] [cursor=pointer]':
+                    - /url: "#onyx-lite"
+                - paragraph [ref=e1067]: The Lite mode can be thought of as a lightweight Chat UI. It requires less resources (under 1GB memory) and runs a less complex stack. It is great for users who want to test out Onyx quickly or for teams who are only interested in the Chat UI and Agents functionalities.
+                - generic [ref=e1068]:
+                  - heading "Standard Onyx" [level=4] [ref=e1069]
+                  - 'link "Permalink: Standard Onyx" [ref=e1070] [cursor=pointer]':
+                    - /url: "#standard-onyx"
+                - paragraph [ref=e1073]: "The complete feature set of Onyx which is recommended for serious users and larger teams. Additional components not included in Lite mode:"
+                - list [ref=e1074]:
+                  - listitem [ref=e1075]: Vector + Keyword index for RAG.
+                  - listitem [ref=e1076]: Background containers to run job queues and workers for syncing knowledge from connectors.
+                  - listitem [ref=e1077]: AI model inference servers to run deep learning models used during indexing and inference.
+                  - listitem [ref=e1078]: Performance optimizations for large scale use via in memory cache (Redis) and blob store (MinIO).
+                - generic [ref=e1079]:
+                  - paragraph [ref=e1080]: Tip
+                  - paragraph [ref=e1083]:
+                    - strong [ref=e1084]:
+                      - text: To try Onyx for free without deploying, visit
+                      - link "Onyx Cloud" [ref=e1085] [cursor=pointer]:
+                        - /url: https://cloud.onyx.app/signup?utm_source=onyx_repo&utm_medium=github&utm_campaign=readme
+                    - text: .
+                - separator [ref=e1086]
+                - generic [ref=e1087]:
+                  - heading "🏢 Onyx for Enterprise" [level=2] [ref=e1088]
+                  - 'link "Permalink: 🏢 Onyx for Enterprise" [ref=e1089] [cursor=pointer]':
+                    - /url: "#-onyx-for-enterprise"
+                - paragraph [ref=e1092]: "Onyx is built for teams of all sizes, from individual users to the largest global enterprises:"
+                - list [ref=e1093]:
+                  - listitem [ref=e1094]: "👥 Collaboration: Share chats and agents with other members of your organization."
+                  - listitem [ref=e1095]: "🔐 Single Sign On: SSO via Google OAuth, OIDC, or SAML. Group syncing and user provisioning via SCIM."
+                  - listitem [ref=e1096]: "🛡️ Role Based Access Control: RBAC for sensitive resources like access to agents, actions, etc."
+                  - listitem [ref=e1097]: "📊 Analytics: Usage graphs broken down by teams, LLMs, or agents."
+                  - listitem [ref=e1098]: "🕵️ Query History: Audit usage to ensure safe adoption of AI in your organization."
+                  - listitem [ref=e1099]: "💻 Custom code: Run custom code to remove PII, reject sensitive queries, or to run custom analysis."
+                  - listitem [ref=e1100]: "🎨 Whitelabeling: Customize the look and feel of Onyx with custom naming, icons, banners, and more."
+                - generic [ref=e1101]:
+                  - heading "📚 Licensing" [level=2] [ref=e1102]
+                  - 'link "Permalink: 📚 Licensing" [ref=e1103] [cursor=pointer]':
+                    - /url: "#-licensing"
+                - paragraph [ref=e1106]: "There are two editions of Onyx:"
+                - list [ref=e1107]:
+                  - listitem [ref=e1108]: Onyx Community Edition (CE) is available freely under the MIT license and covers all of the core features for Chat, RAG, Agents, and Actions.
+                  - listitem [ref=e1109]: Onyx Enterprise Edition (EE) includes extra features that are primarily useful for larger organizations.
+                - paragraph [ref=e1110]:
+                  - text: For feature details, check out
+                  - link "our website" [ref=e1111] [cursor=pointer]:
+                    - /url: https://www.onyx.app/pricing?utm_source=onyx_repo&utm_medium=github&utm_campaign=readme
+                  - text: .
+                - generic [ref=e1112]:
+                  - heading "👪 Community" [level=2] [ref=e1113]
+                  - 'link "Permalink: 👪 Community" [ref=e1114] [cursor=pointer]':
+                    - /url: "#-community"
+                - paragraph [ref=e1117]:
+                  - text: Join our open source community on
+                  - strong [ref=e1118]:
+                    - link "Discord" [ref=e1119] [cursor=pointer]:
+                      - /url: https://discord.gg/TDJ59cGV2X
+                  - text: "!"
+                - generic [ref=e1120]:
+                  - heading "💡 Contributing" [level=2] [ref=e1121]
+                  - 'link "Permalink: 💡 Contributing" [ref=e1122] [cursor=pointer]':
+                    - /url: "#-contributing"
+                - paragraph [ref=e1125]:
+                  - text: Looking to contribute? Please check out the
+                  - link "Contribution Guide" [ref=e1126] [cursor=pointer]:
+                    - /url: /onyx-dot-app/onyx/blob/main/CONTRIBUTING.md
+                  - text: for more details.
+        - generic [ref=e1130]:
+          - generic [ref=e1133]:
+            - heading "About" [level=2] [ref=e1134]
+            - paragraph [ref=e1135]: Open Source AI Platform - AI Chat with advanced features that works with every LLM
+            - link "onyx.app" [ref=e1140] [cursor=pointer]:
+              - /url: https://onyx.app
+            - heading "Topics" [level=3] [ref=e1141]
+            - generic [ref=e1143]:
+              - link "python" [ref=e1144] [cursor=pointer]:
+                - /url: /topics/python
+              - link "information-retrieval" [ref=e1145] [cursor=pointer]:
+                - /url: /topics/information-retrieval
+              - link "ai" [ref=e1146] [cursor=pointer]:
+                - /url: /topics/ai
+              - link "nextjs" [ref=e1147] [cursor=pointer]:
+                - /url: /topics/nextjs
+              - link "self-hosted" [ref=e1148] [cursor=pointer]:
+                - /url: /topics/self-hosted
+              - link "enterprise-search" [ref=e1149] [cursor=pointer]:
+                - /url: /topics/enterprise-search
+              - link "chatui" [ref=e1150] [cursor=pointer]:
+                - /url: /topics/chatui
+              - link "rag" [ref=e1151] [cursor=pointer]:
+                - /url: /topics/rag
+              - link "vector-search" [ref=e1152] [cursor=pointer]:
+                - /url: /topics/vector-search
+              - link "ai-chat" [ref=e1153] [cursor=pointer]:
+                - /url: /topics/ai-chat
+              - link "llm" [ref=e1154] [cursor=pointer]:
+                - /url: /topics/llm
+              - link "chatgpt" [ref=e1155] [cursor=pointer]:
+                - /url: /topics/chatgpt
+              - link "gen-ai" [ref=e1156] [cursor=pointer]:
+                - /url: /topics/gen-ai
+              - link "llm-ui" [ref=e1157] [cursor=pointer]:
+                - /url: /topics/llm-ui
+            - heading "Resources" [level=3] [ref=e1158]
+            - link "Readme" [ref=e1160] [cursor=pointer]:
+              - /url: "#readme-ov-file"
+            - heading "License" [level=3] [ref=e1163]
+            - link "View license" [ref=e1165] [cursor=pointer]:
+              - /url: "#License-1-ov-file"
+            - heading "Contributing" [level=3] [ref=e1168]
+            - link "Contributing" [ref=e1170] [cursor=pointer]:
+              - /url: "#contributing-ov-file"
+            - heading "Security policy" [level=3] [ref=e1173]
+            - link "Security policy" [ref=e1175] [cursor=pointer]:
+              - /url: "#security-ov-file"
+            - link "Activity" [ref=e1179] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/activity
+            - link "Custom properties" [ref=e1183] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/custom-properties
+            - heading "Stars" [level=3] [ref=e1186]
+            - generic [ref=e1188]:
+              - strong [ref=e1191]: 31k
+              - text: stars
+            - heading "Watchers" [level=3] [ref=e1192]
+            - generic [ref=e1194]:
+              - strong [ref=e1197]: "153"
+              - text: watching
+            - heading "Forks" [level=3] [ref=e1198]
+            - link [ref=e1200] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/forks
+              - strong [ref=e1203]: 4.3k
+              - text: forks
+            - link "Report repository" [ref=e1205] [cursor=pointer]:
+              - /url: /contact/report-content?content_url=https%3A%2F%2Fgithub.com%2Fonyx-dot-app%2Fonyx&report=onyx-dot-app+%28user%29
+          - generic [ref=e1207]:
+            - heading [level=2] [ref=e1208]:
+              - link "Releases 253" [ref=e1209] [cursor=pointer]:
+                - /url: /onyx-dot-app/onyx/releases
+                - text: Releases
+                - generic "253" [ref=e1210]
+            - link "v4.3.9 Latest Jul 17, 20262 days ago" [ref=e1211] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/releases/tag/v4.3.9
+              - generic [ref=e1214]:
+                - generic [ref=e1215]:
+                  - generic [ref=e1216]: v4.3.9
+                  - 'generic "Label: Latest" [ref=e1217]': Latest
+                - generic [ref=e1218]: Jul 17, 20262 days ago
+            - link "+ 252 releases" [ref=e1220] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/releases
+          - generic [ref=e1222]:
+            - heading [level=2] [ref=e1223]:
+              - link "Contributors 223" [ref=e1224] [cursor=pointer]:
+                - /url: /onyx-dot-app/onyx/graphs/contributors
+                - text: Contributors
+                - generic "223" [ref=e1225]
+            - list [ref=e1226]:
+              - listitem [ref=e1227]:
+                - link [ref=e1228] [cursor=pointer]:
+                  - /url: https://github.com/apps/github-merge-queue
+                  - img "@github-merge-queue[bot]" [ref=e1229]
+              - listitem [ref=e1230]:
+                - link [ref=e1231] [cursor=pointer]:
+                  - /url: https://github.com/Weves
+                  - img "@Weves" [ref=e1232]
+              - listitem [ref=e1233]:
+                - link [ref=e1234] [cursor=pointer]:
+                  - /url: https://github.com/jmelahman
+                  - img "@jmelahman" [ref=e1235]
+              - listitem [ref=e1236]:
+                - link [ref=e1237] [cursor=pointer]:
+                  - /url: https://github.com/yuhongsun96
+                  - img "@yuhongsun96" [ref=e1238]
+              - listitem [ref=e1239]:
+                - link [ref=e1240] [cursor=pointer]:
+                  - /url: https://github.com/pablonyx
+                  - img "@pablonyx" [ref=e1241]
+              - listitem [ref=e1242]:
+                - link [ref=e1243] [cursor=pointer]:
+                  - /url: https://github.com/wenxi-onyx
+                  - img "@wenxi-onyx" [ref=e1244]
+              - listitem [ref=e1245]:
+                - link [ref=e1246] [cursor=pointer]:
+                  - /url: https://github.com/justin-tahara
+                  - img "@justin-tahara" [ref=e1247]
+              - listitem [ref=e1248]:
+                - link [ref=e1249] [cursor=pointer]:
+                  - /url: https://github.com/raunakab
+                  - img "@raunakab" [ref=e1250]
+              - listitem [ref=e1251]:
+                - link [ref=e1252] [cursor=pointer]:
+                  - /url: https://github.com/evan-onyx
+                  - img "@evan-onyx" [ref=e1253]
+              - listitem [ref=e1254]:
+                - link [ref=e1255] [cursor=pointer]:
+                  - /url: https://github.com/claude
+                  - img "@claude" [ref=e1256]
+              - listitem [ref=e1257]:
+                - link [ref=e1258] [cursor=pointer]:
+                  - /url: https://github.com/rkuo-danswer
+                  - img "@rkuo-danswer" [ref=e1259]
+              - listitem [ref=e1260]:
+                - link [ref=e1261] [cursor=pointer]:
+                  - /url: https://github.com/nmgarza5
+                  - img "@nmgarza5" [ref=e1262]
+              - listitem [ref=e1263]:
+                - link [ref=e1264] [cursor=pointer]:
+                  - /url: https://github.com/apps/dependabot
+                  - img "@dependabot[bot]" [ref=e1265]
+              - listitem [ref=e1266]:
+                - link [ref=e1267] [cursor=pointer]:
+                  - /url: https://github.com/hagen-danswer
+                  - img "@hagen-danswer" [ref=e1268]
+            - link "+ 209 contributors" [ref=e1270] [cursor=pointer]:
+              - /url: /onyx-dot-app/onyx/graphs/contributors
+          - generic [ref=e1272]:
+            - heading "Languages" [level=2] [ref=e1273]
+            - list [ref=e1283]:
+              - listitem [ref=e1284]:
+                - link "Python 66.9%" [ref=e1285] [cursor=pointer]:
+                  - /url: /onyx-dot-app/onyx/search?l=python
+                  - generic [ref=e1288]: Python
+                  - generic [ref=e1289]: 66.9%
+              - listitem [ref=e1290]:
+                - link "TypeScript 27.7%" [ref=e1291] [cursor=pointer]:
+                  - /url: /onyx-dot-app/onyx/search?l=typescript
+                  - generic [ref=e1294]: TypeScript
+                  - generic [ref=e1295]: 27.7%
+              - listitem [ref=e1296]:
+                - link "Go 2.1%" [ref=e1297] [cursor=pointer]:
+                  - /url: /onyx-dot-app/onyx/search?l=go
+                  - generic [ref=e1300]: Go
+                  - generic [ref=e1301]: 2.1%
+              - listitem [ref=e1302]:
+                - link "JavaScript 1.1%" [ref=e1303] [cursor=pointer]:
+                  - /url: /onyx-dot-app/onyx/search?l=javascript
+                  - generic [ref=e1306]: JavaScript
+                  - generic [ref=e1307]: 1.1%
+              - listitem [ref=e1308]:
+                - link "CSS 0.7%" [ref=e1309] [cursor=pointer]:
+                  - /url: /onyx-dot-app/onyx/search?l=css
+                  - generic [ref=e1312]: CSS
+                  - generic [ref=e1313]: 0.7%
+              - listitem [ref=e1314]:
+                - link "HTML 0.4%" [ref=e1315] [cursor=pointer]:
+                  - /url: /onyx-dot-app/onyx/search?l=html
+                  - generic [ref=e1318]: HTML
+                  - generic [ref=e1319]: 0.4%
+              - listitem [ref=e1320]:
+                - generic [ref=e1321]:
+                  - generic [ref=e1324]: Other
+                  - generic [ref=e1325]: 1.1%
+  - contentinfo [ref=e1327]:
+    - heading "Footer" [level=2] [ref=e1328]
+    - generic [ref=e1329]:
+      - generic [ref=e1330]:
+        - link "GitHub Homepage" [ref=e1331] [cursor=pointer]:
+          - /url: https://github.com
+        - generic [ref=e1334]: © 2026 GitHub, Inc.
+      - navigation "Footer" [ref=e1335]:
+        - heading "Footer navigation" [level=3] [ref=e1336]
+        - list "Footer navigation" [ref=e1337]:
+          - listitem [ref=e1338]:
+            - link "Terms" [ref=e1339] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/github-terms/github-terms-of-service
+          - listitem [ref=e1340]:
+            - link "Privacy" [ref=e1341] [cursor=pointer]:
+              - /url: https://docs.github.com/site-policy/privacy-policies/github-privacy-statement
+          - listitem [ref=e1342]:
+            - link "Security" [ref=e1343] [cursor=pointer]:
+              - /url: https://github.com/security
+          - listitem [ref=e1344]:
+            - link "Status" [ref=e1345] [cursor=pointer]:
+              - /url: https://www.githubstatus.com/
+          - listitem [ref=e1346]:
+            - link "Community" [ref=e1347] [cursor=pointer]:
+              - /url: https://github.community/
+          - listitem [ref=e1348]:
+            - link "Docs" [ref=e1349] [cursor=pointer]:
+              - /url: https://docs.github.com/
+          - listitem [ref=e1350]:
+            - link "Contact" [ref=e1351] [cursor=pointer]:
+              - /url: https://support.github.com?tags=dotcom-footer
+          - listitem [ref=e1352]:
+            - button "Manage cookies" [ref=e1354] [cursor=pointer]
+          - listitem [ref=e1355]:
+            - button "Do not share my personal information" [ref=e1357] [cursor=pointer]
