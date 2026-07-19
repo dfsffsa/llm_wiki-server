@@ -771,6 +771,24 @@ async function init() {
     applyTheme(next);
   });
   initCitationCard();
+  // Mobile menu toggle
+  $("#btn-menu-mobile")?.addEventListener("click", () => {
+    document.querySelector(".sidebar")?.classList.toggle("open");
+    const backdrop = document.querySelector(".sidebar-backdrop");
+    if (backdrop) backdrop.classList.toggle("show");
+  });
+
+  // Close sidebar when clicking a project (navigates)
+  document.querySelector(".project-list")?.addEventListener("click", () => {
+    document.querySelector(".sidebar")?.classList.remove("open");
+    document.querySelector(".sidebar-backdrop")?.classList.remove("show");
+  });
+
+  // Also close when clicking a conversation
+  document.querySelector(".history-list")?.addEventListener("click", () => {
+    document.querySelector(".sidebar")?.classList.remove("open");
+    document.querySelector(".sidebar-backdrop")?.classList.remove("show");
+  });
   // Search view
   $("#btn-back-from-search")?.addEventListener("click", () => showView("chat"));
   $("#search-input")?.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(e.target.value); });

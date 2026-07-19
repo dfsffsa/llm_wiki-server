@@ -933,3 +933,60 @@ body {
 .meta-file {
   color: var(--text-muted);
 }
+
+/* --- Mobile responsive --- */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    width: 80%;
+    max-width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    background: var(--surface, #fff);
+    box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  /* Sidebar backdrop */
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+    background: rgba(0,0,0,0.3);
+  }
+  .sidebar-backdrop.show { display: block; }
+
+  .chat-main { width: 100%; }
+
+  .menu-toggle {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 50;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 2.75rem;
+    height: 2.75rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar-footer { font-size: 0.7rem; padding: 6px 10px; }
+  .sidebar-user { max-width: 120px; }
+}
+
+@media (min-width: 769px) {
+  .menu-toggle { display: none; }
+  .sidebar-backdrop { display: none !important; }
+}
