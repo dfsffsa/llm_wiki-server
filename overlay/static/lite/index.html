@@ -15,6 +15,7 @@
         <span class="topbar-spacer"></span>
         <span id="user-email" class="user-email"></span>
         <span id="usage-info" class="usage-info"></span>
+        <button type="button" id="btn-theme" class="btn-icon" aria-label="切换主题">🌓</button>
         <button type="button" id="btn-logout" class="btn-text">登出</button>
       </header>
 
@@ -45,6 +46,7 @@
           <aside class="history-sidebar" id="history-sidebar" aria-label="历史对话">
             <div class="history-header">
               <span>历史对话</span>
+              <button type="button" id="btn-search" class="btn-text">🔍 搜索</button>
               <button type="button" id="btn-new-chat" class="btn-text">＋ 新建</button>
             </div>
             <ul id="history-list" class="history-list"></ul>
@@ -64,6 +66,18 @@
             </footer>
           </div>
         </div>
+      </section>
+
+      <!-- Search -->
+      <section id="view-search" class="view">
+        <div class="search-header-layout">
+          <div class="search-bar">
+            <input type="text" id="search-input" placeholder="搜索当前知识库…" autocomplete="off" />
+            <button type="button" id="search-btn" class="btn-search-go">🔍</button>
+          </div>
+          <button type="button" id="btn-back-from-search" class="icon-btn" aria-label="返回聊天">←</button>
+        </div>
+        <div id="search-results" class="search-results"></div>
       </section>
     </div>
 

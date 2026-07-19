@@ -23,7 +23,10 @@ export function setAssistantBubbleContent(el, text) {
     return;
   }
   el.classList.add("msg-md");
-  el.innerHTML = renderMarkdown(text);
+  let html = renderMarkdown(text);
+  // Replace [N] markers with styled citation badges (sanitize-safe).
+  html = html.replace(/\[(\d+)\]/g, '<sup class="ref-badge" data-id="$1">[$1]</sup>');
+  el.innerHTML = html;
   for (const link of el.querySelectorAll("a[href]")) {
     link.target = "_blank";
     link.rel = "noopener noreferrer";

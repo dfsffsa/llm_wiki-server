@@ -20,6 +20,7 @@ const state = {
   user: null,
   usage: null,
   currentMessages: [],
+  lastSources: [], // structured search results for source cards
 };
 
 function isAbortError(err) {
@@ -230,6 +231,8 @@ function mergeProject(apiProject) {
 
 // --- RAG context ---
 
+const MAX_SOURCES = 6;
+
 async function buildContext(projectId, query) {
   try {
     const res = await apiPost(`/api/v1/projects/${encodeURIComponent(projectId)}/search`, {
@@ -238,16 +241,14 @@ async function buildContext(projectId, query) {
       includeContent: true,
     });
     const data = await res.json();
-    if (!data.results?.length) return "";
-    return data.results
-      .slice(0, 6)
-      .map((r, i) => {
-        const text = r.content || r.snippet || "";
-        return `[${i + 1}] ${r.title || r.path}\n${text}`.trim();
-      })
+    if (!data.results?.length) return { text: "", sources: [] };
+    const results = data.results.slice(0, MAX_SOURCES);
+    const text = results
+      .map((r, i) => `[${i + 1}] ${r.title || r.path}\n${r.content || r.snippet || ""}`.trim())
       .join("\n\n");
+    return { text, sources: results };
   } catch {
-    return "";
+    return { text: "", sources: [] };
   }
 }
 
@@ -312,7 +313,89 @@ async function streamChat(projectId, messages, onToken, onReasoning, signal) {
   }
 }
 
-// --- UI ---
+// ---- Source cards & citation hover ---
+
+let _citationCard = null;
+
+function initCitationCard() {
+  if (_citationCard) return _citationCard;
+  const card = document.createElement("div");
+  card.className = "citation-card";
+  card.hidden = true;
+  document.body.appendChild(card);
+  _citationCard = card;
+
+  // Delegate hover on #messages for .ref-badge and .source-card
+  const msgs = $("#messages");
+  if (msgs) {
+    let hideTimer = null;
+    let lastId = -1;
+
+    function showCard(el, idx) {
+      const sources = window.__lastSources || [];
+      const s = sources[idx];
+      if (!s) { hideCard(); return; }
+      card.innerHTML = `<div class="citation-header"><span class="citation-num">[${idx + 1}]</span><span class="citation-title">${escapeHtml(s.title || s.path || "")}</span></div><div class="citation-snippet">${escapeHtml((s.snippet || s.content || "").slice(0, 200))}</div><a class="citation-link" href="/api/v1/projects/${encodeURIComponent(state.activeProject?.id || "")}/files/content?path=${encodeURIComponent(s.path || "")}" target="_blank">查看原文 →</a>`;
+      card.hidden = false;
+      const rect = el.getBoundingClientRect();
+      const top = rect.bottom + 6;
+      let left = rect.left + rect.width / 2 - 160;
+      if (left < 8) left = 8;
+      if (left + 320 > window.innerWidth) left = window.innerWidth - 328;
+      card.style.top = `${top + window.scrollY}px`;
+      card.style.left = `${left}px`;
+    }
+
+    function hideCard() { card.hidden = true; }
+
+    msgs.addEventListener("mouseover", (e) => {
+      const badge = e.target.closest(".ref-badge");
+      if (!badge) return;
+      const id = parseInt(badge.dataset.id || "0", 10);
+      if (id === lastId) return;
+      clearTimeout(hideTimer);
+      lastId = id;
+      showCard(badge, id - 1);
+    });
+
+    msgs.addEventListener("mouseout", (e) => {
+      const badge = e.target.closest(".ref-badge");
+      if (!badge) return;
+      // Delay hide to allow moving mouse to the card
+      hideTimer = setTimeout(() => { hideCard(); lastId = -1; }, 250);
+    });
+
+    // Keep showing when mouse is on the card itself
+    card.addEventListener("mouseenter", () => clearTimeout(hideTimer));
+    card.addEventListener("mouseleave", () => { hideCard(); lastId = -1; });
+  }
+}
+
+function renderSourceCards(bubble, sources) {
+  if (!sources || !sources.length) return;
+  window.__lastSources = sources;
+  const wrap = document.createElement("div");
+  wrap.className = "sources-grid";
+  let html = '<div class="sources-label">📎 参考来源</div>';
+  for (let i = 0; i < sources.length; i++) {
+    const r = sources[i];
+    const title = r.title || r.path || "";
+    const dir = r.path ? r.path.replace(/[^/]+\/?$/, "") : "";
+    const pid = state.activeProject?.id || "";
+    const path = r.path ? `/api/v1/projects/${encodeURIComponent(pid)}/files/content?path=${encodeURIComponent(r.path)}` : "#";
+    html += `<a class="source-card" href="${path}" target="_blank">
+      <span class="source-index">[${i + 1}]</span>
+      <span class="source-info">
+        <span class="source-title">${escapeHtml(title)}</span>
+        ${dir ? `<span class="source-dir">${escapeHtml(dir)}</span>` : ""}
+      </span>
+    </a>`;
+  }
+  wrap.innerHTML = html;
+  bubble.appendChild(wrap);
+}
+
+// --- Shared helpers ---
 
 function escapeHtml(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -339,9 +422,49 @@ function showBanner(text) {
   el.classList.remove("hidden");
 }
 
+// --- Search ---
+
+let _lastQuery = "";
+
+function showSearch() {
+  abortActiveStream();
+  showView("search");
+  setTimeout(() => $("#search-input")?.focus(), 50);
+}
+
+async function doSearch(query) {
+  const q = (query || "").trim();
+  if (!q || !state.activeProject) return;
+  _lastQuery = q;
+  const el = $("#search-results");
+  el.innerHTML = '<div class="search-status">正在搜索…</div>';
+  try {
+    const res = await apiPost(`/api/v1/projects/${encodeURIComponent(state.activeProject.id)}/search`, { query: q, topK: 30, includeContent: true });
+    const data = await res.json();
+    const results = data.results || [];
+    if (!results.length) { el.innerHTML = '<div class="search-status search-empty">未找到相关内容</div>'; return; }
+    el.innerHTML = results.map((r, i) => {
+      const snippet = r.snippet || r.content || "";
+      const title = r.title || r.path || "";
+      const pid = state.activeProject.id;
+      const link = `/api/v1/projects/${encodeURIComponent(pid)}/files/content?path=${encodeURIComponent(r.path || "")}`;
+      return `<div class="result-item"><h3 class="result-title"><a href="${link}" target="_blank">${escapeHtml(title)}</a></h3><p class="result-snippet">${highlightQuery(escapeHtml(snippet), q)}</p><div class="result-meta"><span class="meta-file">${escapeHtml(r.path || "")}</span></div></div>`;
+    }).join("");
+  } catch { el.innerHTML = '<div class="search-status search-empty">搜索请求失败</div>'; }
+}
+
+function highlightQuery(text, q) {
+  if (!q || !text) return text;
+  const words = q.split(/\s+/).filter(Boolean).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  let result = text;
+  for (const w of words) { result = result.replace(new RegExp(`(${w})`, "gi"), "<mark>$1</mark>"); }
+  return result;
+}
+
 function showView(name) {
   $("#view-home").classList.toggle("active", name === "home");
   $("#view-chat").classList.toggle("active", name === "chat");
+  $("#view-search").classList.toggle("active", name === "search");
 }
 
 async function openProject(project) {
@@ -564,11 +687,17 @@ async function sendMessage(text) {
   let aborted = false;
   let firstAnswerToken = true;
   try {
-    const context = await buildContext(state.activeProject.id, trimmed);
+    const ctx = await buildContext(state.activeProject.id, trimmed);
     if (generation !== state.sendGeneration) return;
+    state.lastSources = ctx.sources;
     updateStreamStatus("正在思考…");
     const systemParts = [`你是「${state.activeProject.title}」知识库助手，用简洁中文回答家长/职场新人的实际问题。`, "优先依据下方检索到的资料；若无相关资料，请诚实说明并给出通用建议。"];
-    if (context) systemParts.push("\n--- 检索资料 ---\n" + context);
+    if (ctx.text) {
+      systemParts.push("\n--- 检索资料 ---\n" + ctx.text);
+      if (ctx.sources.length > 0) {
+        systemParts.push("回答时若引用具体资料，请在引用处标注对应的编号 [1][2] 等。");
+      }
+    }
     const historyForApi = messages.slice(0, -1).filter((m) => m.role === "user" || (m.role === "assistant" && m.content.trim().length > 0)).map((m) => ({ role: m.role, content: m.content }));
     const apiMessages = [{ role: "system", content: systemParts.join("\n") }, ...historyForApi];
     await streamChat(state.activeProject.id, apiMessages,
@@ -590,6 +719,12 @@ async function sendMessage(text) {
     if (generation !== state.sendGeneration) return;
     if (aborted && !assistant.content.trim() && messages[messages.length - 1]?.role === "assistant") { messages.pop(); }
     finishReplyUI(messages, generation);
+    // Append source cards to the last assistant message (re-render wiped them).
+    if (state.lastSources?.length > 0) {
+      const lastMsg = document.querySelector(".msg-row.assistant:last-child .msg");
+      if (lastMsg) renderSourceCards(lastMsg, state.lastSources);
+      state.lastSources = [];
+    }
     refreshUsage();
     renderHistoryList();
   }
@@ -614,6 +749,27 @@ async function init() {
   $("#btn-new-chat").addEventListener("click", () => newConversation());
   $("#btn-logout")?.addEventListener("click", async () => { try { await fetch(`${(CFG.apiBase || "").replace(/\/$/, "")}/auth/logout`, { method: "POST", credentials: "same-origin" }); } catch {} location.href = "/login"; });
   $("#btn-menu")?.addEventListener("click", () => { $("#history-sidebar")?.classList.toggle("open"); });
+  // Theme toggle: "🌓" cycles light→dark→system→light
+  function applyTheme(mode) {
+    const html = document.documentElement;
+    if (mode === "dark") { html.dataset.colorScheme = "dark"; }
+    else if (mode === "light") { html.dataset.colorScheme = "light"; }
+    else { html.removeAttribute("data-color-scheme"); } // follow system (CSS prefers-color-scheme)
+  }
+  const saved = localStorage.getItem("theme_scheme") || "auto";
+  applyTheme(saved);
+  $("#btn-theme")?.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-color-scheme");
+    const next = cur === "dark" ? "light" : cur === "light" ? "auto" : "dark";
+    localStorage.setItem("theme_scheme", next);
+    applyTheme(next);
+  });
+  initCitationCard();
+  // Search view
+  $("#btn-search")?.addEventListener("click", () => showSearch());
+  $("#btn-back-from-search")?.addEventListener("click", () => showView("chat"));
+  $("#search-input")?.addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(e.target.value); });
+  $("#search-btn")?.addEventListener("click", () => doSearch($("#search-input")?.value));
   const input = $("#input");
   const btnSend = $("#btn-send");
   input.addEventListener("input", () => { btnSend.disabled = !input.value.trim() || !state.chatEnabled; input.style.height = "auto"; input.style.height = `${Math.min(input.scrollHeight, 120)}px`; });
