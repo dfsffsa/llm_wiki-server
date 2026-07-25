@@ -124,5 +124,35 @@ class TestEvaluator(unittest.TestCase):
         self.assertEqual(report.source_file, "s.md")
 
 
+class TestLlmJudgePipeline(unittest.TestCase):
+    @patch("llm_judge.load_llm_config")
+    @patch("judge.extractor.call_llm")
+    @patch("judge.evaluator.call_llm")
+    def test_run_llm_judge(self, mock_eval, mock_extract, mock_load_cfg):
+        import tempfile
+        mock_extract.return_value = json.dumps(
+            [{"claim": "C1", "location": "L1"}]
+        )
+        mock_eval.return_value = json.dumps({
+            "coverage_claims": [{"claim": "C1", "source_location": "L1",
+                                 "wiki_coverage": "full", "wiki_excerpt": "E"}],
+            "hallucinations": [],
+            "scores": {"coverage": 10, "consistency": 9}
+        })
+        with tempfile.TemporaryDirectory() as td:
+            raw = os.path.join(td, "raw", "sources")
+            wiki = os.path.join(td, "wiki", "sources")
+            os.makedirs(raw)
+            os.makedirs(wiki)
+            with open(os.path.join(raw, "test.md"), "w") as f:
+                f.write("# source")
+            with open(os.path.join(wiki, "test.md"), "w") as f:
+                f.write("# wiki")
+            from llm_judge import run_llm_judge
+            result = run_llm_judge(td, "dummy.json")
+            self.assertEqual(result["summary"]["sources_evaluated"], 1)
+            self.assertEqual(result["summary"]["avg_coverage"], 10)
+
+
 if __name__ == "__main__":
     unittest.main()

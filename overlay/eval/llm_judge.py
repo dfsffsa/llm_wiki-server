@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+"""
+LLM-as-Judge Ingest 质量评估
+
+对 ingest 产出的 wiki 页面做内容级质量评估：
+- 角色 A (Extractor): 从 source 中提取关键陈述清单
+- 角色 B (Evaluator): 逐条比对 wiki 页面的覆盖度
+
+用法:
+    python llm_judge.py --project <path> --config <config.json>
+    python llm_judge.py --project <path> --config <config.json> --sample 20
+"""
+
+import argparse
+import json
+import os
+import random
+import sys
+import glob
+from datetime import datetime
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from judge.llm_client import load_llm_config
+from judge.extractor import extract_claims, parse_extracted_claims
+from judge.evaluator import evaluate_wiki
+from judge.models import JudgeReportItem
+
+
+def find_source_wiki_pairs(project_dir: str, sample: int = None) -> list:
+    """找到 raw/sources/*.md 和 wiki/sources/*.md 的配对"""
+    raw_dir = os.path.join(project_dir, "raw", "sources")
+    wiki_dir = os.path.join(project_dir, "wiki", "sources")
+    pairs = []
+    if not os.path.isdir(raw_dir):
+        return pairs
+    for rf in glob.glob(os.path.join(raw_dir, "*.md")):
+        base = os.path.basename(rf)
+        wf = os.path.join(wiki_dir, base)
+        if os.path.exists(wf):
+            pairs.append((rf, wf))
+    if sample and sample < len(pairs):
+        pairs = random.sample(pairs, sample)
+    return sorted(pairs)
+
+
+def read_file(path: str) -> str:
+    try:
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+    except Exception:
+        return None
+
+
+def summarize(reports: list) -> dict:
+    if not reports:
+        return {
+            "sources_evaluated": 0,
+            "avg_coverage": 0,
+            "avg_consistency": 0,
+            "total_hallucinations": 0,
+            "low_quality": []
+        }
+    coverages = [r["scores"].get("coverage", 0) for r in reports]
+    consistencies = [r["scores"].get("consistency", 0) for r in reports]
+    total_hall = sum(len(r.get("hallucinations", [])) for r in reports)
+    return {
+        "sources_evaluated": len(reports),
+        "avg_coverage": round(sum(coverages) / len(coverages), 1) if coverages else 0,
+        "avg_consistency": round(sum(consistencies) / len(consistencies), 1) if consistencies else 0,
+        "total_hallucinations": total_hall,
+        "low_quality": [
+            r["source_file"] for r in reports
+            if r["scores"].get("coverage", 10) < 5
+        ]
+    }
+
+
+def run_llm_judge(project_dir: str, config_path: str, sample: int = None,
+                  verbose: bool = False) -> dict:
+    """运行 LLM-as-Judge 评估管线"""
+    llm_config = load_llm_config(config_path)
+    pairs = find_source_wiki_pairs(project_dir, sample)
+    reports = []
+
+    for i, (src, wiki) in enumerate(pairs):
+        src_content = read_file(src)
+        wiki_content = read_file(wiki)
+        if not src_content or not wiki_content:
+            continue
+
+        source_name = os.path.basename(src)
+        wiki_rel = os.path.relpath(wiki, project_dir)
+
+        if verbose:
+            print(f"[{i+1}/{len(pairs)}] {source_name} ...", end=" ", flush=True)
+
+        try:
+            # 角色 A: 提取关键陈述
+            claims_resp = extract_claims(src_content, source_name, llm_config)
+            claims = parse_extracted_claims(claims_resp)
+            claims_text = json.dumps(claims, ensure_ascii=False, indent=2)
+
+            # 角色 B: 评估 wiki 覆盖度
+            report = evaluate_wiki(claims_text, wiki_content, llm_config)
+            report.source_file = os.path.relpath(src, project_dir)
+            report.wiki_page = wiki_rel
+            reports.append(report.to_dict())
+
+            if verbose:
+                cov = report.scores.get("coverage", "?")
+                hall = len(report.hallucinations)
+                print(f"coverage={cov} hallucinations={hall}")
+        except Exception as e:
+            if verbose:
+                print(f"ERROR: {e}")
+            reports.append(JudgeReportItem(
+                source_file=os.path.relpath(src, project_dir),
+                wiki_page=wiki_rel,
+                scores={"error": str(e)}
+            ).to_dict())
+
+    return {
+        "project": os.path.basename(project_dir.rstrip("/")),
+        "timestamp": str(datetime.now()),
+        "config": {"model": llm_config.get("model"), "sample": sample},
+        "reports": reports,
+        "summary": summarize(reports)
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser(description="LLM-as-Judge Ingest 质量评估")
+    parser.add_argument("--project", "-p", required=True, help="项目路径")
+    parser.add_argument("--config", "-c", required=True, help="LLM 配置 JSON 路径")
+    parser.add_argument("--sample", "-s", type=int, default=None,
+                        help="随机抽样数量（不指定则评估全部）")
+    parser.add_argument("--verbose", "-v", action="store_true", help="详细输出")
+    parser.add_argument("--output", "-o", help="结果输出 JSON 路径")
+    args = parser.parse_args()
+
+    result = run_llm_judge(args.project, args.config, args.sample, args.verbose)
+
+    print(json.dumps(result["summary"], ensure_ascii=False, indent=2))
+
+    if args.output:
+        os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
+        with open(args.output, "w", encoding="utf-8") as f:
+            json.dump(result, f, ensure_ascii=False, indent=2)
+        print(f"Results saved to {args.output}")
+
+
+if __name__ == "__main__":
+    main()
