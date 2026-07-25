@@ -20,6 +20,7 @@ def evaluate_wiki(claims_text, wiki_content, llm_config):
     return parse_eval_response(resp, "", "")
 
 def parse_eval_response(resp, source_file, wiki_page):
+    import logging
     try:
         data = json.loads(resp)
     except json.JSONDecodeError:
@@ -27,9 +28,55 @@ def parse_eval_response(resp, source_file, wiki_page):
         if m:
             data = json.loads(m.group(1))
         else:
-            raise
-    claims = [CoverageClaim(**c) for c in data.get("coverage_claims", [])]
-    halls = [Hallucination(**h) for h in data.get("hallucinations", [])]
+            # 尝试解析截断的 JSON
+            try:
+                data = json.loads(resp + "}")
+            except json.JSONDecodeError:
+                try:
+                    data = json.loads(resp + '"}')
+                except json.JSONDecodeError:
+                    logging.warning(f"Failed to parse eval response:\n{resp[:500]}")
+                    raise
+
+    # 规范化字段名：LLM 可能用不同的字段名
+    FIELD_ALIASES = {
+        "location": "source_location",
+        "status": "wiki_coverage",
+        "coverage": "wiki_coverage",
+        "coverage_status": "wiki_coverage",
+        "source": "source_location",
+        "source_text": "source_location",
+        "excerpt": "wiki_excerpt",
+        "text": "wiki_excerpt",
+        "wiki_text": "wiki_excerpt",
+    }
+
+    def normalize_claim(c):
+        for alias, target in FIELD_ALIASES.items():
+            if alias in c and target not in c:
+                c[target] = c.pop(alias)
+        c.setdefault("source_location", "")
+        c.setdefault("wiki_excerpt", "")
+        c.setdefault("wiki_coverage", "partial")
+        return c
+
+    def normalize_hallucination(h):
+        FIELD_ALIASES_H = {
+            "location": "wiki_location",
+            "reason": "judge_reasoning",
+            "explanation": "judge_reasoning",
+            "reasoning": "judge_reasoning",
+        }
+        for alias, target in FIELD_ALIASES_H.items():
+            if alias in h and target not in h:
+                h[target] = h.pop(alias)
+        h.setdefault("wiki_location", "")
+        h.setdefault("judge_reasoning", "")
+        h.setdefault("severity", "minor")
+        return h
+
+    claims = [CoverageClaim(**normalize_claim(c)) for c in data.get("coverage_claims", [])]
+    halls = [Hallucination(**normalize_hallucination(h)) for h in data.get("hallucinations", [])]
     return JudgeReportItem(
         source_file=source_file, wiki_page=wiki_page,
         coverage_claims=claims, hallucinations=halls,

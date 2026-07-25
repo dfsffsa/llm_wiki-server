@@ -33,15 +33,18 @@ def call_llm(prompt: str, llm_config: dict, system: str = "") -> str:
         "model": llm_config.get("model", "gpt-4"),
         "messages": messages,
         "temperature": 0.1,
-        "max_tokens": 4096,
+        "max_tokens": llm_config.get("max_tokens", 8192),
     }
 
     endpoint = llm_config.get("endpoint", "").rstrip("/")
     if not endpoint:
         endpoint = "https://api.openai.com/v1"
-    url = f"{endpoint}/chat/completions"
+    if endpoint.endswith("/chat/completions"):
+        url = endpoint
+    else:
+        url = f"{endpoint}/chat/completions"
 
-    resp = requests.post(url, headers=headers, json=payload, timeout=120)
+    resp = requests.post(url, headers=headers, json=payload, timeout=300)
     resp.raise_for_status()
     return resp.json()["choices"][0]["message"]["content"]
 
