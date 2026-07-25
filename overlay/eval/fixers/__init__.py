@@ -27,3 +27,8 @@ def register(strategy: str):
 def get_fixer(strategy: str) -> FixerFn:
     """根据策略名获取修复函数，不存在时返回 None"""
     return FIXER_REGISTRY.get(strategy)
+
+
+# 导入 fixer 模块触发 @register 装饰器
+from . import frontmatter  # noqa: F401, E402
+from . import wikilink  # noqa: F401, E402

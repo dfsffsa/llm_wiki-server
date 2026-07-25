@@ -24,7 +24,7 @@ def _serialize_frontmatter(fm: dict) -> str:
     return "\n".join(lines)
 
 def fix_frontmatter(project_dir: str, finding: Finding) -> dict:
-    page_path = os.path.join(project_dir, finding.page)
+    page_path = os.path.join(project_dir, "wiki", finding.page)
     if not os.path.exists(page_path):
         return {"fixed": False, "error": "file not found"}
 

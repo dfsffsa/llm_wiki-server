@@ -14,7 +14,7 @@ class TestFrontmatterFixer(unittest.TestCase):
                 f.write("---\ntitle: Test\n---\n# Body\n")
 
             finding = Finding(
-                page=os.path.relpath(page, td),
+                page=os.path.relpath(page, os.path.join(td, "wiki")),
                 severity="error",
                 category="missing_frontmatter",
                 message="Missing type",
@@ -43,7 +43,7 @@ class TestFrontmatterFixer(unittest.TestCase):
             with open(page, "w") as f:
                 f.write("---\ntype: entity\ntitle: OK\ncreated: 2025-01-01\nupdated: 2025-01-01\n---\n# OK\n")
             finding = Finding(
-                page=os.path.relpath(page, td),
+                page=os.path.relpath(page, os.path.join(td, "wiki")),
                 severity="info",
                 category="missing_frontmatter",
                 message="",
@@ -69,7 +69,7 @@ class TestWikilinkFixer(unittest.TestCase):
                 f.write("---\ntype: source\ntitle: T\n---\nSee [[nonexistent]] for details.\n")
 
             finding = Finding(
-                page="wiki/sources/test.md",
+                page="sources/test.md",
                 severity="warning",
                 category="broken_wikilink",
                 message="Broken wikilink",
@@ -97,7 +97,7 @@ class TestWikilinkFixer(unittest.TestCase):
                 f.write("See [[维生素D]]\n")
 
             finding = Finding(
-                page="wiki/sources/foo.md",
+                page="sources/foo.md",
                 severity="warning",
                 category="broken_wikilink",
                 message="",
@@ -123,7 +123,7 @@ class TestAutoFixPipeline(unittest.TestCase):
                 f.write(content_orig)
 
             finding = Finding(
-                page="wiki/test.md",
+                page="test.md",
                 severity="error",
                 category="missing_frontmatter",
                 message="Missing type",

@@ -15,7 +15,7 @@ def _build_slug_index(project_dir: str) -> dict:
     return index
 
 def fix_wikilink(project_dir: str, finding: Finding) -> dict:
-    page_path = os.path.join(project_dir, finding.page)
+    page_path = os.path.join(project_dir, "wiki", finding.page)
     if not os.path.exists(page_path):
         return {"fixed": False, "error": "file not found"}
 
