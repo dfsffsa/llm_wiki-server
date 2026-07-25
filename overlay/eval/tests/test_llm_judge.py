@@ -82,5 +82,25 @@ class TestLlmClient(unittest.TestCase):
             parse_json_response("not json at all")
 
 
+class TestExtractor(unittest.TestCase):
+    @patch("judge.extractor.call_llm")
+    def test_extract_claims(self, mock_call):
+        mock_call.return_value = json.dumps([
+            {"claim": "维D从出生后15天开始补", "location": "第3段"},
+            {"claim": "每天400国际单位", "location": "第4段"}
+        ])
+        from judge.extractor import extract_claims, parse_extracted_claims
+        resp = extract_claims("source text", "test.md", {})
+        claims = parse_extracted_claims(resp)
+        self.assertEqual(len(claims), 2)
+        self.assertEqual(claims[0]["claim"], "维D从出生后15天开始补")
+
+    def test_parse_fallback(self):
+        from judge.extractor import parse_extracted_claims
+        resp = "```json\n[{\"claim\": \"test\", \"location\": \"L1\"}]\n```"
+        claims = parse_extracted_claims(resp)
+        self.assertEqual(len(claims), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
