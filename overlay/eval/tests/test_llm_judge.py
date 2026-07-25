@@ -1,0 +1,86 @@
+"""Tests for judge models and LLM client."""
+
+import json
+import os
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch, MagicMock
+
+EVAL_DIR = os.path.join(os.path.dirname(__file__), "..")
+sys.path.insert(0, EVAL_DIR)
+
+
+class TestModels(unittest.TestCase):
+    def test_report_to_dict(self):
+        from judge.models import JudgeReportItem, CoverageClaim
+
+        r = JudgeReportItem(
+            source_file="a.md",
+            wiki_page="wiki/a.md",
+            coverage_claims=[
+                CoverageClaim(
+                    claim="C1", source_location="L1", wiki_coverage="full"
+                )
+            ],
+            scores={"coverage": 8},
+        )
+        d = r.to_dict()
+        self.assertEqual(d["scores"]["coverage"], 8)
+        self.assertEqual(d["coverage_claims"][0]["wiki_coverage"], "full")
+
+
+class TestLlmClient(unittest.TestCase):
+    @patch("judge.llm_client.requests.post")
+    def test_call_llm(self, mock_post):
+        from judge.llm_client import call_llm
+
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {
+            "choices": [{"message": {"content": "ok"}}]
+        }
+        mock_post.return_value = mock_resp
+        mock_post.return_value.raise_for_status = lambda: None
+
+        result = call_llm("hello", {"model": "test", "endpoint": "http://x"})
+        self.assertEqual(result, "ok")
+
+    def test_env_var_expansion(self):
+        from judge.llm_client import load_llm_config
+
+        os.environ["TEST_KEY"] = "sk-test"
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump({"llmConfig": {"apiKey": "${TEST_KEY}"}}, f)
+        cfg = load_llm_config(f.name)
+        self.assertEqual(cfg["apiKey"], "sk-test")
+        os.unlink(f.name)
+
+    def test_parse_json_response_direct(self):
+        from judge.llm_client import parse_json_response
+
+        result = parse_json_response('{"key": "value"}')
+        self.assertEqual(result, {"key": "value"})
+
+    def test_parse_json_response_code_block(self):
+        from judge.llm_client import parse_json_response
+
+        text = "Here is the result:\n```json\n{\"key\": \"value\"}\n```\n"
+        result = parse_json_response(text)
+        self.assertEqual(result, {"key": "value"})
+
+    def test_parse_json_response_code_block_no_lang(self):
+        from judge.llm_client import parse_json_response
+
+        text = "```\n{\"key\": \"value\"}\n```"
+        result = parse_json_response(text)
+        self.assertEqual(result, {"key": "value"})
+
+    def test_parse_json_response_raises_on_invalid(self):
+        from judge.llm_client import parse_json_response
+
+        with self.assertRaises(ValueError):
+            parse_json_response("not json at all")
+
+
+if __name__ == "__main__":
+    unittest.main()
