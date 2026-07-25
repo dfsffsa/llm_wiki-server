@@ -102,5 +102,27 @@ class TestExtractor(unittest.TestCase):
         self.assertEqual(len(claims), 1)
 
 
+class TestEvaluator(unittest.TestCase):
+    @patch("judge.evaluator.call_llm")
+    def test_evaluate_full_coverage(self, mock_call):
+        mock_call.return_value = json.dumps({
+            "coverage_claims": [
+                {"claim": "C1", "source_location": "L1",
+                 "wiki_coverage": "full", "wiki_excerpt": "..."}
+            ],
+            "hallucinations": [],
+            "scores": {"coverage": 10, "consistency": 10}})
+        from judge.evaluator import evaluate_wiki
+        report = evaluate_wiki("[C1]", "wiki content", {})
+        self.assertEqual(len(report.coverage_claims), 1)
+        self.assertEqual(report.coverage_claims[0].wiki_coverage, "full")
+
+    def test_parse_code_block(self):
+        from judge.evaluator import parse_eval_response
+        resp = '```json\n{"coverage_claims": [], "hallucinations": [], "scores": {}}\n```'
+        report = parse_eval_response(resp, "s.md", "w.md")
+        self.assertEqual(report.source_file, "s.md")
+
+
 if __name__ == "__main__":
     unittest.main()
