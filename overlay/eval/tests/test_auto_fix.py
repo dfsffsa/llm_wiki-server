@@ -112,5 +112,39 @@ class TestWikilinkFixer(unittest.TestCase):
             self.assertIn("维生素D补充", out)  # 模糊匹配到正确页面
 
 
+class TestAutoFixPipeline(unittest.TestCase):
+    def test_dry_run_does_not_modify(self):
+        with tempfile.TemporaryDirectory() as td:
+            wiki = os.path.join(td, "wiki")
+            os.makedirs(wiki)
+            page = os.path.join(wiki, "test.md")
+            content_orig = "---\ntitle: T\n---\n# Body\n"
+            with open(page, "w") as f:
+                f.write(content_orig)
+
+            finding = Finding(
+                page="wiki/test.md",
+                severity="error",
+                category="missing_frontmatter",
+                message="Missing type",
+                detail={"missing_keys": ["type"], "existing_fm": {"title": "T"}},
+                auto_fixable=True,
+                fix_strategy="rule_frontmatter",
+            )
+            import ingest_check
+            orig_run = ingest_check.run_ingest_check
+            def fake_run(*args, **kwargs):
+                return {"findings": [finding.to_dict()], "overall_score": 50}
+            ingest_check.run_ingest_check = fake_run
+            try:
+                from auto_fix import run_auto_fix
+                report = run_auto_fix(td, dry_run=True)
+                self.assertTrue(report.get("dry_run"))
+                with open(page) as f:
+                    self.assertEqual(f.read(), content_orig)
+            finally:
+                ingest_check.run_ingest_check = orig_run
+
+
 if __name__ == "__main__":
     unittest.main()
