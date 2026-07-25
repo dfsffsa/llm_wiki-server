@@ -14,7 +14,7 @@ def _serialize_frontmatter(fm: dict) -> str:
             for item in v:
                 lines.append(f"  - {json.dumps(item, ensure_ascii=False)}")
         elif isinstance(v, str):
-            if any(c in v for c in [":", "#", "[", "]", "{", "}", "'", '"']):
+            if any(c in v for c in [":", "#", "[", "]", "{", "}", "'", '"']) or v.lower() in ("true", "false", "null", "yes", "no"):
                 lines.append(f"{k}: {json.dumps(v, ensure_ascii=False)}")
             else:
                 lines.append(f"{k}: {v}")
@@ -59,7 +59,7 @@ def fix_frontmatter(project_dir: str, finding: Finding) -> dict:
     # 备份原文件
     backup_dir = os.path.join(project_dir, "fix_backups")
     os.makedirs(backup_dir, exist_ok=True)
-    backup_path = os.path.join(backup_dir, os.path.basename(finding.page) + ".bak")
+    backup_path = os.path.join(backup_dir, finding.page.replace("/", "_") + ".bak")
     shutil.copy2(page_path, backup_path)
 
     # 写回
