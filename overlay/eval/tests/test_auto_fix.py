@@ -1,6 +1,7 @@
 import tempfile, os, unittest, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from fixers.frontmatter import fix_frontmatter
+from fixers.wikilink import fix_wikilink
 from ingest_check import Finding
 
 class TestFrontmatterFixer(unittest.TestCase):
@@ -52,6 +53,64 @@ class TestFrontmatterFixer(unittest.TestCase):
             )
             result = fix_frontmatter(td, finding)
             self.assertFalse(result["fixed"])
+
+class TestWikilinkFixer(unittest.TestCase):
+    def test_repair_path(self):
+        with tempfile.TemporaryDirectory() as td:
+            wiki = os.path.join(td, "wiki")
+            os.makedirs(os.path.join(wiki, "sources"))
+            os.makedirs(os.path.join(wiki, "entities"))
+            # 目标页面存在
+            with open(os.path.join(wiki, "entities", "vitamind.md"), "w") as f:
+                f.write("---\ntype: entity\ntitle: VD\n---\n# VD\n")
+            # 有 broken link 的页面
+            page = os.path.join(wiki, "sources", "test.md")
+            with open(page, "w") as f:
+                f.write("---\ntype: source\ntitle: T\n---\nSee [[nonexistent]] for details.\n")
+
+            finding = Finding(
+                page="wiki/sources/test.md",
+                severity="warning",
+                category="broken_wikilink",
+                message="Broken wikilink",
+                detail={"target": "nonexistent", "link_text": "nonexistent"},
+                auto_fixable=True,
+                fix_strategy="rule_wikilink",
+            )
+            result = fix_wikilink(td, finding)
+            # nonexistent 没有模糊匹配，降级为纯文本
+            self.assertTrue(result["fixed"])
+            with open(page) as f:
+                out = f.read()
+            self.assertNotIn("[[nonexistent]]", out)
+            self.assertIn("nonexistent", out)  # 保留文本
+
+    def test_fuzzy_match(self):
+        with tempfile.TemporaryDirectory() as td:
+            wiki = os.path.join(td, "wiki")
+            os.makedirs(os.path.join(wiki, "concepts"))
+            with open(os.path.join(wiki, "concepts", "维生素D补充.md"), "w") as f:
+                f.write("---\ntype: concept\n---\n# VD\n")
+            page = os.path.join(wiki, "sources", "foo.md")
+            os.makedirs(os.path.join(wiki, "sources"))
+            with open(page, "w") as f:
+                f.write("See [[维生素D]]\n")
+
+            finding = Finding(
+                page="wiki/sources/foo.md",
+                severity="warning",
+                category="broken_wikilink",
+                message="",
+                detail={"target": "维生素D", "link_text": "维生素D"},
+                auto_fixable=True,
+                fix_strategy="rule_wikilink",
+            )
+            result = fix_wikilink(td, finding)
+            self.assertTrue(result["fixed"])
+            with open(page) as f:
+                out = f.read()
+            self.assertIn("维生素D补充", out)  # 模糊匹配到正确页面
+
 
 if __name__ == "__main__":
     unittest.main()
