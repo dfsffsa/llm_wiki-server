@@ -25,6 +25,7 @@ pub struct User {
     pub is_admin: bool,
     pub created_at: i64,
     pub last_seen_at: i64,
+    pub email_verified_at: Option<i64>,
 }
 
 #[derive(Debug, Clone)]
@@ -77,7 +78,8 @@ impl Store {
     pub fn find_user_by_email(&self, email: &str) -> Result<Option<User>, AuthError> {
         let conn = self.lock();
         conn.query_row(
-            "SELECT id, email, password_hash, display_name, is_admin, created_at, last_seen_at
+            "SELECT id, email, password_hash, display_name, is_admin, created_at, last_seen_at,
+                    email_verified_at
              FROM users WHERE email = ?1",
             params![email],
             row_to_user,
@@ -89,7 +91,8 @@ impl Store {
     pub fn find_user_by_id(&self, id: i64) -> Result<Option<User>, AuthError> {
         let conn = self.lock();
         conn.query_row(
-            "SELECT id, email, password_hash, display_name, is_admin, created_at, last_seen_at
+            "SELECT id, email, password_hash, display_name, is_admin, created_at, last_seen_at,
+                    email_verified_at
              FROM users WHERE id = ?1",
             params![id],
             row_to_user,
@@ -200,6 +203,169 @@ impl Store {
             params![token_hash],
         )?;
         Ok(())
+    }
+
+    // --- email verification ---
+
+    pub fn set_email_verified(&self, user_id: i64, now: i64) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "UPDATE users SET email_verified_at = ?1 WHERE id = ?2",
+            params![now, user_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn create_verification_token(
+        &self,
+        token_hash: &str,
+        user_id: i64,
+        expires_at: i64,
+    ) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "INSERT INTO email_verification_tokens (token_hash, user_id, expires_at)
+             VALUES (?1, ?2, ?3)",
+            params![token_hash, user_id, expires_at],
+        )?;
+        Ok(())
+    }
+
+    pub fn find_verification_token_user(
+        &self,
+        token_hash: &str,
+    ) -> Result<Option<(i64, i64)>, AuthError> {
+        let conn = self.lock();
+        conn.query_row(
+            "SELECT user_id, expires_at FROM email_verification_tokens
+             WHERE token_hash = ?1",
+            params![token_hash],
+            |row| Ok((row.get::<_, i64>(0)?, row.get::<_, i64>(1)?)),
+        )
+        .optional()
+        .map_err(AuthError::from)
+    }
+
+    pub fn delete_verification_token(&self, token_hash: &str) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "DELETE FROM email_verification_tokens WHERE token_hash = ?1",
+            params![token_hash],
+        )?;
+        Ok(())
+    }
+
+    // --- email change ---
+
+    pub fn create_pending_change(
+        &self,
+        user_id: i64,
+        new_email: &str,
+        old_token_hash: &str,
+        old_expires_at: i64,
+        new_token_hash: &str,
+        new_expires_at: i64,
+        now: i64,
+    ) -> Result<i64, AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "INSERT INTO pending_email_changes
+             (user_id, new_email, old_token_hash, old_expires_at,
+              new_token_hash, new_expires_at, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![
+                user_id,
+                new_email,
+                old_token_hash,
+                old_expires_at,
+                new_token_hash,
+                new_expires_at,
+                now
+            ],
+        )?;
+        Ok(conn.last_insert_rowid())
+    }
+
+    pub fn find_pending_change_by_hash(
+        &self,
+        token_hash: &str,
+    ) -> Result<Option<PendingChangeRow>, AuthError> {
+        let conn = self.lock();
+        conn.query_row(
+            "SELECT id, user_id, new_email, old_token_hash, old_expires_at,
+                    old_confirmed, new_token_hash, new_expires_at, new_confirmed,
+                    created_at
+             FROM pending_email_changes
+             WHERE old_token_hash = ?1 OR new_token_hash = ?1",
+            params![token_hash],
+            |row| {
+                Ok(PendingChangeRow {
+                    id: row.get(0)?,
+                    user_id: row.get(1)?,
+                    new_email: row.get(2)?,
+                    old_token_hash: row.get(3)?,
+                    old_expires_at: row.get(4)?,
+                    old_confirmed: row.get::<_, i64>(5)? != 0,
+                    new_token_hash: row.get(6)?,
+                    new_expires_at: row.get(7)?,
+                    new_confirmed: row.get::<_, i64>(8)? != 0,
+                    created_at: row.get(9)?,
+                })
+            },
+        )
+        .optional()
+        .map_err(AuthError::from)
+    }
+
+    pub fn mark_old_email_confirmed(&self, change_id: i64) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "UPDATE pending_email_changes SET old_confirmed = 1 WHERE id = ?1",
+            params![change_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn mark_new_email_confirmed(&self, change_id: i64) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "UPDATE pending_email_changes SET new_confirmed = 1 WHERE id = ?1",
+            params![change_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn update_user_email(
+        &self,
+        user_id: i64,
+        new_email: &str,
+        now: i64,
+    ) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "UPDATE users SET email = ?1, email_verified_at = ?2 WHERE id = ?3",
+            params![new_email, now, user_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_pending_change(&self, change_id: i64) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "DELETE FROM pending_email_changes WHERE id = ?1",
+            params![change_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn verify_email_exists(&self, email: &str) -> Result<bool, AuthError> {
+        let conn = self.lock();
+        let exists: Option<i64> = conn
+            .query_row("SELECT 1 FROM users WHERE email = ?1", params![email], |row| {
+                row.get(0)
+            })
+            .optional()?;
+        Ok(exists.is_some())
     }
 
     // --- conversations ---
@@ -385,7 +551,22 @@ fn row_to_user(row: &rusqlite::Row<'_>) -> rusqlite::Result<User> {
         is_admin: row.get::<_, i64>(4)? != 0,
         created_at: row.get(5)?,
         last_seen_at: row.get(6)?,
+        email_verified_at: row.get::<_, Option<i64>>(7)?,
     })
+}
+
+#[derive(Debug, Clone)]
+pub struct PendingChangeRow {
+    pub id: i64,
+    pub user_id: i64,
+    pub new_email: String,
+    pub old_token_hash: String,
+    pub old_expires_at: i64,
+    pub old_confirmed: bool,
+    pub new_token_hash: String,
+    pub new_expires_at: i64,
+    pub new_confirmed: bool,
+    pub created_at: i64,
 }
 
 #[derive(Debug, Clone)]
@@ -469,5 +650,83 @@ mod tests {
             store.try_increment_usage(uid, date, 1).unwrap();
         }
         assert_eq!(store.get_usage(uid, date).unwrap(), 1);
+    }
+
+    #[test]
+    fn set_email_verified_updates_field() {
+        let store = open_test_store();
+        let uid = make_user(&store, "verify@test.com");
+        assert_eq!(
+            store.find_user_by_id(uid).unwrap().unwrap().email_verified_at,
+            None
+        );
+        store.set_email_verified(uid, 2000).unwrap();
+        assert_eq!(
+            store.find_user_by_id(uid).unwrap().unwrap().email_verified_at,
+            Some(2000)
+        );
+    }
+
+    #[test]
+    fn create_and_find_verification_token() {
+        let store = open_test_store();
+        let uid = make_user(&store, "token@test.com");
+        let hash = "testhash123";
+        store.create_verification_token(hash, uid, 2000).unwrap();
+        let found = store.find_verification_token_user(hash).unwrap().unwrap();
+        assert_eq!(found.0, uid);
+        assert_eq!(found.1, 2000);
+    }
+
+    #[test]
+    fn delete_verification_token_removes_it() {
+        let store = open_test_store();
+        let uid = make_user(&store, "del@test.com");
+        store.create_verification_token("h1", uid, 2000).unwrap();
+        assert!(store.find_verification_token_user("h1").unwrap().is_some());
+        store.delete_verification_token("h1").unwrap();
+        assert!(store.find_verification_token_user("h1").unwrap().is_none());
+    }
+
+    #[test]
+    fn create_and_complete_pending_change() {
+        let store = open_test_store();
+        let uid = make_user(&store, "old@test.com");
+        let cid = store
+            .create_pending_change(uid, "new@test.com", "oldh", 2000, "newh", 2000, 1000)
+            .unwrap();
+        let row = store
+            .find_pending_change_by_hash("oldh")
+            .unwrap()
+            .unwrap();
+        assert_eq!(row.new_email, "new@test.com");
+        assert!(!row.old_confirmed);
+        assert!(!row.new_confirmed);
+        store.mark_old_email_confirmed(cid).unwrap();
+        store.mark_new_email_confirmed(cid).unwrap();
+        let row2 = store
+            .find_pending_change_by_hash("oldh")
+            .unwrap()
+            .unwrap();
+        assert!(row2.old_confirmed);
+        assert!(row2.new_confirmed);
+        // complete the change
+        store.update_user_email(uid, "new@test.com", 1500).unwrap();
+        store.delete_pending_change(cid).unwrap();
+        let user = store.find_user_by_id(uid).unwrap().unwrap();
+        assert_eq!(user.email, "new@test.com");
+        assert_eq!(user.email_verified_at, Some(1500));
+        assert!(store
+            .find_pending_change_by_hash("oldh")
+            .unwrap()
+            .is_none());
+    }
+
+    #[test]
+    fn create_and_verify_email_exists() {
+        let store = open_test_store();
+        make_user(&store, "exists@test.com");
+        assert!(store.verify_email_exists("exists@test.com").unwrap());
+        assert!(!store.verify_email_exists("nope@test.com").unwrap());
     }
 }
