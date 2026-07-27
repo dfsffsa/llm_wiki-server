@@ -157,7 +157,10 @@
           <div id="error-message" class="hidden bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm" role="alert"></div>
           
           <!-- 成功提示 -->
-          <div id="success-message" class="hidden bg-green-50 text-green-600 px-4 py-3 rounded-xl text-sm" role="alert"></div>
+          <div id="success-area" class="hidden">
+            <div id="success-message" class="bg-green-50 text-green-600 px-4 py-3 rounded-xl text-sm" role="alert"></div>
+            <a href="/login" class="mt-4 block text-center text-primary-600 hover:underline text-sm">返回登录</a>
+          </div>
           
           <!-- 提交按钮 -->
           <button 
@@ -205,14 +208,15 @@
     const btnText = document.getElementById('btn-text');
     const btnLoading = document.getElementById('btn-loading');
     const errorDiv = document.getElementById('error-message');
-    const successDiv = document.getElementById('success-message');
+    const successArea = document.getElementById('success-area');
+    const successMessage = document.getElementById('success-message');
     
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       // 清除提示
       errorDiv.classList.add('hidden');
-      successDiv.classList.add('hidden');
+      successArea.classList.add('hidden');
       
       // 验证密码匹配
       if (passwordInput.value !== confirmPasswordInput.value) {
@@ -250,13 +254,13 @@
         }
         
         // 注册成功
-        successDiv.textContent = '注册成功！正在跳转到登录页面...';
-        successDiv.classList.remove('hidden');
-        
-        // 2秒后跳转到登录页
+        successMessage.textContent = '验证邮件已发送，请检查邮箱';
+        successArea.classList.remove('hidden');
+
+        // 3秒后跳转到登录页
         setTimeout(() => {
           window.location.href = '/login';
-        }, 2000);
+        }, 3000);
         
       } catch (error) {
         errorDiv.textContent = error.message;
