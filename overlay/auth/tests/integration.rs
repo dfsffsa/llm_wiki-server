@@ -276,25 +276,37 @@ fn register_then_login_then_me() {
         ip: None,
         user_agent: None,
     }).unwrap();
-    assert_eq!(reg.user.email, "alice@example.com"); // lowercased
+    assert_eq!(reg.email, "alice@example.com"); // lowercased
 
-    let token = reg.session_token.clone();
+    // verify email before login
+    let vt = svc.start_verification(reg.id, 1_200).unwrap();
+    svc.complete_verification(&vt, 1_300).unwrap();
+
+    // login to get a session token
+    let lo = svc.login(LoginInput {
+        email: "alice@example.com",
+        password: "supersecret",
+        now: 1_500,
+        ip: None,
+        user_agent: None,
+    }).unwrap();
+    let token = lo.session_token.clone();
     let me = svc.session_user(&token, 2_000).unwrap().unwrap();
-    assert_eq!(me.id, reg.user.id);
+    assert_eq!(me.id, reg.id);
 
     // logout
     svc.logout(&token).unwrap();
     assert!(svc.session_user(&token, 3_000).unwrap().is_none());
 
     // re-login
-    let lo = svc.login(LoginInput {
+    let lo2 = svc.login(LoginInput {
         email: "alice@example.com",
         password: "supersecret",
         now: 4_000,
         ip: None,
         user_agent: None,
     }).unwrap();
-    assert_eq!(lo.user.id, reg.user.id);
+    assert_eq!(lo2.user.id, reg.id);
 }
 
 #[test]
@@ -307,7 +319,7 @@ fn admin_email_marks_user_admin() {
         ip: None,
         user_agent: None,
     }).unwrap();
-    assert!(reg.user.is_admin);
+    assert!(reg.is_admin);
 }
 
 #[test]
@@ -325,9 +337,12 @@ fn duplicate_email_is_rejected() {
 #[test]
 fn login_with_wrong_password_returns_invalid_credentials() {
     let (svc, _dir) = fresh_service();
-    svc.register(RegisterInput {
+    let reg = svc.register(RegisterInput {
         email: "y@x.com", password: "p1234567", now: 1, ip: None, user_agent: None,
     }).unwrap();
+    // verify email before login
+    let vt = svc.start_verification(reg.id, 1).unwrap();
+    svc.complete_verification(&vt, 1).unwrap();
     let err = svc.login(LoginInput {
         email: "y@x.com", password: "wrong000", now: 2, ip: None, user_agent: None,
     }).unwrap_err();
@@ -385,17 +400,17 @@ fn forgot_password_returns_token_for_known_email() {
     svc.register(RegisterInput {
         email: "f@x.com", password: "p1234567", now: 1, ip: None, user_agent: None,
     }).unwrap();
-    let res = svc.start_password_reset("f@x.com", 100).unwrap();
-    assert!(res.is_some(), "should produce a token for an existing user");
+    let res = svc.start_password_reset("f@x.com", 100, None);
+    assert!(res.unwrap().is_some(), "should produce a token for an existing user");
 }
 
 #[test]
 fn forgot_password_unknown_email_returns_none_silently() {
     let (svc, _dir) = fresh_service();
-    let res = svc.start_password_reset("nobody@x.com", 100).unwrap();
+    let res = svc.start_password_reset("nobody@x.com", 100, None);
     // Service signals "no token" but the HTTP layer must still return 200
     // to avoid email enumeration. The service doesn't fail.
-    assert!(res.is_none());
+    assert!(res.unwrap().is_none());
 }
 
 #[test]
@@ -404,12 +419,20 @@ fn reset_password_works_then_old_sessions_die() {
     let reg = svc.register(RegisterInput {
         email: "r@x.com", password: "oldpassword", now: 1, ip: None, user_agent: None,
     }).unwrap();
-    let token = svc.start_password_reset("r@x.com", 10).unwrap().unwrap();
+    // verify email before login
+    let vt = svc.start_verification(reg.id, 3).unwrap();
+    svc.complete_verification(&vt, 4).unwrap();
+    // login to create a session
+    let login_out = svc.login(LoginInput {
+        email: "r@x.com", password: "oldpassword", now: 5, ip: None, user_agent: None,
+    }).unwrap();
+    let session_token = login_out.session_token.clone();
+    let token = svc.start_password_reset("r@x.com", 10, None).unwrap().unwrap();
 
     svc.complete_password_reset(&token, "newpassword", 20).unwrap();
 
     // Old session is dead.
-    assert!(svc.session_user(&reg.session_token, 30).unwrap().is_none());
+    assert!(svc.session_user(&session_token, 30).unwrap().is_none());
 
     // New password works, old does not.
     assert!(svc.login(LoginInput {
@@ -429,7 +452,7 @@ fn reset_token_is_single_use() {
     svc.register(RegisterInput {
         email: "s@x.com", password: "p1234567", now: 1, ip: None, user_agent: None,
     }).unwrap();
-    let token = svc.start_password_reset("s@x.com", 10).unwrap().unwrap();
+    let token = svc.start_password_reset("s@x.com", 10, None).unwrap().unwrap();
     svc.complete_password_reset(&token, "newpassword", 20).unwrap();
     let err = svc.complete_password_reset(&token, "newer000", 30).unwrap_err();
     assert_eq!(err.code(), "invalid_reset_token");
@@ -441,7 +464,7 @@ fn reset_token_expires() {
     svc.register(RegisterInput {
         email: "t@x.com", password: "p1234567", now: 1, ip: None, user_agent: None,
     }).unwrap();
-    let token = svc.start_password_reset("t@x.com", 10).unwrap().unwrap();
+    let token = svc.start_password_reset("t@x.com", 10, None).unwrap().unwrap();
     // 1 hour + 1 second later
     let err = svc.complete_password_reset(&token, "newpassword", 10 + 3601).unwrap_err();
     assert_eq!(err.code(), "expired_reset_token");
