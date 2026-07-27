@@ -227,6 +227,10 @@
           if (errData.code === 'email_not_verified') {
             errorDiv.innerHTML = '邮箱未验证，请先查收验证邮件。没收到？<a href="/register" class="underline">重新注册</a>';
             errorDiv.classList.remove('hidden');
+            submitBtn.disabled = false;
+            btnText.classList.remove('hidden');
+            btnLoading.classList.add('hidden');
+            return;
           } else {
             throw new Error(errData.message || '登录失败');
           }
