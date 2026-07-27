@@ -145,13 +145,13 @@ fn handle_register(
         ip: header_lookup(headers, "x-forwarded-for"),
         user_agent: header_lookup(headers, "user-agent"),
     }) {
-        Ok(out) => {
-            let cookie =
-                build_session_cookie(&out.session_token, auth.config().session_ttl_secs, secure);
+        Ok(user) => {
+            // No session cookie: user must verify email before first login.
+            let cookie = String::new();
             respond_with_cookie(
                 request,
                 200,
-                json!({ "user": user_to_json(&out.user) }),
+                json!({ "user": user_to_json(&user) }),
                 cookie,
             );
         }
