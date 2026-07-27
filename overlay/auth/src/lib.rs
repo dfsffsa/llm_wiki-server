@@ -17,6 +17,6 @@ pub mod ratelimit;
 
 pub mod service;
 
-pub use service::{AuthService, AuthServiceConfig, AuthOutcome, LoginInput, RegisterInput};
+pub use service::{AuthService, AuthServiceConfig, AuthOutcome, EmailChangeStatus, LoginInput, RegisterInput};
 pub use store::{PendingChangeRow, Store, User};
 pub use error::AuthError;
