@@ -29,3 +29,16 @@ class JudgeReportItem:
 
     def to_dict(self) -> dict:
         return asdict(self)
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "JudgeReportItem":
+        """从 to_dict() 的输出重建对象"""
+        claims = [CoverageClaim(**c) for c in d.get("coverage_claims", [])]
+        halls = [Hallucination(**h) for h in d.get("hallucinations", [])]
+        return cls(
+            source_file=d.get("source_file", ""),
+            wiki_page=d.get("wiki_page", ""),
+            coverage_claims=claims,
+            hallucinations=halls,
+            scores=d.get("scores", {}),
+        )
