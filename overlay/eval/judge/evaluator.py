@@ -104,9 +104,14 @@ def parse_eval_response(resp, source_file, wiki_page):
     if not isinstance(raw_scores, dict):
         raw_scores = {}
     # 规范化 score 字段名
-    SCORE_ALIASES = {"information_coverage": "coverage", "fact_consistency": "consistency",
-                     "coverage_score": "coverage", "consistency_score": "consistency",
-                     "info_coverage": "coverage"}
+    SCORE_ALIASES = {
+        "information_coverage": "coverage", "fact_consistency": "consistency",
+        "coverage_score": "coverage", "consistency_score": "consistency",
+        "info_coverage": "coverage", "coverage_rate": "coverage",
+        "factual_consistency": "consistency", "factuality_score": "consistency",
+        "fidelity": "consistency", "accuracy_score": "consistency",
+        "信息覆盖率": "coverage", "事实一致性": "consistency",
+    }
     for alias, target in SCORE_ALIASES.items():
         if alias in raw_scores and target not in raw_scores:
             raw_scores[target] = raw_scores.pop(alias)
