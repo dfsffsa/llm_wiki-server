@@ -184,9 +184,23 @@ def run_repairs(project_dir: str, config_path: str, eval_result: dict,
     }
 
 
+def _save_checkpoint(output_path: str, result: dict):
+    """写 checkpoint，确保目录存在"""
+    if not output_path:
+        return
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    tmp = output_path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, output_path)
+
+
 def run_llm_judge(project_dir: str, config_path: str, sample: int = None,
-                  verbose: bool = False) -> dict:
-    """运行 LLM-as-Judge 评估管线"""
+                  verbose: bool = False,
+                  output_path: str = None) -> dict:
+    """运行 LLM-as-Judge 评估管线
+    如果指定 output_path, 每完成一个文件写 checkpoint。
+    """
     llm_config = load_llm_config(config_path)
     pairs = find_source_wiki_pairs(project_dir, sample)
     reports = []
@@ -228,6 +242,18 @@ def run_llm_judge(project_dir: str, config_path: str, sample: int = None,
                 scores={"error": str(e)}
             ).to_dict())
 
+        # 每完成一个文件写 checkpoint
+        if output_path:
+            partial = {
+                "project": os.path.basename(project_dir.rstrip("/")),
+                "timestamp": str(datetime.now()),
+                "config": {"model": llm_config.get("model"), "sample": sample},
+                "progress": f"{len(reports)}/{len(pairs)}",
+                "reports": reports,
+                "summary": summarize(reports),
+            }
+            _save_checkpoint(output_path, partial)
+
     return {
         "project": os.path.basename(project_dir.rstrip("/")),
         "timestamp": str(datetime.now()),
@@ -253,9 +279,8 @@ def main():
                         help="预览模式：显示会修复哪些页面，但不实际修改文件")
     args = parser.parse_args()
 
-    result = run_llm_judge(args.project, args.config, args.sample, args.verbose)
-
-    print(json.dumps(result["summary"], ensure_ascii=False, indent=2))
+    result = run_llm_judge(args.project, args.config, args.sample, args.verbose,
+                           output_path=args.output)
 
     # Phase 3: auto-fix
     if args.auto_fix:
