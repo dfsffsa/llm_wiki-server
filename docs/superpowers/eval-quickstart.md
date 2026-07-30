@@ -9,11 +9,12 @@
 | 项目 | ParentingBooks |
 | 总文件 | 167 |
 | 已完成 | 167 ✅（评估已跑完，数据在 `/tmp/parenting-eval.json`） |
-| 平均覆盖率 | 4.3 / 10 |
-| 平均一致性 | 3.1 / 10 |
-| 幻觉总数 | 275 |
-| 错误数 | 58（含 9 个 429 限流，其余为 LLM 返回格式解析失败） |
-| 低质量页面 (coverage<6) | 约 82 个 |
+| 错误数 | 58（47 个 429 限流，11 个 JSON 解析失败） |
+| **有效评估** | **109** |
+| **平均覆盖率** | **7.3 / 10**（中位数 7.0） |
+| **平均一致性** | **9.7 / 10**（中位数 10.0） |
+| **幻觉总数** | **275**（平均每页 2.5，全部 minor） |
+| **低质量 (coverage<6)** | **14 页 (13%)** |
 
 ## 文件结构
 
@@ -173,17 +174,18 @@ python3 -m unittest overlay/eval/tests/test_repairer.py -v
 ## 已知问题
 
 ### 1. 429 Rate Limit
-最后 9 个文件遇到 `429 Too Many Requests`。建议：
-- 在两次请求之间加入延迟
-- 或使用更慢的速率重新跑失败的 9 个文件
+最后 47 个文件遇到 `429 Too Many Requests`。初步判断是 API 速率限制。
+建议：
+- 在 `llm_client.py` 中加入重试 + 指数退避
+- 或分批运行，每次 --sample 20 个
 
 ### 2. JSON 解析失败
 约 49 个文件因 LLM 返回格式异常导致解析失败（`unparseable_response`、`Unterminated string` 等）。可能原因：
 - LLM 输出截断（max_tokens=16384 可能不够）
 - LLM 返回了非 JSON 文本
 
-### 3. 低 avg_consistency (3.1/10)
-评分偏低，可能是 LLM 标准严格，或 Wiki 页面确实质量不高。需要人工判断。
+### 3. 低 avg_coverage (7.3/10)
+13% 的页面覆盖率低于 6，需要修复。这些页面是 auto-fix 的目标。
 
 ### 4. 项目数据路径
 项目数据在 `/home/li/code/personal/llm_wiki_projects/`，不在 `llm_wiki-server` 仓库内。另一台机器上需要 rsync 或重新拉取。
