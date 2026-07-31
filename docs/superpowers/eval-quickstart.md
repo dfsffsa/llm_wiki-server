@@ -25,7 +25,11 @@ rsync -avz user@current-machine:/home/li/code/personal/llm_wiki_projects/Parenti
 ```
 
 ### 评估结果文件
-`/tmp/parenting-eval.json`（167 条 report，已清洗字段别名）
+`docs/superpowers/ParentingBooks_llmjudge_results.json`（167 条 report，已清洗字段别名，500 KB）
+
+```bash
+python3 -c "import json; d=json.load(open('docs/superpowers/ParentingBooks_llmjudge_results.json')); print(f'{len(d[\"reports\"])} reports')"
+```
 
 ---
 
@@ -35,7 +39,7 @@ rsync -avz user@current-machine:/home/li/code/personal/llm_wiki_projects/Parenti
 - [x] **Phase 1: 规则评估 + Auto-fix** — `ingest_check.py` + `fixers/` + `auto_fix.py`
 - [x] **Phase 2: LLM-as-Judge 评估** — `judge/extractor.py` + `evaluator.py` + `llm_judge.py`
 - [x] **Phase 3: Repairer 实现** — `judge/repairer.py` + `--auto-fix` CLI 参数
-- [x] **全量评估已跑完** — 167 文件，结果在 `/tmp/parenting-eval.json`
+- [x] **全量评估已跑完** — 167 文件，结果在 `docs/superpowers/ParentingBooks_llmjudge_results.json`
 - [x] **Score 字段别名修复** — 43 个 `factual_consistency` → `consistency` 等（已映射 + 清洗数据）
 - [x] **Checkpoint 保存** — 每完成一个文件写 JSON，中断不丢数据
 - [x] 64 个单元测试全部通过
@@ -108,7 +112,7 @@ def call_llm(prompt, llm_config, system="", max_retries=3):
 # 看具体文件
 python3 -c "
 import json
-with open('/tmp/parenting-eval.json') as f:
+with open('docs/superpowers/ParentingBooks_llmjudge_results.json') as f:
     d = json.load(f)
 errs = [r for r in d['reports'] if 'error' in r.get('scores', {}) and '429' not in r['scores']['error']]
 for e in errs:
@@ -165,7 +169,7 @@ ls /home/li/code/personal/llm_wiki_projects/ParentingBooks/raw/sources/ | wc -l
 ls /home/li/code/personal/llm_wiki_projects/ParentingBooks/wiki/sources/ | wc -l
 
 # 4. 确认评估结果
-python3 -c "import json; d=json.load(open('/tmp/parenting-eval.json')); print(f'{len(d[\"reports\"])} reports, {d[\"summary\"]}')"
+python3 -c "import json; d=json.load(open('docs/superpowers/ParentingBooks_llmjudge_results.json')); print(f'{len(d[\"reports\"])} reports')"
 ```
 
 ---
