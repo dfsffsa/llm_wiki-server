@@ -3,7 +3,7 @@ import re
 from .llm_client import call_llm
 from .models import CoverageClaim, Hallucination, JudgeReportItem
 
-EVAL_SYSTEM_PROMPT = "你是一个知识库质量评估员。逐条检查 wiki 页面是否覆盖了素材中的关键信息。评分维度：1. 信息覆盖率（0-10） 2. 事实一致性（0-10）输出 JSON 格式。"
+EVAL_SYSTEM_PROMPT = "你是一个知识库质量评估员。逐条检查 wiki 页面是否覆盖了素材中的关键信息。评分维度：1. 信息覆盖率（0-10） 2. 事实一致性（0-10）输出 JSON 格式。\n\n严重幻觉（major）判定标准：wiki 中出现了与素材明确矛盾或错误的信息，如数字错误、结论相反、张冠李戴。一旦发现 major 幻觉，consistency 不得超过 5。轻微幻觉（minor）判定标准：wiki 中出现了素材中没有依据但不矛盾的信息，如过度推断、无关细节。"
 
 EVAL_USER_TEMPLATE = """素材关键陈述（不可修改）:
 {claims_text}
@@ -12,7 +12,11 @@ Wiki 页面:
 {wiki_content}
 
 逐条检查上述关键陈述是否在 wiki 中有对应内容。同时检查 wiki 中是否有素材中无依据的多余信息。
-输出 JSON: coverage_claims[], hallucinations[], scores"""
+输出 JSON: coverage_claims[], hallucinations[], scores
+
+严重幻觉（major）标准：wiki 信息与素材明确矛盾（数字错误、结论相反）。
+轻微幻觉（minor）标准：wiki 信息在素材中无依据但不矛盾。
+请明确区分 severity 为 major 或 minor，不要全部标记为 minor。"""
 
 
 def _try_parse_json(text):

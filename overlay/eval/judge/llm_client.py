@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import time
 from typing import Optional
 
 import requests
@@ -18,8 +19,12 @@ def load_llm_config(config_path: str) -> dict:
     return llm
 
 
-def call_llm(prompt: str, llm_config: dict, system: str = "") -> str:
-    """调用 OpenAI 兼容接口。返回 response 文本。"""
+def call_llm(prompt: str, llm_config: dict, system: str = "",
+             max_retries: int = 3) -> str:
+    """调用 OpenAI 兼容接口。返回 response 文本。
+
+    遇 429 Rate Limit 自动重试，指数退避：20s, 40s, 80s。
+    """
     headers = {"Content-Type": "application/json"}
     if llm_config.get("apiKey"):
         headers["Authorization"] = f"Bearer {llm_config['apiKey']}"
@@ -44,13 +49,23 @@ def call_llm(prompt: str, llm_config: dict, system: str = "") -> str:
     else:
         url = f"{endpoint}/chat/completions"
 
-    resp = requests.post(url, headers=headers, json=payload, timeout=300)
-    resp.raise_for_status()
-    return resp.json()["choices"][0]["message"]["content"]
+    for attempt in range(max_retries):
+        try:
+            resp = requests.post(url, headers=headers, json=payload, timeout=300)
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"]
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 429 and attempt < max_retries - 1:
+                wait = 2 ** (attempt + 1) * 10  # 20s, 40s, 80s
+                print(f"  [429 限流] 等待 {wait}s 后重试 ({attempt+1}/{max_retries})",
+                      flush=True)
+                time.sleep(wait)
+                continue
+            raise
 
 
 def parse_json_response(text: str) -> dict:
-    """Parse JSON from LLM response, handling markdown code block fences."""
+    """Parse JSON from LLM response, handling markdown code block fences and truncation."""
     text = text.strip()
     # Try direct parsing first
     try:
@@ -64,4 +79,10 @@ def parse_json_response(text: str) -> dict:
             return json.loads(m.group(1).strip())
         except json.JSONDecodeError:
             pass
+    # Try truncation recovery: append closing brackets
+    for suffix in ['"}', '"]', '}', '"]}', '}']:
+        try:
+            return json.loads(text + suffix)
+        except json.JSONDecodeError:
+            continue
     raise ValueError(f"Could not parse JSON from response: {text[:200]}")

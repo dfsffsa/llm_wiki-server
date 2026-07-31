@@ -1,8 +1,0 @@
-{
-  "llmConfig": {
-    "model": "deepseek-v4-flash",
-    "apiKey": "sk-95maPEsHlsNjrg1ojeUb7Uw4BYIUXeLKtzznpb27RGIqrPhQ4QxnS84DbkqGzhY4",
-    "endpoint": "https://opencode.ai/zen/go/v1/chat/completions",
-    "max_tokens": 16384
-  }
-}

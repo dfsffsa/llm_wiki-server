@@ -729,10 +729,16 @@ def main():
         with open(args.config, 'r') as f:
             cfg = json.load(f)
             llm_cfg = cfg.get('llmConfig', {})
-            config['apiKey'] = llm_cfg.get('apiKey', config['apiKey'])
-            config['model'] = llm_cfg.get('model', config['model'])
-            config['customEndpoint'] = llm_cfg.get('customEndpoint', config['customEndpoint'])
-            config['apiMode'] = llm_cfg.get('apiMode', config['apiMode'])
+
+            def _expand(val):
+                if isinstance(val, str) and val.startswith("${") and val.endswith("}"):
+                    return os.environ.get(val[2:-1], val)
+                return val
+
+            config['apiKey'] = _expand(llm_cfg.get('apiKey', config['apiKey']))
+            config['model'] = _expand(llm_cfg.get('model', config['model']))
+            config['customEndpoint'] = _expand(llm_cfg.get('customEndpoint', config['customEndpoint']))
+            config['apiMode'] = _expand(llm_cfg.get('apiMode', config['apiMode']))
     
     # 输出路径
     if not args.output:

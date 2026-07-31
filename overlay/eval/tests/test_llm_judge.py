@@ -149,7 +149,7 @@ class TestLlmJudgePipeline(unittest.TestCase):
             with open(os.path.join(wiki, "test.md"), "w") as f:
                 f.write("# wiki")
             from llm_judge import run_llm_judge
-            result = run_llm_judge(td, "dummy.json")
+            result = run_llm_judge(td, "dummy.json", "dummy.json")
             self.assertEqual(result["summary"]["sources_evaluated"], 1)
             self.assertEqual(result["summary"]["avg_coverage"], 10)
 

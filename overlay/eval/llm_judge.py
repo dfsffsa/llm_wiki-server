@@ -6,9 +6,12 @@ LLM-as-Judge Ingest 质量评估
 - 角色 A (Extractor): 从 source 中提取关键陈述清单
 - 角色 B (Evaluator): 逐条比对 wiki 页面的覆盖度
 
+角色 A 和 B 可使用不同模型（通过 --config-a / --config-b 分别指定）。
+
 用法:
     python llm_judge.py --project <path> --config <config.json>
-    python llm_judge.py --project <path> --config <config.json> --sample 20
+    python llm_judge.py --project <path> --config-a <a.json> --config-b <b.json> --sample 20
+    python llm_judge.py --project <path> --config <config.json> --auto-fix
 """
 
 import argparse
@@ -76,11 +79,11 @@ def summarize(reports: list) -> dict:
     }
 
 
-def run_repairs(project_dir: str, config_path: str, eval_result: dict,
+def run_repairs(project_dir: str, config_path_b: str, eval_result: dict,
                 threshold: int = 6, dry_run: bool = False,
                 verbose: bool = False) -> dict:
-    """对评估结果中低质量的页面执行 auto-fix"""
-    llm_config = load_llm_config(config_path)
+    """对评估结果中低质量的页面执行 auto-fix（使用角色 B 的模型）"""
+    llm_config = load_llm_config(config_path_b)
     repair_log = []
 
     for report_dict in eval_result.get("reports", []):
@@ -195,13 +198,17 @@ def _save_checkpoint(output_path: str, result: dict):
     os.replace(tmp, output_path)
 
 
-def run_llm_judge(project_dir: str, config_path: str, sample: int = None,
-                  verbose: bool = False,
+def run_llm_judge(project_dir: str, config_path_a: str, config_path_b: str,
+                  sample: int = None, verbose: bool = False,
                   output_path: str = None) -> dict:
     """运行 LLM-as-Judge 评估管线
+
+    角色 A (Extractor) 使用 config_path_a 的模型，
+    角色 B (Evaluator) 使用 config_path_b 的模型。
     如果指定 output_path, 每完成一个文件写 checkpoint。
     """
-    llm_config = load_llm_config(config_path)
+    llm_config_a = load_llm_config(config_path_a)
+    llm_config_b = load_llm_config(config_path_b)
     pairs = find_source_wiki_pairs(project_dir, sample)
     reports = []
 
@@ -218,13 +225,13 @@ def run_llm_judge(project_dir: str, config_path: str, sample: int = None,
             print(f"[{i+1}/{len(pairs)}] {source_name} ...", end=" ", flush=True)
 
         try:
-            # 角色 A: 提取关键陈述
-            claims_resp = extract_claims(src_content, source_name, llm_config)
+            # 角色 A: 提取关键陈述（用 A 模型）
+            claims_resp = extract_claims(src_content, source_name, llm_config_a)
             claims = parse_extracted_claims(claims_resp)
             claims_text = json.dumps(claims, ensure_ascii=False, indent=2)
 
-            # 角色 B: 评估 wiki 覆盖度
-            report = evaluate_wiki(claims_text, wiki_content, llm_config)
+            # 角色 B: 评估 wiki 覆盖度（用 B 模型）
+            report = evaluate_wiki(claims_text, wiki_content, llm_config_b)
             report.source_file = os.path.relpath(src, project_dir)
             report.wiki_page = wiki_rel
             reports.append(report.to_dict())
@@ -247,7 +254,11 @@ def run_llm_judge(project_dir: str, config_path: str, sample: int = None,
             partial = {
                 "project": os.path.basename(project_dir.rstrip("/")),
                 "timestamp": str(datetime.now()),
-                "config": {"model": llm_config.get("model"), "sample": sample},
+                "config": {
+                    "model_a": llm_config_a.get("model"),
+                    "model_b": llm_config_b.get("model"),
+                    "sample": sample,
+                },
                 "progress": f"{len(reports)}/{len(pairs)}",
                 "reports": reports,
                 "summary": summarize(reports),
@@ -257,7 +268,11 @@ def run_llm_judge(project_dir: str, config_path: str, sample: int = None,
     return {
         "project": os.path.basename(project_dir.rstrip("/")),
         "timestamp": str(datetime.now()),
-        "config": {"model": llm_config.get("model"), "sample": sample},
+        "config": {
+            "model_a": llm_config_a.get("model"),
+            "model_b": llm_config_b.get("model"),
+            "sample": sample,
+        },
         "reports": reports,
         "summary": summarize(reports)
     }
@@ -266,7 +281,9 @@ def run_llm_judge(project_dir: str, config_path: str, sample: int = None,
 def main():
     parser = argparse.ArgumentParser(description="LLM-as-Judge Ingest 质量评估")
     parser.add_argument("--project", "-p", required=True, help="项目路径")
-    parser.add_argument("--config", "-c", required=True, help="LLM 配置 JSON 路径")
+    parser.add_argument("--config", "-c", help="LLM 配置 JSON 路径（A/B 共用，被 --config-a/--config-b 覆盖）")
+    parser.add_argument("--config-a", help="角色 A (Extractor) 专用配置，优先级高于 --config")
+    parser.add_argument("--config-b", help="角色 B (Evaluator/Repairer) 专用配置，优先级高于 --config")
     parser.add_argument("--sample", "-s", type=int, default=None,
                         help="随机抽样数量（不指定则评估全部）")
     parser.add_argument("--verbose", "-v", action="store_true", help="详细输出")
@@ -279,14 +296,22 @@ def main():
                         help="预览模式：显示会修复哪些页面，但不实际修改文件")
     args = parser.parse_args()
 
-    result = run_llm_judge(args.project, args.config, args.sample, args.verbose,
+    # 解析 A/B 配置：优先用 --config-a/--config-b，否则 fallback 到 --config
+    config_a = args.config_a or args.config
+    config_b = args.config_b or args.config
+    if not config_a or not config_b:
+        parser.error("必须提供 --config 或 --config-a/--config-b")
+
+    result = run_llm_judge(args.project, config_a, config_b, args.sample, args.verbose,
                            output_path=args.output)
+
+    print(json.dumps(result["summary"], ensure_ascii=False, indent=2))
 
     # Phase 3: auto-fix
     if args.auto_fix:
         print("\n=== Auto-Fix Phase ===")
         fix_result = run_repairs(
-            args.project, args.config, result,
+            args.project, config_b, result,
             threshold=args.threshold, dry_run=args.dry_run,
             verbose=args.verbose,
         )

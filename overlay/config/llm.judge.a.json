@@ -1,0 +1,8 @@
+{
+  "llmConfig": {
+    "model": "deepseek-v4-flash-202605",
+    "apiKey": "${TENCENT_TOKEN}",
+    "endpoint": "https://tokenhub.tencentmaas.com/plan/v3/chat/completions",
+    "max_tokens": 32768
+  }
+}
