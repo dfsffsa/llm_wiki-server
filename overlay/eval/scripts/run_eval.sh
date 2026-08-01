@@ -55,6 +55,24 @@ python3 "$EVAL_DIR/ingest_check.py" \
     --project "$PROJECT_PATH" \
     --output "$RESULTS_DIR/${PROJECT_NAME}_ingest_check.json"
 
+# Auto-fix（可选）
+FIX="${3:-false}"
+if [ "$FIX" = "--fix" ]; then
+    echo ""
+    echo "[2.5] 自动修复..."
+    python3 "$EVAL_DIR/auto_fix.py" \
+        --project "$PROJECT_PATH" \
+        --budget 10 \
+        --output "$RESULTS_DIR/${PROJECT_NAME}_auto_fix.json"
+elif [ "$FIX" = "--dry-run" ]; then
+    echo ""
+    echo "[2.5] 修复预览（dry-run）..."
+    python3 "$EVAL_DIR/auto_fix.py" \
+        --project "$PROJECT_PATH" \
+        --dry-run \
+        --output "$RESULTS_DIR/${PROJECT_NAME}_auto_fix_preview.json"
+fi
+
 # RAG + Chat 评测
 echo ""
 echo "[3/3] RAG + Chat 在线评测..."

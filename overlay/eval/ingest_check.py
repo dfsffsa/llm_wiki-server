@@ -12,6 +12,7 @@ import json
 import os
 import re
 import glob
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
@@ -19,6 +20,32 @@ try:
     import yaml
 except Exception:  # pragma: no cover - 允许无 PyYAML 的环境回退
     yaml = None  # type: ignore
+
+# ============ Finding 数据模型 ============
+
+@dataclass
+class Finding:
+    """结构化的检查发现项"""
+    page: str                    # wiki 相对路径，如 "wiki/sources/foo.md"
+    severity: str                # "error" | "warning" | "info"
+    category: str                # "missing_frontmatter" | "broken_wikilink" | "missing_source_page" | ...
+    message: str                 # 人类可读描述
+    detail: dict = field(default_factory=dict)  # 修复所需的上下文
+    auto_fixable: bool = False   # 是否可自动修复
+    fix_strategy: str = ""       # "rule_frontmatter" | "rule_wikilink" | ...
+
+    def to_dict(self) -> Dict:
+        """序列化为 dict，支持 JSON 序列化"""
+        return {
+            "page": self.page,
+            "severity": self.severity,
+            "category": self.category,
+            "message": self.message,
+            "detail": self.detail,
+            "auto_fixable": self.auto_fixable,
+            "fix_strategy": self.fix_strategy,
+        }
+
 
 # ============ 配置 ============
 
@@ -111,19 +138,23 @@ def normalize_slug(name: str) -> str:
 
 
 def check_wikilink_density(wiki_dir: str) -> Dict:
-    """检查 Wikilink 密度"""
+    """检查 Wikilink 密度和破损链接"""
     stats = {
         "total_links": 0,
         "total_pages": 0,
         "avg_links_per_page": 0,
         "orphaned_pages": 0,
-        "link_targets": set()
+        "link_targets": set(),
+        "findings": [],
     }
-    
+
     # 收集所有 wiki 页面
     md_files = glob.glob(f"{wiki_dir}/**/*.md", recursive=True)
     stats["total_pages"] = len(md_files)
-    
+
+    # 收集所有页面 identity 集合
+    identities = {page_identity(f, wiki_dir) for f in md_files}
+
     # 统计链接
     link_targets = set()
     for md_file in md_files:
@@ -133,36 +164,51 @@ def check_wikilink_density(wiki_dir: str) -> Dict:
             stats["total_links"] += len(links)
             for link in links:
                 link_targets.add(normalize_link_target(link))
-    
-    stats["link_targets"] = link_targets
+
+            # 检测破损 wikilink
+            for link in links:
+                target = normalize_link_target(link)
+                if target and target not in identities and target != "index":
+                    rel = os.path.relpath(md_file, wiki_dir)
+                    stats["findings"].append(Finding(
+                        page=rel,
+                        severity="warning",
+                        category="broken_wikilink",
+                        message=f"Broken wikilink: [[{target}]] does not exist",
+                        detail={"target": target, "link_text": link},
+                        auto_fixable=False,
+                        fix_strategy="rule_wikilink",
+                    ).to_dict())
+
+    stats["link_targets"] = sorted(link_targets)  # sorted list for JSON serialization
     stats["avg_links_per_page"] = stats["total_links"] / max(stats["total_pages"], 1)
-    
+
     # 孤立页面：没有链接指向其 identity 或 basename
-    identities = {page_identity(f, wiki_dir) for f in md_files}
     linked_identities = {ident for ident in identities if is_linked(ident, link_targets)}
     stats["orphaned_pages"] = len(identities - linked_identities)
-    
+
     return stats
 
 def check_schema_compliance(wiki_dir: str) -> Dict:
-    """检查 schema 合规性"""
+    """检查 schema 合规性，产出 Finding 列表"""
     stats = {
         "total_pages": 0,
         "compliant_pages": 0,
         "missing_fields": [],
-        "compliance_rate": 0
+        "compliance_rate": 0,
+        "findings": [],
     }
-    
+
     md_files = glob.glob(f"{wiki_dir}/**/*.md", recursive=True)
     stats["total_pages"] = len(md_files)
-    
+
     for md_file in md_files:
         content = read_file(md_file)
         if not content:
             continue
-        
+
         fm, body = parse_frontmatter(content)
-        
+
         # 检查必需字段
         has_required = all(k in fm for k in ['type', 'title'])
         if has_required:
@@ -173,9 +219,19 @@ def check_schema_compliance(wiki_dir: str) -> Dict:
                 "file": os.path.relpath(md_file, wiki_dir),
                 "missing": missing
             })
-    
+            rel = os.path.relpath(md_file, wiki_dir)
+            stats["findings"].append(Finding(
+                page=rel,
+                severity="error",
+                category="missing_frontmatter",
+                message=f"Missing fields: {missing}",
+                detail={"missing_keys": missing, "existing_fm": fm},
+                auto_fixable=True,
+                fix_strategy="rule_frontmatter",
+            ).to_dict())
+
     stats["compliance_rate"] = stats["compliant_pages"] / max(stats["total_pages"], 1)
-    
+
     return stats
 
 def check_category_coverage(wiki_dir: str) -> Dict:
@@ -207,27 +263,28 @@ def check_category_coverage(wiki_dir: str) -> Dict:
     return stats
 
 def compare_source_to_wiki(raw_dir: str, wiki_sources_dir: str) -> Dict:
-    """对比原始材料与生成的 wiki 页面"""
+    """对比原始材料与生成的 wiki 页面，产出 Finding 列表"""
     stats = {
         "total_raw_sources": 0,
         "total_wiki_pages": 0,
         "coverage_rate": 0,
         "missing_wiki_pages": [],
-        "coverage_samples": []
+        "coverage_samples": [],
+        "findings": [],
     }
-    
+
     # 统计原始材料
     raw_files = glob.glob(f"{raw_dir}/sources/*.md")
     stats["total_raw_sources"] = len(raw_files)
-    
+
     # 统计 wiki 页面
     wiki_files = glob.glob(f"{wiki_sources_dir}/*.md")
     stats["total_wiki_pages"] = len(wiki_files)
-    
+
     # 匹配检查（用归一化 slug 精确匹配，避免子串误匹配）
-    if raw_files and wiki_files:
+    if raw_files:
         raw_basenames = {os.path.basename(f) for f in raw_files}
-        wiki_basenames = {os.path.basename(f) for f in wiki_files}
+        wiki_basenames = {os.path.basename(f) for f in wiki_files} if wiki_files else set()
         wiki_slugs = {normalize_slug(b) for b in wiki_basenames}
 
         matched = 0
@@ -238,6 +295,15 @@ def compare_source_to_wiki(raw_dir: str, wiki_sources_dir: str) -> Dict:
                 matched += 1
             else:
                 missing.append(raw_base)
+                stats["findings"].append(Finding(
+                    page=os.path.join("raw/sources", raw_base),
+                    severity="warning",
+                    category="missing_source_page",
+                    message=f"Raw source '{raw_base}' has no matching wiki page",
+                    detail={"raw_source": raw_base},
+                    auto_fixable=False,
+                    fix_strategy="",
+                ).to_dict())
 
         stats["coverage_rate"] = matched / max(len(raw_basenames), 1)
         stats["matched_sources"] = matched
@@ -379,7 +445,15 @@ def run_ingest_check(project_dir: str, verbose: bool = False) -> Dict:
         print("\n⚠️ Ingest 结构质量一般，建议优化")
     else:
         print("\n❌ Ingest 结构质量较差，需要改进")
-    
+
+    # 收集所有 findings
+    all_findings = []
+    for section_name, section_data in results["sections"].items():
+        if isinstance(section_data, dict) and "findings" in section_data:
+            all_findings.extend(section_data["findings"])
+    results["findings"] = all_findings
+    results["fixable_count"] = sum(1 for f in all_findings if f.get("auto_fixable", False))
+
     return results
 
 # ============ 主函数 ============

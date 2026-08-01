@@ -13,6 +13,9 @@ pub enum AuthError {
     DailyLimitExceeded,
     InvalidResetToken,
     ExpiredResetToken,
+    EmailNotVerified,
+    EmailAlreadyVerified,
+    EmailChangeConflict(String),
     Internal(String),
 }
 
@@ -27,6 +30,9 @@ impl AuthError {
             Self::DailyLimitExceeded => "daily_limit_exceeded",
             Self::InvalidResetToken => "invalid_reset_token",
             Self::ExpiredResetToken => "expired_reset_token",
+            Self::EmailNotVerified => "email_not_verified",
+            Self::EmailAlreadyVerified => "email_already_verified",
+            Self::EmailChangeConflict(_) => "email_change_conflict",
             Self::Internal(_) => "internal_error",
         }
     }
@@ -38,6 +44,9 @@ impl AuthError {
             Self::InvalidCredentials | Self::NotAuthenticated => 401,
             Self::RateLimited | Self::DailyLimitExceeded => 429,
             Self::InvalidResetToken | Self::ExpiredResetToken => 400,
+            Self::EmailNotVerified => 403,
+            Self::EmailAlreadyVerified => 400,
+            Self::EmailChangeConflict(_) => 409,
             Self::Internal(_) => 500,
         }
     }
@@ -52,6 +61,9 @@ impl AuthError {
             Self::DailyLimitExceeded => "今日额度已用完,明日重置".into(),
             Self::InvalidResetToken => "重置链接无效".into(),
             Self::ExpiredResetToken => "重置链接已过期".into(),
+            Self::EmailNotVerified => "邮箱未验证，请先查收验证邮件".into(),
+            Self::EmailAlreadyVerified => "邮箱已验证".into(),
+            Self::EmailChangeConflict(m) => m.clone(),
             Self::Internal(_) => "服务内部错误".into(),
         }
     }

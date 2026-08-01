@@ -22,9 +22,12 @@
 ```
 overlay/eval/
 ├── README.md              # 本文件
+├── auto_fix.py            # Ingest 自动修复管线
+├── fixers/                # 修复策略实现
+│   ├── __init__.py        # Fixer 注册表
+│   ├── frontmatter.py     # Frontmatter 字段修复
+│   └── wikilink.py        # Broken wikilink 修复
 ├── test_cases/            # 测试集
-│   ├── parenting_books.json   # 育儿书籍测试集
-│   └── civil_career.json      # 职业发展测试集
 ├── ingest_check.py        # Ingest 质量检查工具
 ├── rag_eval.py            # RAG + Chat 在线评测
 ├── results/               # 评测结果
@@ -32,7 +35,41 @@ overlay/eval/
     └── run_eval.sh        # 批量评测脚本
 ```
 
-## 3. 测试集格式
+## 3. 自动修复
+
+### 3.1 基本用法
+
+```bash
+# 检查 + 自动修复（最多修 3 个问题）
+python overlay/eval/auto_fix.py --project ~/overseas-github/llm_wiki_projects/ParentingBooks
+
+# 仅预览不修改
+python overlay/eval/auto_fix.py --project ~/overseas-github/llm_wiki_projects/ParentingBooks --dry-run
+
+# 增加预算
+python overlay/eval/auto_fix.py --project ~/overseas-github/llm_wiki_projects/ParentingBooks --budget 20
+
+# 作为评测管线的一部分
+./overlay/eval/scripts/run_eval.sh ParentingBooks all --fix
+```
+
+### 3.2 修复策略
+
+| 策略 | 修复内容 | 依赖 | 可信度 |
+|------|---------|------|--------|
+| `rule_frontmatter` | 补缺失 type/title/created/updated | 无 | 高（确定性） |
+| `rule_wikilink` | 修正路径 / 模糊匹配 / 降级纯文本 | 无 | 高（确定性） |
+
+### 3.3 安全机制
+
+- **Fix budget**: 单次运行最多修 N 个问题（默认 3），防止失控
+- **文件备份**: 每次修改前备份到 `fix_backups/`
+- **回归检查**: 修复后自动 re-check，分数下降时报警
+- **Dry-run**: `--dry-run` 预览影响范围
+
+---
+
+## 4. 测试集格式
 
 测试集为 JSON 文件，每个测试用例包含：
 
@@ -133,7 +170,7 @@ cat overlay/eval/results/parenting_books_*.json
 
 ---
 
-## 6. 评测指标
+## 5. 评测指标
 
 ### 6.1 Ingest 质量
 
@@ -163,7 +200,7 @@ cat overlay/eval/results/parenting_books_*.json
 
 ---
 
-## 7. 持续监控
+## 6. 持续监控
 
 ### 7.1 回归测试
 
@@ -191,7 +228,7 @@ cat overlay/eval/results/parenting_books_trend.json
 
 ---
 
-## 8. 相关文档
+## 7. 相关文档
 
 | 文档 | 内容 |
 |------|------|

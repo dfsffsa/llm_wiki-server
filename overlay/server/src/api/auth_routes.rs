@@ -37,7 +37,7 @@ pub fn handle(
                 );
                 return;
             }
-            handle_register(auth, headers, body, request)
+            handle_register(auth, state, headers, body, request)
         }
         (&Method::Post, "/auth/login") => handle_login(auth, headers, body, request),
         (&Method::Post, "/auth/logout") => handle_logout(auth, headers, request),
@@ -47,6 +47,15 @@ pub fn handle(
         }
         (&Method::Post, "/auth/reset-password") => {
             handle_reset(auth, body, request)
+        }
+        (&Method::Get, "/auth/verify-email") => {
+            handle_verify_email(state, auth, request)
+        }
+        (&Method::Post, "/auth/change-email") => {
+            handle_change_email(state, auth, headers, body, request)
+        }
+        (&Method::Get, "/auth/confirm-email-change") => {
+            handle_confirm_email_change(auth, request)
         }
         _ => api::respond_json(
             request,
@@ -119,6 +128,7 @@ fn respond_err(request: Request, err: &AuthError) {
 
 fn handle_register(
     auth: &std::sync::Arc<llm_wiki_auth::AuthService>,
+    state: &ServerState,
     headers: &[(String, String)],
     body: &str,
     request: Request,
@@ -135,7 +145,6 @@ fn handle_register(
         Ok(s) => s,
         Err(e) => return respond_err(request, &e),
     };
-    let secure = is_secure(headers);
     let now = now_secs();
 
     match auth.register(RegisterInput {
@@ -145,15 +154,22 @@ fn handle_register(
         ip: header_lookup(headers, "x-forwarded-for"),
         user_agent: header_lookup(headers, "user-agent"),
     }) {
-        Ok(out) => {
-            let cookie =
-                build_session_cookie(&out.session_token, auth.config().session_ttl_secs, secure);
-            respond_with_cookie(
-                request,
-                200,
-                json!({ "user": user_to_json(&out.user) }),
-                cookie,
-            );
+        Ok(user) => {
+            // 发验证邮件
+            if let Ok(token) = auth.start_verification(user.id, now) {
+                let app_state = state.load_app_state().unwrap_or(serde_json::Value::Null);
+                let smtp = crate::mail::parse_smtp_config(&app_state);
+                match (smtp, state.runtime()) {
+                    (Some(cfg), Some(rt)) if !cfg.public_base_url.is_empty() => {
+                        let _ = rt.block_on(crate::mail::send_verification_email(&cfg, &user.email, &token));
+                    }
+                    _ => {
+                        eprintln!("[auth] verification token for {}: {} (SMTP not configured)", user.email, token);
+                    }
+                }
+            }
+            // 始终返回 ok:true，防邮箱枚举
+            api::respond_json(request, 200, json!({ "ok": true, "message": "验证邮件已发送，请检查邮箱" }));
         }
         Err(e) => respond_err(request, &e),
     }
@@ -307,6 +323,138 @@ fn handle_reset(
     let now = now_secs();
     match auth.complete_password_reset(token, new_password, now) {
         Ok(()) => api::respond_json(request, 200, json!({ "ok": true })),
+        Err(e) => respond_err(request, &e),
+    }
+}
+
+fn handle_verify_email(
+    state: &ServerState,
+    auth: &std::sync::Arc<llm_wiki_auth::AuthService>,
+    request: Request,
+) {
+    let now = now_secs();
+    // 从 full URL 取 token（request.url() 含 query string，需 to_string() 避免借用冲突）
+    let full_url = request.url().to_string();
+    let token = full_url.split('?').nth(1).unwrap_or("")
+        .split('&')
+        .find(|p| p.starts_with("token="))
+        .map(|p| &p[6..])
+        .unwrap_or("")
+        .to_string();
+
+    if token.is_empty() {
+        api::respond_json(request, 400, json!({ "error": { "code": "invalid_input", "message": "缺少 token" } }));
+        return;
+    }
+
+    match auth.complete_verification(&token, now) {
+        Ok(user) => {
+            // 发欢迎邮件
+            let app_state = state.load_app_state().unwrap_or(serde_json::Value::Null);
+            let smtp = crate::mail::parse_smtp_config(&app_state);
+            if let (Some(cfg), Some(rt)) = (smtp, state.runtime()) {
+                let display_name = user.display_name.clone().unwrap_or_default();
+                let _ = rt.block_on(crate::mail::send_welcome_email(&cfg, &user.email, &display_name));
+            }
+            // 302 跳到登录页
+            let redirect = "/login?verified=true";
+            let mut resp = tiny_http::Response::from_string("")
+                .with_status_code(302);
+            resp.add_header(
+                tiny_http::Header::from_bytes("Location", redirect.as_bytes()).unwrap()
+            );
+            let _ = request.respond(resp);
+        }
+        Err(_e) => {
+            let redirect = "/login?verified=failed";
+            let mut resp = tiny_http::Response::from_string("")
+                .with_status_code(302);
+            resp.add_header(
+                tiny_http::Header::from_bytes("Location", redirect.as_bytes()).unwrap()
+            );
+            let _ = request.respond(resp);
+        }
+    }
+}
+
+fn handle_change_email(
+    state: &ServerState,
+    auth: &std::sync::Arc<llm_wiki_auth::AuthService>,
+    headers: &[(String, String)],
+    body: &str,
+    request: Request,
+) {
+    let now = now_secs();
+    // 需要登录 cookie
+    let token = match cookie_token(headers) {
+        Some(t) => t,
+        None => return respond_err(request, &AuthError::NotAuthenticated),
+    };
+    let user = match auth.session_user(&token, now) {
+        Ok(Some(u)) => u,
+        Ok(None) => return respond_err(request, &AuthError::NotAuthenticated),
+        Err(e) => return respond_err(request, &e),
+    };
+    let v = match parse_json(body) {
+        Ok(v) => v,
+        Err(e) => return respond_err(request, &e),
+    };
+    let new_email = match json_str(&v, "email") {
+        Ok(s) => s,
+        Err(e) => return respond_err(request, &e),
+    };
+
+    match auth.start_email_change(user.id, new_email, now) {
+        Ok((old_token, new_token)) => {
+            let app_state = state.load_app_state().unwrap_or(serde_json::Value::Null);
+            let smtp = crate::mail::parse_smtp_config(&app_state);
+            if let (Some(cfg), Some(rt)) = (smtp, state.runtime()) {
+                let base = cfg.public_base_url.trim_end_matches('/');
+                let old_confirm_url = format!("{base}/auth/confirm-email-change?token={old_token}");
+                let new_verify_url = format!("{base}/auth/confirm-email-change?token={new_token}");
+                let _ = rt.block_on(crate::mail::send_email_change_notice(&cfg, &user.email, &old_confirm_url));
+                let _ = rt.block_on(crate::mail::send_new_email_verification(&cfg, new_email, &new_verify_url));
+            }
+            api::respond_json(request, 200, json!({ "ok": true, "message": "确认邮件已发送" }));
+        }
+        Err(e) => respond_err(request, &e),
+    }
+}
+
+fn handle_confirm_email_change(
+    auth: &std::sync::Arc<llm_wiki_auth::AuthService>,
+    request: Request,
+) {
+    let now = now_secs();
+    let full_url = request.url().to_string();
+    let token: String = full_url.split('?').nth(1).unwrap_or("")
+        .split('&')
+        .find(|p| p.starts_with("token="))
+        .map(|p| p[6..].to_string())
+        .unwrap_or_default();
+
+    if token.is_empty() {
+        api::respond_json(request, 400, json!({ "error": { "code": "invalid_input", "message": "缺少 token" } }));
+        return;
+    }
+
+    match auth.confirm_email_change(&token, now) {
+        Ok(llm_wiki_auth::EmailChangeStatus::Completed) => {
+            let mut resp = tiny_http::Response::from_string("")
+                .with_status_code(302);
+            resp.add_header(
+                tiny_http::Header::from_bytes("Location", b"/settings?email=changed").unwrap()
+            );
+            let _ = request.respond(resp);
+        }
+        Ok(llm_wiki_auth::EmailChangeStatus::PendingOneSide) => {
+            let mut resp = tiny_http::Response::from_string("")
+                .with_status_code(302);
+            resp.add_header(
+                tiny_http::Header::from_bytes("Location", b"/settings?email=pending").unwrap()
+            );
+            let _ = request.respond(resp);
+        }
         Err(e) => respond_err(request, &e),
     }
 }
