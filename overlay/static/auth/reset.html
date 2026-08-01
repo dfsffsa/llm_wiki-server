@@ -43,6 +43,16 @@
     const m1 = document.getElementById('step1-msg');
     const m2 = document.getElementById('step2-msg');
 
+    // Auto-detect token from URL (e.g. /reset-password?token=xxx from email link)
+    const urlToken = new URLSearchParams(window.location.search).get('token');
+    if (urlToken) {
+      const tokenInput = s2.querySelector('input[name="token"]');
+      tokenInput.value = urlToken;
+      tokenInput.type = 'hidden';
+      s1.style.display = 'none';
+      s2.style.display = 'flex';
+    }
+
     s1.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = new FormData(s1).get('email');
