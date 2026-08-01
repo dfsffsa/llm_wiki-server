@@ -9,50 +9,41 @@
   </head>
   <body>
     <div id="app">
-      <header class="topbar" id="topbar" hidden>
-        <button type="button" id="btn-menu" class="icon-btn" aria-label="菜单" hidden>☰</button>
-        <span class="topbar-title">知识问答</span>
-        <span class="topbar-spacer"></span>
-        <span id="user-email" class="user-email"></span>
-        <span id="usage-info" class="usage-info"></span>
-        <button type="button" id="btn-logout" class="btn-text">登出</button>
-      </header>
-
-      <!-- Home: pick project -->
-      <section id="view-home" class="view active">
-        <header class="home-header">
-          <h1>知识问答</h1>
-          <p class="tagline">选一个话题，开始提问</p>
-        </header>
-        <div id="banner-offline" class="banner hidden" role="alert"></div>
-        <div id="project-grid" class="project-grid"></div>
-        <p class="home-footer">
-          <a href="/" class="link-muted">完整版界面</a>
-        </p>
-      </section>
-
       <!-- Chat -->
-      <section id="view-chat" class="view">
-        <header class="chat-header">
-          <button type="button" id="btn-back" class="icon-btn" aria-label="返回">←</button>
-          <div class="chat-header-title">
-            <span id="chat-emoji" class="chat-emoji"></span>
-            <span id="chat-title"></span>
-          </div>
-        </header>
-
+      <section id="view-chat" class="view active">
         <div class="chat-layout">
-          <aside class="history-sidebar" id="history-sidebar" aria-label="历史对话">
-            <div class="history-header">
-              <span>历史对话</span>
-              <button type="button" id="btn-new-chat" class="btn-text">＋ 新建</button>
+          <aside class="sidebar" id="sidebar">
+            <!-- 项目列表 -->
+            <div class="sidebar-section" id="sidebar-projects">
+              <div class="section-header">
+                <span>知识库</span>
+              </div>
+              <div id="project-list" class="project-list"></div>
             </div>
+            <div class="sidebar-divider"></div>
+            <!-- 对话功能区 -->
+            <div class="sidebar-section">
+              <div class="section-header">
+                <button id="btn-search-sidebar" class="sidebar-action">🔍 搜索对话</button>
+                <button id="btn-new-chat" class="sidebar-action">＋ 新建</button>
+              </div>
+            </div>
+            <!-- 对话列表 -->
             <ul id="history-list" class="history-list"></ul>
+            <!-- 底部：用户信息 -->
+            <div class="sidebar-footer">
+              <span id="sidebar-user" class="sidebar-user"></span>
+              <span id="sidebar-usage" class="sidebar-usage"></span>
+              <button type="button" id="btn-logout-sidebar" class="sidebar-logout">登出</button>
+              <button type="button" id="btn-theme-sidebar" class="sidebar-logout">🌓</button>
+            </div>
           </aside>
+          <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+          <button type="button" id="btn-menu-mobile" class="menu-toggle" aria-label="菜单">☰</button>
 
           <div class="chat-main">
             <main id="messages" class="messages" aria-live="polite"></main>
-            <div id="starters" class="starters"></div>
             <footer class="composer">
               <textarea
                 id="input"
@@ -65,7 +56,21 @@
           </div>
         </div>
       </section>
+
+      <!-- Search -->
+      <section id="view-search" class="view">
+        <div class="search-header-layout">
+          <div class="search-bar">
+            <input type="text" id="search-input" placeholder="搜索当前知识库…" autocomplete="off" />
+            <button type="button" id="search-btn" class="btn-search-go">🔍</button>
+          </div>
+          <button type="button" id="btn-back-from-search" class="icon-btn" aria-label="返回聊天">←</button>
+        </div>
+        <div id="search-results" class="search-results"></div>
+      </section>
     </div>
+
+    <div id="banner-offline" class="banner hidden" role="alert"></div>
 
     <script src="/lite/config.js"></script>
     <script src="/lite/app.js" type="module"></script>
