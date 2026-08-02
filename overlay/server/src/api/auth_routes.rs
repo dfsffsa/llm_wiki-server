@@ -289,7 +289,7 @@ fn handle_forgot(
                 let reset_url = crate::mail::build_reset_url(&cfg.public_base_url, &t);
                 // Send on the shared runtime. Errors are logged but never
                 // surfaced to the client (ok:true either way).
-                if let Err(e) = rt.block_on(crate::mail::send_password_reset(&cfg, email, &reset_url)) {
+                if let Err(e) = rt.block_on(crate::mail::send_password_reset(&cfg, email, &reset_url, &t)) {
                     eprintln!("[auth] password-reset email to {email} failed: {e}");
                 }
             }

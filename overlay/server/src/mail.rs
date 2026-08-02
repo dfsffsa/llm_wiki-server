@@ -66,12 +66,14 @@ pub fn build_reset_url(base_url: &str, token: &str) -> String {
 }
 
 /// Build the plain-text body of the password-reset email. Pure.
-pub fn build_reset_plain(reset_url: &str) -> String {
+pub fn build_reset_plain(token: &str, reset_url: &str) -> String {
     format!(
         "您请求重置 LLM Wiki 账户密码。\n\n\
-         点击下方链接设置新密码（{ttl} 小时内有效，单次使用）：\n{url}\n\n\
+         重置 Token（{ttl} 小时内有效，单次使用）：\n{token}\n\n\
+         复制上方 Token，在密码重置页面粘贴即可设置新密码；也可点击链接：\n{url}\n\n\
          如果不是您本人操作，请忽略此邮件，您的密码不会更改。\n",
         ttl = RESET_TOKEN_TTL_HOURS,
+        token = token,
         url = reset_url,
     )
 }
@@ -132,13 +134,19 @@ pub fn build_new_email_verify_plain(verify_url: &str) -> String {
     format!("请点击以下链接验证您的新邮箱（1 小时内有效）：\n\n{verify_url}")
 }
 
-pub fn build_reset_html(reset_url: &str) -> String {
-    format!(r#"<!DOCTYPE html><html><body style="font-family:sans-serif;max-width:600px;margin:40px auto;padding:20px;line-height:1.6">
+pub fn build_reset_html(token: &str, reset_url: &str) -> String {
+    format!(
+        r#"<!DOCTYPE html><html><body style="font-family:sans-serif;max-width:600px;margin:40px auto;padding:20px;line-height:1.6">
 <h2 style="color:#333">重置您的 LLM Wiki 密码</h2>
-<p>请点击下方按钮重置密码（1 小时内有效，单次使用）：</p>
+<p>请复制以下 Token 到密码重置页面，或点击按钮（{ttl} 小时内有效，单次使用）：</p>
+<p style="background:#f1f5f9;padding:12px 16px;border-radius:6px;font-family:monospace;word-break:break-all">{token}</p>
 <a href="{reset_url}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;margin:16px 0">重置密码</a>
 <p style="color:#666;font-size:14px">如非本人操作请忽略，您的密码不会更改。</p>
-</body></html>"#)
+</body></html>"#,
+        ttl = RESET_TOKEN_TTL_HOURS,
+        token = token,
+        reset_url = reset_url,
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -245,10 +253,11 @@ pub async fn send_password_reset(
     cfg: &SmtpConfig,
     to_email: &str,
     reset_url: &str,
+    token: &str,
 ) -> Result<(), String> {
     send_email(cfg, to_email, "重置你的 LLM Wiki 密码",
-        &build_reset_html(reset_url),
-        &build_reset_plain(reset_url)).await
+        &build_reset_html(token, reset_url),
+        &build_reset_plain(token, reset_url)).await
 }
 
 #[cfg(test)]
@@ -279,8 +288,9 @@ mod tests {
     #[test]
     fn email_body_contains_reset_url_and_expiry() {
         let url = "https://wiki.example.com/reset-password?token=abc123";
-        let body = build_reset_plain(url);
+        let body = build_reset_plain("abc123", url);
         assert!(body.contains(url), "body must contain the reset URL");
+        assert!(body.contains("abc123"), "body must show the copyable token");
         assert!(body.contains("1 小时"), "body must state the expiry");
     }
 
@@ -384,8 +394,9 @@ mod tests {
 
     #[test]
     fn reset_html_contains_link() {
-        let html = build_reset_html("https://example.com/reset-password?token=abc");
+        let html = build_reset_html("abc123", "https://example.com/reset-password?token=abc");
         assert!(html.contains("reset-password?token=abc"));
+        assert!(html.contains("abc123"), "html must show the copyable token");
         assert!(html.contains("重置密码"));
     }
 }
