@@ -45,7 +45,11 @@ SERVER_WIKI_ROOT="${SERVER_WIKI_ROOT:-/root/llm_wiki_projects}"
 SERVER_PORT="${SERVER_PORT:-8080}"
 SERVER_BIND="${SERVER_BIND:-127.0.0.1:${SERVER_PORT}}"
 SERVER_TOKEN="${SERVER_TOKEN:-minmax2.7}"          # 缺省值；生产建议改
-SERVER_AUTH_DB="${SERVER_AUTH_DB:-/var/lib/llm-wiki/auth.db}"  # 多用户认证 DB（见 docs/部署-ECS与Tunnel.md §3.6.1）
+SERVER_AUTH_DB="${SERVER_AUTH_DB:-${SERVER_REPO}/auth.db}"  # 多用户认证 DB；默认跟随仓库，避免覆盖已有用户库
+SERVER_REQUIRE_LOGIN="${SERVER_REQUIRE_LOGIN:-true}"
+SERVER_ADMIN_EMAIL="${SERVER_ADMIN_EMAIL:-}"        # 该邮箱注册时自动 admin
+SERVER_DAILY_CHAT_LIMIT="${SERVER_DAILY_CHAT_LIMIT:-50}"
+SERVER_SESSION_TTL_DAYS="${SERVER_SESSION_TTL_DAYS:-30}"
 SMTP_PASS="${SMTP_PASS:-}"                          # 可选；设置后注入 systemd 供 ${SMTP_PASS} 展开
 
 # ─── 计算路径 ───────────────────────────────────────────────────
@@ -55,7 +59,7 @@ ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 SERVER_BIN_LOCAL="${ROOT}/overlay/server/target/x86_64-unknown-linux-musl/release/llm-wiki-server"
 CLI_BIN_LOCAL="${ROOT}/overlay/cli/rust/target/x86_64-unknown-linux-musl/release/llm-wiki"
 DIST_LOCAL="${ROOT}/upstream/dist"
-CONFIG_LOCAL="${ROOT}/overlay/config/server.example.json"
+CONFIG_LOCAL="${CONFIG_LOCAL:-${ROOT}/overlay/config/server.example.json}"   # 可覆盖为 per-server 真实配置
 
 # ─── SSH / rsync 包装 ───────────────────────────────────────────
 SSH_ARGS=()
@@ -216,7 +220,12 @@ Environment=LLM_WIKI_CONFIG=${SERVER_REPO}/overlay/config/server.local.json
 Environment=LLM_WIKI_STATIC=${SERVER_REPO}/upstream/dist
 Environment=LLM_WIKI_BIND=${SERVER_BIND}
 Environment=LLM_WIKI_REPO=${SERVER_REPO}
+Environment=LLM_WIKI_PUBLIC_LANDING_DIR=${SERVER_REPO}/overlay/static
 Environment=LLM_WIKI_AUTH_DB=${SERVER_AUTH_DB}
+Environment=LLM_WIKI_REQUIRE_LOGIN=${SERVER_REQUIRE_LOGIN}
+$([[ -n "${SERVER_ADMIN_EMAIL}" ]] && echo "Environment=LLM_WIKI_ADMIN_EMAIL=${SERVER_ADMIN_EMAIL}")
+Environment=LLM_WIKI_DAILY_CHAT_LIMIT=${SERVER_DAILY_CHAT_LIMIT}
+Environment=LLM_WIKI_SESSION_TTL_DAYS=${SERVER_SESSION_TTL_DAYS}
 $([[ -n "${SMTP_PASS}" ]] && echo "Environment=SMTP_PASS=${SMTP_PASS}")
 ExecStart=${SERVER_REPO}/overlay/server/target/release/llm-wiki-server
 Restart=on-failure

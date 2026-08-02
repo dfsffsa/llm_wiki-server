@@ -27,11 +27,11 @@
   },
   "smtp": {
     "enabled": true,
-    "host": "smtp.example.com",
+    "host": "smtp.resend.com",
     "port": 587,
-    "user": "noreply@example.com",
+    "user": "resend",
     "pass": "${SMTP_PASS}",
-    "from": "LLM Wiki <noreply@example.com>",
-    "publicBaseUrl": "https://wiki.example.com"
+    "from": "DocuChat <noreply@sship.online>",
+    "publicBaseUrl": "https://www.sship.online"
   }
 }
