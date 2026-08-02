@@ -169,6 +169,14 @@ rsync -avz --progress \
   "${SSH_HOST}:${SERVER_REPO}/overlay/config/server.local.json"
 "${SSH[@]}" "$SSH_HOST" "chmod 600 ${SERVER_REPO}/overlay/config/server.local.json"
 
+# ─── 上传 overlay/static/（公开落地页 + /lite/ QA 页）─────────
+# systemd 的 LLM_WIKI_PUBLIC_LANDING_DIR 指向这里；缺失时远端会回退到
+# 旧版/缺失的落地页。--delete 保证远端与本地一致（清除陈旧文件）。
+echo "==> 上传 overlay/static/（公开落地页 + /lite/）"
+rsync -avz --delete --progress \
+  "${ROOT}/overlay/static/" \
+  "${SSH_HOST}:${SERVER_REPO}/overlay/static/"
+
 # ─── 上传 Node 依赖（从本机 rsync，不在远端 npm ci） ────────
 # 1.6GB RAM 的远端跑 npm ci 会 OOM/超时；改成在本机装好 node_modules
 # 再 rsync 过去。首次 ~559MB（upstream 524M + cli/node 35M），增量
