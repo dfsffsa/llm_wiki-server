@@ -233,6 +233,7 @@ pub fn respond_options(request: tiny_http::Request) {
         response.add_header(header);
     }
     response.add_header(Header::from_bytes("Access-Control-Max-Age", "600").unwrap());
+    crate::audit::set_status(204);
     let _ = request.respond(response);
 }
 
@@ -242,6 +243,7 @@ pub fn respond_json(request: tiny_http::Request, status: u16, body: Value) {
     for header in cors_headers() {
         response.add_header(header);
     }
+    crate::audit::set_status(status);
     let _ = request.respond(response);
 }
 

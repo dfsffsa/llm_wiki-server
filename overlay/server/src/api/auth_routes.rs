@@ -115,6 +115,7 @@ fn respond_with_cookie(request: Request, status: u16, body: Value, cookie: Strin
         resp.add_header(h);
     }
     resp.add_header(Header::from_bytes("Set-Cookie", cookie.as_bytes()).unwrap());
+    crate::audit::set_status(status);
     let _ = request.respond(resp);
 }
 
@@ -363,6 +364,7 @@ fn handle_verify_email(
             resp.add_header(
                 tiny_http::Header::from_bytes("Location", redirect.as_bytes()).unwrap()
             );
+            crate::audit::set_status(302);
             let _ = request.respond(resp);
         }
         Err(_e) => {
@@ -372,6 +374,7 @@ fn handle_verify_email(
             resp.add_header(
                 tiny_http::Header::from_bytes("Location", redirect.as_bytes()).unwrap()
             );
+            crate::audit::set_status(302);
             let _ = request.respond(resp);
         }
     }
@@ -445,6 +448,7 @@ fn handle_confirm_email_change(
             resp.add_header(
                 tiny_http::Header::from_bytes("Location", b"/settings?email=changed").unwrap()
             );
+            crate::audit::set_status(302);
             let _ = request.respond(resp);
         }
         Ok(llm_wiki_auth::EmailChangeStatus::PendingOneSide) => {
@@ -453,6 +457,7 @@ fn handle_confirm_email_change(
             resp.add_header(
                 tiny_http::Header::from_bytes("Location", b"/settings?email=pending").unwrap()
             );
+            crate::audit::set_status(302);
             let _ = request.respond(resp);
         }
         Err(e) => respond_err(request, &e),
@@ -460,19 +465,7 @@ fn handle_confirm_email_change(
 }
 
 fn today_utc() -> String {
-    // YYYY-MM-DD in UTC, computed from now without bringing in chrono.
-    let secs = now_secs();
-    let days = secs / 86_400;
-    // Civil-from-days (Howard Hinnant). Same algorithm as in chat.rs.
-    let z = days + 719_468;
-    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
-    let doe = z - era * 146_097;
-    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146_096) / 365;
-    let y = yoe + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = doy - (153 * mp + 2) / 5 + 1;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 };
-    let y = if m <= 2 { y + 1 } else { y };
-    format!("{y:04}-{m:02}-{d:02}")
+    // YYYY-MM-DD in UTC. Shares the civil-from-days implementation with the
+    // audit module (no chrono dependency anywhere).
+    crate::audit::utc_date(now_secs() as u64)
 }

@@ -147,6 +147,8 @@ When `VITE_BACKEND=http`, Vite aliases redirect upstream imports to overlay:
 | `LLM_WIKI_ADMIN_EMAIL` | Email auto-marked `is_admin` on registration |
 | `LLM_WIKI_SESSION_TTL_DAYS` | Session cookie lifetime (default 30) |
 | `LLM_WIKI_PUBLIC_LANDING_DIR` | Public landing page dir (login/register/reset HTML; default `overlay/static/`) |
+| `LLM_WIKI_AUDIT_DIR` | Directory for in-house access audit log (`access-YYYY-MM-DD.jsonl`). Unset → auditing off (zero cost) |
+| `LLM_WIKI_AUDIT_RETENTION_DAYS` | Keep audit files this many days (default 30; pruned at startup) |
 | `RUST_LOG` | tracing log level (default `info`; e.g. `debug,llm_wiki_server=trace`) |
 
 ## Wiki Project Structure
@@ -332,6 +334,7 @@ If any of these fail, the corresponding `docs/` section is the next place to loo
 - [docs/日常运维.md](docs/日常运维.md) — Daily operations
 - [docs/邮件配置-SMTP-Resend.md](./docs/邮件配置-SMTP-Resend.md) — **SMTP email** (Resend signup, SPF/DKIM/DMARC, smtp config, troubleshooting)
 - [docs/备份与恢复.md](./docs/备份与恢复.md) — **Backup & recovery** (auth DB hot backup, wiki rsync, restore drill)
+- [docs/站内审计.md](./docs/站内审计.md) — **In-house access audit** (non-Cloudflare visitor/request log, audit-summary.sh, privacy)
 - [docs/远端服务器ingest.md](./docs/远端服务器ingest.md) — **Remote ingest runbook** (do ingest on ECS, agent-friendly quick start)
 - [docs/部署-低配ECS一键脚本.md](./docs/部署-低配ECS一键脚本.md) — **Low-spec ECS runbook** (deploy-ecs.sh / sync-artifacts.sh, pitfalls, ssh config)
 - [docs/低配机交叉编译CLI.md](./docs/低配机交叉编译CLI.md) — musl cross-compile details

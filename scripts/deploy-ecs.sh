@@ -29,6 +29,7 @@
 #   SERVER_PORT=8081 \
 #   SERVER_AUTH_DB=/var/lib/llm-wiki/auth.db \
 #   SMTP_PASS='re_...' \
+#   SERVER_AUDIT_DIR=/root/llm_wiki-server/audit \
 #   LLM_API_KEY='sk-...' \
 #     ./scripts/deploy-ecs.sh
 set -euo pipefail
@@ -51,6 +52,8 @@ SERVER_ADMIN_EMAIL="${SERVER_ADMIN_EMAIL:-}"        # 该邮箱注册时自动 a
 SERVER_DAILY_CHAT_LIMIT="${SERVER_DAILY_CHAT_LIMIT:-50}"
 SERVER_SESSION_TTL_DAYS="${SERVER_SESSION_TTL_DAYS:-30}"
 SMTP_PASS="${SMTP_PASS:-}"                          # 可选；设置后注入 systemd 供 ${SMTP_PASS} 展开
+SERVER_AUDIT_DIR="${SERVER_AUDIT_DIR:-}"            # 可选；站内访问审计日志目录，设置后启用 LLM_WIKI_AUDIT_DIR
+SERVER_AUDIT_RETENTION_DAYS="${SERVER_AUDIT_RETENTION_DAYS:-30}"
 
 # ─── 计算路径 ───────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -85,6 +88,7 @@ echo "  SERVER_BIND      = ${SERVER_BIND}"
 echo "  SERVER_TOKEN     = ${SERVER_TOKEN}"
 echo "  SERVER_AUTH_DB   = ${SERVER_AUTH_DB}"
 echo "  SMTP_PASS        = $([[ -n "${SMTP_PASS}" ]] && echo "set(${#SMTP_PASS}c)" || echo "unset (email off)")"
+echo "  SERVER_AUDIT_DIR = ${SERVER_AUDIT_DIR:-unset (in-house audit off)}"
 echo "  LLM_API_KEY      = ${LLM_API_KEY:0:8}…${LLM_API_KEY: -4}  ($(printf '%s' "$LLM_API_KEY" | wc -c) chars)"
 
 # ─── 检查前置 ──────────────────────────────────────────────────
@@ -241,6 +245,8 @@ $([[ -n "${SERVER_ADMIN_EMAIL}" ]] && echo "Environment=LLM_WIKI_ADMIN_EMAIL=${S
 Environment=LLM_WIKI_DAILY_CHAT_LIMIT=${SERVER_DAILY_CHAT_LIMIT}
 Environment=LLM_WIKI_SESSION_TTL_DAYS=${SERVER_SESSION_TTL_DAYS}
 $([[ -n "${SMTP_PASS}" ]] && echo "Environment=SMTP_PASS=${SMTP_PASS}")
+$([[ -n "${SERVER_AUDIT_DIR}" ]] && echo "Environment=LLM_WIKI_AUDIT_DIR=${SERVER_AUDIT_DIR}")
+$([[ -n "${SERVER_AUDIT_DIR}" ]] && echo "Environment=LLM_WIKI_AUDIT_RETENTION_DAYS=${SERVER_AUDIT_RETENTION_DAYS}")
 ExecStart=${SERVER_REPO}/overlay/server/target/release/llm-wiki-server
 Restart=on-failure
 RestartSec=5

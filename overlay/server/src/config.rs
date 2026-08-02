@@ -23,6 +23,11 @@ pub struct ServerConfig {
     /// assets are served from here instead of upstream/dist. `None` disables
     /// (local dev unchanged — `/` still shows the full React UI).
     pub public_landing_dir: Option<PathBuf>,
+    /// Directory for the in-house access audit log (`access-YYYY-MM-DD.jsonl`).
+    /// `None` disables auditing entirely (zero overhead, existing behavior).
+    pub audit_dir: Option<PathBuf>,
+    /// Keep audit files at least this many days before pruning at startup.
+    pub audit_retention_days: u32,
 }
 
 impl ServerConfig {
@@ -39,6 +44,8 @@ impl ServerConfig {
         admin_email: Option<String>,
         session_ttl_days: u32,
         public_landing_dir: Option<String>,
+        audit_dir: Option<String>,
+        audit_retention_days: u32,
     ) -> Result<Self, String> {
         let project = project
             .map(PathBuf::from)
@@ -112,6 +119,10 @@ impl ServerConfig {
             })
             .transpose()?;
 
+        let audit_dir = audit_dir
+            .map(PathBuf::from)
+            .filter(|p| !p.as_os_str().is_empty());
+
         Ok(Self {
             project,
             bind,
@@ -125,6 +136,8 @@ impl ServerConfig {
             admin_email,
             session_ttl_days,
             public_landing_dir,
+            audit_dir,
+            audit_retention_days,
         })
     }
 }

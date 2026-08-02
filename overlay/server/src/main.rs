@@ -3,6 +3,7 @@
 //! Serves upstream static UI + REST API compatible with upstream `api_server`.
 
 mod api;
+mod audit;
 mod config;
 mod llm;
 mod mail;
@@ -76,6 +77,15 @@ struct Args {
     #[arg(long, env = "LLM_WIKI_PUBLIC_LANDING_DIR")]
     public_landing_dir: Option<String>,
 
+    /// Directory for the in-house access audit log (`access-YYYY-MM-DD.jsonl`).
+    /// Unset → auditing disabled (existing behavior unchanged).
+    #[arg(long, env = "LLM_WIKI_AUDIT_DIR")]
+    audit_dir: Option<String>,
+
+    /// Keep audit log files at least this many days before pruning.
+    #[arg(long, env = "LLM_WIKI_AUDIT_RETENTION_DAYS", default_value_t = 30)]
+    audit_retention_days: u32,
+
     /// Grace period (seconds) to drain in-flight requests on SIGINT/SIGTERM
     /// before forcing exit. Long-lived SSE chats still holding a slot past
     /// this window are cut off. Should be ≤ systemd `TimeoutStopSec`.
@@ -108,6 +118,8 @@ fn main() {
         args.admin_email,
         args.session_ttl_days,
         args.public_landing_dir,
+        args.audit_dir,
+        args.audit_retention_days,
     ) {
         Ok(config) => config,
         Err(err) => {

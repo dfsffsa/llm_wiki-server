@@ -7,6 +7,7 @@ use tiny_http::{Method, Server};
 use serde_json::json;
 
 use crate::api::{self, API_PREFIX};
+use crate::audit;
 use crate::config::ServerConfig;
 use crate::state::ServerState;
 use crate::static_files;
@@ -35,51 +36,115 @@ pub fn run(
     let state = Arc::new(state);
     let static_dir = static_dir.map(Arc::new);
 
+    // In-house access audit. Disabled unless LLM_WIKI_AUDIT_DIR is set; a
+    // failure to open the directory only disables auditing, never the server.
+    // (Named `audit_log`, not `audit`, so the value doesn't shadow the module.)
+    let audit_log: Option<Arc<audit::AuditLog>> = match config.audit_dir {
+        Some(ref dir) => match audit::AuditLog::new(dir.clone(), config.audit_retention_days) {
+            Ok(log) => Some(Arc::new(log)),
+            Err(e) => {
+                eprintln!("[audit] disabled: failed to open {}: {e}", dir.display());
+                None
+            }
+        },
+        None => None,
+    };
+
     for request in server.incoming_requests() {
+        // Metadata is extracted before `request` is moved into the worker
+        // thread. `path` intentionally drops the query string so tokens in
+        // URLs (`/auth/verify-email?token=...`) never reach the log.
+        let started = std::time::Instant::now();
+        let method = request.method().clone();
+        let url = request.url().to_string();
+        let (path, _) = api::split_url(&url);
+        let ip = audit::client_ip(&request);
+        let ua = request
+            .headers()
+            .iter()
+            .find(|h| h.field.as_str().as_str().eq_ignore_ascii_case("user-agent"))
+            .map(|h| audit::truncate(h.value.as_str(), 256))
+            .unwrap_or_default();
+        let request_id = uuid::Uuid::new_v4().simple().to_string();
+
         // During shutdown, fast-reject new connections so in-flight work can
         // drain instead of queuing more.
         if api::is_shutting_down() {
+            record_audit(&audit_log, &request_id, &method, &path, &ip, &ua, 503, started);
             api::respond_error(request, 503, "Server is shutting down");
             continue;
         }
-        let method = request.method().clone();
-        let url = request.url().to_string();
         if api::should_rate_limit(&method, &url) && !api::allow_request() {
+            record_audit(&audit_log, &request_id, &method, &path, &ip, &ua, 429, started);
             api::respond_error(request, 429, "Too many requests");
             continue;
         }
         let Some(slot) = api::try_acquire_request_slot() else {
+            record_audit(&audit_log, &request_id, &method, &path, &ip, &ua, 503, started);
             api::respond_error(request, 503, "API server is busy");
             continue;
         };
         let state = Arc::clone(&state);
         let static_dir = static_dir.clone();
+        let audit_log = audit_log.clone();
         thread::spawn(move || {
             let _slot = slot;
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-                dispatch_request(state, static_dir, request);
+                dispatch_request(state, static_dir, request, &request_id);
             }));
-            if let Err(payload) = result {
-                eprintln!("[server] request handler panicked: {payload:?}");
-            }
+            // The respond helpers record the final status into a thread-local;
+            // read it back here (per-request thread, so it's unambiguous).
+            let status = match result {
+                Err(payload) => {
+                    eprintln!("[server] request handler panicked: {payload:?}");
+                    500
+                }
+                Ok(()) => audit::last_status().unwrap_or(200),
+            };
+            record_audit(&audit_log, &request_id, &method, &path, &ip, &ua, status, started);
         });
     }
     Ok(())
+}
+
+/// Append one request to the audit log, if enabled.
+fn record_audit(
+    audit_log: &Option<Arc<audit::AuditLog>>,
+    request_id: &str,
+    method: &Method,
+    path: &str,
+    ip: &str,
+    ua: &str,
+    status: u16,
+    started: std::time::Instant,
+) {
+    if let Some(log) = audit_log {
+        log.record(&audit::Entry {
+            method: method.as_str().to_string(),
+            path: path.to_string(),
+            status,
+            ip: ip.to_string(),
+            ua: ua.to_string(),
+            ms: started.elapsed().as_millis() as u64,
+            req: request_id.to_string(),
+        });
+    }
 }
 
 fn dispatch_request(
     state: Arc<ServerState>,
     static_dir: Option<Arc<PathBuf>>,
     mut request: tiny_http::Request,
+    request_id: &str,
 ) {
     let method = request.method().clone();
     let url = request.url().to_string();
     let (path, _) = api::split_url(&url);
 
-    // Per-request tracing span. The request_id propagates into every log
-    // line emitted while handling this request, so a single request's
-    // trace is grep-able in the journal. Also counted as a metric.
-    let request_id = uuid::Uuid::new_v4().simple().to_string();
+    // Per-request tracing span. The request_id (generated in the accept loop,
+    // shared with the audit log) propagates into every log line emitted while
+    // handling this request, so a single request's trace is grep-able in the
+    // journal and joinable to its audit record.
     let span = tracing::info_span!("request", request_id = %request_id, %method, path = %path);
     let _enter = span.enter();
     tracing::info!("dispatch");
@@ -104,6 +169,7 @@ fn dispatch_request(
             tiny_http::Header::from_bytes("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
                 .unwrap(),
         );
+        crate::audit::set_status(200);
         let _ = request.respond(resp);
         return;
     }
@@ -205,6 +271,7 @@ fn dispatch_request(
         };
         if let Some(rel) = landing_path {
             if let Some(response) = static_files::serve_file(landing_root, rel) {
+                crate::audit::set_status(200);
                 let _ = request.respond(response);
                 return;
             }
@@ -213,10 +280,12 @@ fn dispatch_request(
 
     if let Some(ref root) = static_dir {
         if let Some(response) = static_files::serve_static(root, &path) {
+            crate::audit::set_status(200);
             let _ = request.respond(response);
             return;
         }
     }
 
+    crate::audit::set_status(404);
     let _ = request.respond(static_files::not_found_response());
 }
