@@ -118,6 +118,13 @@ Multi-user routes — active only when `LLM_WIKI_AUTH_DB` is set (cookie/bearer 
 | DELETE | `/api/v1/conversations/{id}` | Delete conversation |
 | GET/POST | `/api/v1/conversations/{id}/messages` | List / send chat messages |
 
+Billing routes — active only when `billing` config block is present (Waffo Pancake, see [docs/付款-Waffo-Pancake.md](./docs/付款-Waffo-Pancake.md)):
+
+| Method | Path | Handler |
+|--------|------|---------|
+| POST | `/api/v1/billing/checkout` | Create Waffo checkout session (cookie auth; `{plan:"pro"}` → `{checkoutUrl}`; 409 if already subscribed) |
+| POST | `/api/v1/billing/webhook` | Waffo webhook (RSA-SHA256 verified, raw body, idempotent) → updates per-user plan |
+
 ### Web Adapter (HTTP Mode)
 
 When `VITE_BACKEND=http`, Vite aliases redirect upstream imports to overlay:
@@ -148,6 +155,8 @@ When `VITE_BACKEND=http`, Vite aliases redirect upstream imports to overlay:
 | `LLM_WIKI_SESSION_TTL_DAYS` | Session cookie lifetime (default 30) |
 | `LLM_WIKI_PUBLIC_LANDING_DIR` | Public landing page dir (login/register/reset HTML; default `overlay/static/`) |
 | `RUST_LOG` | tracing log level (default `info`; e.g. `debug,llm_wiki_server=trace`) |
+| `billing` config block | Waffo Pancake: `waffoMerchantId`/`waffoPrivateKey`/`proProductId`/`webhookPublicKey`/`environment`/`freeTierDailyLimit`(3)/`proTierDailyLimit`(10000)/`checkoutSuccessUrl`/`language`. Present → per-plan chat quota + checkout/webhook routes; absent → global `LLM_WIKI_DAILY_CHAT_LIMIT` unchanged |
+| `WAFFO_MERCHANT_ID` / `WAFFO_PRIVATE_KEY` / `WAFFO_PRO_PRODUCT_ID` / `WAFFO_WEBHOOK_PUBLIC_KEY` | Waffo credentials, injected via `deploy-ecs.sh` sed into `server.local.json` (chmod 600). Unset `${VAR}` → billing fail-closed with a warn log |
 
 ## Wiki Project Structure
 
@@ -331,6 +340,7 @@ If any of these fail, the corresponding `docs/` section is the next place to loo
 - [overlay/static/lite/README.md](overlay/static/lite/README.md) — `/lite/` minimal QA page
 - [docs/日常运维.md](docs/日常运维.md) — Daily operations
 - [docs/邮件配置-SMTP-Resend.md](./docs/邮件配置-SMTP-Resend.md) — **SMTP email** (Resend signup, SPF/DKIM/DMARC, smtp config, troubleshooting)
+- [docs/付款-Waffo-Pancake.md](./docs/付款-Waffo-Pancake.md) — **Waffo 付款** (Pro 订阅: Dashboard 准备、billing 配置、webhook、e2e、排错、开发经验与坑、上线检查清单)
 - [docs/备份与恢复.md](./docs/备份与恢复.md) — **Backup & recovery** (auth DB hot backup, wiki rsync, restore drill)
 - [docs/远端服务器ingest.md](./docs/远端服务器ingest.md) — **Remote ingest runbook** (do ingest on ECS, agent-friendly quick start)
 - [docs/部署-低配ECS一键脚本.md](./docs/部署-低配ECS一键脚本.md) — **Low-spec ECS runbook** (deploy-ecs.sh / sync-artifacts.sh, pitfalls, ssh config)
