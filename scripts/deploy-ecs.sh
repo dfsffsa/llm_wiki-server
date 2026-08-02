@@ -22,11 +22,13 @@
 #   SSH_HOST=llm-wiki-ecs SSH_CONFIG=~/.ssh/config.d/ecs.conf \
 #     LLM_API_KEY='sk-...' ./scripts/deploy-ecs.sh
 #
-#   # 全部参数走 env
+#   # 全部参数走 env（含多用户认证 + 邮件）
 #   SSH_HOST=... SSH_PORT=... SSH_CONFIG=... \
 #   SERVER_REPO=/root/llm_wiki-server \
 #   SERVER_WIKI_ROOT=/root/llm_wiki_projects \
 #   SERVER_PORT=8081 \
+#   SERVER_AUTH_DB=/var/lib/llm-wiki/auth.db \
+#   SMTP_PASS='re_...' \
 #   LLM_API_KEY='sk-...' \
 #     ./scripts/deploy-ecs.sh
 set -euo pipefail
@@ -43,6 +45,8 @@ SERVER_WIKI_ROOT="${SERVER_WIKI_ROOT:-/root/llm_wiki_projects}"
 SERVER_PORT="${SERVER_PORT:-8080}"
 SERVER_BIND="${SERVER_BIND:-127.0.0.1:${SERVER_PORT}}"
 SERVER_TOKEN="${SERVER_TOKEN:-minmax2.7}"          # 缺省值；生产建议改
+SERVER_AUTH_DB="${SERVER_AUTH_DB:-/var/lib/llm-wiki/auth.db}"  # 多用户认证 DB（见 docs/部署-ECS与Tunnel.md §3.6.1）
+SMTP_PASS="${SMTP_PASS:-}"                          # 可选；设置后注入 systemd 供 ${SMTP_PASS} 展开
 
 # ─── 计算路径 ───────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -75,6 +79,8 @@ echo "  SERVER_REPO      = ${SERVER_REPO}"
 echo "  SERVER_WIKI_ROOT = ${SERVER_WIKI_ROOT}"
 echo "  SERVER_BIND      = ${SERVER_BIND}"
 echo "  SERVER_TOKEN     = ${SERVER_TOKEN}"
+echo "  SERVER_AUTH_DB   = ${SERVER_AUTH_DB}"
+echo "  SMTP_PASS        = $([[ -n "${SMTP_PASS}" ]] && echo "set(${#SMTP_PASS}c)" || echo "unset (email off)")"
 echo "  LLM_API_KEY      = ${LLM_API_KEY:0:8}…${LLM_API_KEY: -4}  ($(printf '%s' "$LLM_API_KEY" | wc -c) chars)"
 
 # ─── 检查前置 ──────────────────────────────────────────────────
@@ -100,7 +106,8 @@ echo "==> 准备远端目录"
   ${SERVER_REPO}/overlay/cli/rust/target/release \
   ${SERVER_REPO}/overlay/cli/node \
   ${SERVER_REPO}/overlay/config \
-  ${SERVER_REPO}/upstream"
+  ${SERVER_REPO}/upstream \
+  $(dirname "${SERVER_AUTH_DB}")"
 
 # ─── 上传 server 二进制 ───────────────────────────────────────
 echo "==> 上传 server 二进制"
@@ -139,17 +146,19 @@ rsync -avz --progress \
   "${SSH_HOST}:${SERVER_REPO}/upstream/"
 
 # ─── 上传 server config + 注入真实 API key ──────────────────
-# server.example.json 中 llmConfig.apiKey 写 PLACEHOLDER_FILL_ON_SERVER，
-# 部署时用 sed 替换成真实密钥再上传，chmod 600 限制读取。
+# server.example.json 中 llmConfig.apiKey 写 PLACEHOLDER_FILL_ON_SERVER 或
+# ${LLM_API_KEY} 占位符，部署时用 sed 替换成真实密钥再上传，chmod 600 限制读取。
 echo "==> 上传 server config（含真实 LLM_API_KEY，chmod 600）"
 TMP_CONFIG=$(mktemp)
 trap 'rm -f "$TMP_CONFIG"' EXIT
-if ! grep -q 'PLACEHOLDER_FILL_ON_SERVER' "$CONFIG_LOCAL"; then
-  echo "  警告: $CONFIG_LOCAL 不含 PLACEHOLDER_FILL_ON_SERVER，密钥将原样上传" >&2
-  cp "$CONFIG_LOCAL" "$TMP_CONFIG"
-else
-  sed "s|PLACEHOLDER_FILL_ON_SERVER|${LLM_API_KEY}|g" \
+if grep -qE 'PLACEHOLDER_FILL_ON_SERVER|\$\{LLM_API_KEY\}' "$CONFIG_LOCAL"; then
+  sed -e "s|PLACEHOLDER_FILL_ON_SERVER|${LLM_API_KEY}|g" \
+      -e "s|\${LLM_API_KEY}|${LLM_API_KEY}|g" \
     "$CONFIG_LOCAL" > "$TMP_CONFIG"
+  echo "  已注入真实 LLM_API_KEY"
+else
+  echo "  警告: $CONFIG_LOCAL 不含任何密钥占位符，配置将原样上传" >&2
+  cp "$CONFIG_LOCAL" "$TMP_CONFIG"
 fi
 rsync -avz --progress \
   "$TMP_CONFIG" \
@@ -207,6 +216,8 @@ Environment=LLM_WIKI_CONFIG=${SERVER_REPO}/overlay/config/server.local.json
 Environment=LLM_WIKI_STATIC=${SERVER_REPO}/upstream/dist
 Environment=LLM_WIKI_BIND=${SERVER_BIND}
 Environment=LLM_WIKI_REPO=${SERVER_REPO}
+Environment=LLM_WIKI_AUTH_DB=${SERVER_AUTH_DB}
+$([[ -n "${SMTP_PASS}" ]] && echo "Environment=SMTP_PASS=${SMTP_PASS}")
 ExecStart=${SERVER_REPO}/overlay/server/target/release/llm-wiki-server
 Restart=on-failure
 RestartSec=5
