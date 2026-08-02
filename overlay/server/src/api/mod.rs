@@ -6,6 +6,7 @@ mod graph;
 mod projects;
 mod runtime;
 mod search;
+pub(crate) mod billing;
 
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};

@@ -76,6 +76,12 @@ CREATE TABLE IF NOT EXISTS pending_email_changes (
   new_confirmed         INTEGER NOT NULL DEFAULT 0,
   created_at            INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS waffo_webhook_events (
+  event_id   TEXT PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  created_at INTEGER NOT NULL
+);
 "#;
 
 /// Apply pragmas + create all tables. Safe to call repeatedly.
@@ -100,6 +106,27 @@ pub fn init_schema(conn: &Connection) -> rusqlite::Result<()> {
     conn.execute_batch(
         "UPDATE users SET email_verified_at = created_at
          WHERE email_verified_at IS NULL AND created_at > 0",
+    )?;
+
+    // Billing/subscription plan columns (idempotent ALTER, same pattern as above).
+    for ddl in [
+        "ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'",
+        "ALTER TABLE users ADD COLUMN waffo_order_id TEXT",
+        "ALTER TABLE users ADD COLUMN pro_since INTEGER",
+        "ALTER TABLE users ADD COLUMN plan_period_end INTEGER",
+    ] {
+        match conn.execute_batch(ddl) {
+            Ok(_) => {}
+            Err(e) if e.to_string().contains("duplicate column name") => {}
+            Err(e) => return Err(e),
+        }
+    }
+
+    // Unique index on waffo_order_id — needed for fast lookups on every
+    // webhook event. NULLs are distinct in SQLite unique indexes, so free
+    // users (waffo_order_id IS NULL) are unaffected.
+    conn.execute_batch(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_order_id ON users(waffo_order_id)",
     )?;
 
     Ok(())
