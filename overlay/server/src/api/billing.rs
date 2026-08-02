@@ -143,6 +143,7 @@ pub fn parse_billing_config(app_state: &serde_json::Value) -> Option<BillingConf
             .get("environment")
             .and_then(serde_json::Value::as_str)
             .unwrap_or("test")
+            .trim()
             .to_string(),
         free_tier_daily_limit: b
             .get("freeTierDailyLimit")
@@ -158,11 +159,12 @@ pub fn parse_billing_config(app_state: &serde_json::Value) -> Option<BillingConf
             .get("checkoutSuccessUrl")
             .and_then(serde_json::Value::as_str)
             .unwrap_or("")
+            .trim()
             .to_string(),
         language: b
             .get("language")
             .and_then(serde_json::Value::as_str)
-            .map(ToOwned::to_owned),
+            .map(|s| s.trim().to_owned()),
     })
 }
 
