@@ -212,8 +212,14 @@ echo "==> 验证远端二进制是 musl 静态"
 "${SSH[@]}" "$SSH_HOST" "file ${SERVER_REPO}/overlay/cli/rust/target/release/llm-wiki | head -1"
 
 # ─── 写 systemd unit ───────────────────────────────────────
-echo "==> 写 systemd unit"
-"${SSH[@]}" "$SSH_HOST" "cat > /etc/systemd/system/llm-wiki-server.service" <<UNIT
+# SKIP_SYSTEMD=1 时只生成 unit 文件到仓库目录（供无 sudo 的用户手动安装），
+# 不写 /etc/systemd、不重启服务（例如 ecs199 的 li 用户需要 sudo 密码）。
+UNIT_TARGET="/etc/systemd/system/llm-wiki-server.service"
+if [[ "${SKIP_SYSTEMD:-0}" == "1" ]]; then
+  UNIT_TARGET="${SERVER_REPO}/llm-wiki-server.service"
+fi
+echo "==> 写 systemd unit → ${UNIT_TARGET}"
+"${SSH[@]}" "$SSH_HOST" "cat > ${UNIT_TARGET}" <<UNIT
 [Unit]
 Description=llm_wiki-server (HTTP read-only)
 After=network.target
@@ -245,23 +251,31 @@ StandardError=append:/var/log/llm-wiki-server.log
 WantedBy=multi-user.target
 UNIT
 
-# ─── 启动服务 ─────────────────────────────────────────────
-echo "==> 启动服务"
-"${SSH[@]}" "$SSH_HOST" "systemctl daemon-reload && \
-  systemctl enable llm-wiki-server && \
-  systemctl restart llm-wiki-server && \
-  sleep 2 && \
-  systemctl status llm-wiki-server --no-pager | head -15"
+if [[ "${SKIP_SYSTEMD:-0}" != "1" ]]; then
+  # ─── 启动服务 ─────────────────────────────────────────────
+  echo "==> 启动服务"
+  "${SSH[@]}" "$SSH_HOST" "systemctl daemon-reload && \
+    systemctl enable llm-wiki-server && \
+    systemctl restart llm-wiki-server && \
+    sleep 2 && \
+    systemctl status llm-wiki-server --no-pager | head -15"
 
-# ─── 验证 HTTP ─────────────────────────────────────────────
-echo "==> 验证 HTTP API"
-sleep 1
-"${SSH[@]}" "$SSH_HOST" "curl -sS -H 'Authorization: Bearer ${SERVER_TOKEN}' \
-  http://127.0.0.1:${SERVER_PORT}/api/v1/health && echo"
-"${SSH[@]}" "$SSH_HOST" "curl -sS -H 'Authorization: Bearer ${SERVER_TOKEN}' \
-  http://127.0.0.1:${SERVER_PORT}/api/v1/projects | head -c 400 && echo"
+  # ─── 验证 HTTP ─────────────────────────────────────────────
+  echo "==> 验证 HTTP API"
+  sleep 1
+  "${SSH[@]}" "$SSH_HOST" "curl -sS -H 'Authorization: Bearer ${SERVER_TOKEN}' \
+    http://127.0.0.1:${SERVER_PORT}/api/v1/health && echo"
+  "${SSH[@]}" "$SSH_HOST" "curl -sS -H 'Authorization: Bearer ${SERVER_TOKEN}' \
+    http://127.0.0.1:${SERVER_PORT}/api/v1/projects | head -c 400 && echo"
 
-echo "==> 完成"
-echo "  内网: http://127.0.0.1:${SERVER_PORT}/"
-echo "  公网: 需配合 Cloudflare Tunnel（见 docs/部署-ECS与Tunnel.md）"
-echo "  日志: ssh ${SSH_ARGS[*]} ${SSH_HOST} 'journalctl -u llm-wiki-server -f'"
+  echo "==> 完成"
+  echo "  内网: http://127.0.0.1:${SERVER_PORT}/"
+  echo "  公网: 需配合 Cloudflare Tunnel（见 docs/部署-ECS与Tunnel.md）"
+  echo "  日志: ssh ${SSH_ARGS[*]} ${SSH_HOST} 'journalctl -u llm-wiki-server -f'"
+else
+  echo "==> 文件部署完成（SKIP_SYSTEMD=1，未写 /etc、未启动）"
+  echo "    手动安装 systemd（在目标服务器上执行，需 sudo）："
+  echo "      sudo cp ${SERVER_REPO}/llm-wiki-server.service /etc/systemd/system/"
+  echo "      sudo systemctl daemon-reload"
+  echo "      sudo systemctl enable --now llm-wiki-server"
+fi
