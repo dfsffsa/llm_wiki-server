@@ -58,8 +58,8 @@ Resend 会给你几条 DNS 记录，**逐条加到你域名的 DNS 解析里**�
   "port": 587,
   "user": "resend",
   "pass": "${SMTP_PASS}",
-  "from": "LLM Wiki <noreply@yourdomain.com>",
-  "publicBaseUrl": "https://wiki.yourdomain.com"
+  "from": "DocuChat <noreply@sship.online>",
+  "publicBaseUrl": "https://www.sship.online"
 }
 ```
 
@@ -71,8 +71,8 @@ Resend 会给你几条 DNS 记录，**逐条加到你域名的 DNS 解析里**�
 | `port` | `587` | STARTTLS（代码默认，兼容） |
 | `user` | `resend` | **字面量 `resend`**，不是你的邮箱（Resend 规定） |
 | `pass` | `${SMTP_PASS}` | 用占位符，环境变量注入真实 API Key `re_...`（见下）。**不要写死进 JSON** |
-| `from` | `LLM Wiki <noreply@yourdomain.com>` | 格式 `显示名 <本地部分@你的已验证域名>`。域名必须与第 2 步验证一致，否则 Resend 拒发 |
-| `publicBaseUrl` | `https://wiki.yourdomain.com` | 站点公网地址，用于拼重置链接 `https://wiki.yourdomain.com/reset-password?token=...` |
+| `from` | `DocuChat <noreply@sship.online>` | 格式 `显示名 <本地部分@你的已验证域名>`。域名必须与第 2 步验证一致，否则 Resend 拒发 |
+| `publicBaseUrl` | `https://www.sship.online` | 站点公网地址，用于拼重置链接 `https://www.sship.online/reset-password?token=...` |
 
 ### 密钥注入（systemd）
 

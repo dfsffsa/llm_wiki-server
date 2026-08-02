@@ -1,6 +1,7 @@
 # 远端服务器 ingest runbook
 
 > 适用：希望在**阿里云 ECS (47.103.39.152)** 上做 wiki ingest，而不是在本地。
+> 注意：**ecs199（腾讯 170.106.132.196）未装 node**，远端 ingest 暂不可用（需要 `sudo apt install nodejs npm`）；本文以 ecs99 为例。
 > 上下文：这个仓库的默认工作流是"本地 ingest + rsync wiki 数据到远端"（见 [CLAUDE.md](../CLAUDE.md) + [日常运维.md §7](./日常运维.md)）。本 runbook 覆盖另一个场景——**直接在远端跑 ingest**。
 > 关键参考：[CLAUDE.md](../CLAUDE.md) · [部署-低配ECS一键脚本.md](./部署-低配ECS一键脚本.md) · [日常运维.md](./日常运维.md)
 
@@ -27,7 +28,7 @@
 |------|--------|
 | `/root/llm_wiki-server/overlay/cli/rust/target/release/llm-wiki` | CLI 二进制（50 MB, musl static-pie） |
 | `/root/llm_wiki-server/scripts/llm-wiki` | bash wrapper（364 B，自动设 `LLM_WIKI_REPO`） |
-| `/root/llm_wiki-server/overlay/config/server.local.json` | 含真实 `LLM_API_KEY`，chmod 600（`PLACEHOLDER_FILL_ON_SERVER` 已被 sed 替换） |
+| `/root/llm_wiki-server/overlay/config/server.local.json` | 含真实 LLM key，chmod 600（deploy-ecs.sh 用 `CONFIG_LOCAL=` 指定 per-server 真实配置上传） |
 | `/root/llm_wiki-server/overlay/cli/node/node_modules/tsx` | tsx 运行时（devDep，但 `npm ci` 没省） |
 | `/root/llm_wiki-server/upstream/node_modules/` | zustand / milkdown 等（**ingest** 子进程要；chat 已是纯 Rust，不需要） |
 | `/root/llm_wiki_projects/<项目>/` | wiki 数据，每个项目有 `wiki/` `raw/sources/` `purpose.md` 等 |
@@ -43,7 +44,7 @@
 源材料放 `raw/sources/`，ingest 时按 `wiki/sources/<同名>.md` 是否存在决定 SKIP 或处理。
 
 ```bash
-SSHHOME=/home/ab/cross-device-syncer/ssh-tunnels
+SSHHOME=/home/li/cross-device-syncer/ssh-tunnels
 SSH="$SSHHOME/ecs99-connect-22022.sh"
 
 # 单文件 scp
@@ -83,7 +84,7 @@ SSH="ssh -p 22022 root@47.103.39.152"
 ```
 [ingest] project=/root/llm_wiki_projects/ParentingBooks
 [ingest] source=/root/llm_wiki_projects/ParentingBooks/raw/sources/<source>.md
-[ingest] model=MiniMax-M2.7
+[ingest] model=deepseek-v4-flash
 [ingest] done — N wiki file(s) written
   /root/llm_wiki_projects/ParentingBooks/wiki/sources/<source>.md
   /root/llm_wiki_projects/ParentingBooks/wiki/concepts/...
@@ -129,9 +130,10 @@ SSH="ssh -p 22022 root@47.103.39.152"
   "apiConfig": { "enabled": true, "token": "minmax2.7", ... },
   "llmConfig": {
     "provider": "custom",
-    "model": "MiniMax-M2.7",
-    "customEndpoint": "https://api.minimaxi.com/anthropic",
-    "apiKey": "sk-cp-...真实密钥...已注入...",
+    "model": "deepseek-v4-flash",
+    "customEndpoint": "https://ark.cn-beijing.volces.com/api/coding/v3/chat/completions",
+    "apiKey": "ark-...真实密钥...已注入...",
+    "apiMode": "chat_completions",
     ...
   },
   "embeddingConfig": { ... }
@@ -192,7 +194,7 @@ SSH="ssh -p 22022 root@47.103.39.152"
 # ./scripts/remote-ingest.sh <project-relative-path> <source-filename>
 # 例: ./scripts/remote-ingest.sh ParentingBooks 01-辅食添加.md
 set -euo pipefail
-SSHHOME=/home/ab/cross-device-syncer/ssh-tunnels
+SSHHOME=/home/li/cross-device-syncer/ssh-tunnels
 SSH="$SSHHOME/ecs99-connect-22022.sh"
 PROJECT="${1:?project name, e.g. ParentingBooks}"
 SOURCE="${2:?source filename, e.g. 01-辅食添加.md}"
