@@ -74,9 +74,15 @@ pub fn serve_file(root: &Path, rel: &str) -> Option<Response<std::io::Cursor<Vec
     if let Some(mime) = mime_for_path(&file_path) {
         let _ = response.add_header(Header::from_bytes("Content-Type", mime).ok()?);
     }
-    let _ = response.add_header(
-        Header::from_bytes("Cache-Control", "public, max-age=3600").ok()?,
-    );
+    // i18n.js is the single copy source — slogan/button text changes should
+    // propagate on refresh, not sit in a 1-hour cache. Everything else keeps
+    // the normal cache policy.
+    let cache = if rel == "i18n.js" {
+        "no-cache"
+    } else {
+        "public, max-age=3600"
+    };
+    let _ = response.add_header(Header::from_bytes("Cache-Control", cache).ok()?);
     Some(response)
 }
 

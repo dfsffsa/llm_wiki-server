@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DocuChat - AI智能知识库问答</title>
-  <meta name="description" content="DocuChat是AI驱动的智能知识库问答平台，让育儿知识和职场文档触手可及。">
+  <title>DocuChat</title>
+  <meta name="description" content="DocuChat是AI驱动的智能知识库问答平台，让育儿知识和职场文档触手可及。" data-i18n-meta-content="home.metaDesc">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/i18n.js" defer></script>
   <script>
     tailwind.config = {
       theme: {
@@ -75,20 +76,21 @@
       <div class="flex justify-between items-center h-16">
         <!-- Logo -->
         <div class="flex items-center">
-          <a href="/" class="text-2xl font-bold text-primary-600">DocuChat</a>
+          <a href="/" class="text-2xl font-bold text-primary-600" data-i18n="brand.name">DocuChat</a>
         </div>
-        
+
         <!-- 桌面端菜单 -->
         <div class="hidden md:flex items-center space-x-8">
-          <a href="#features" class="text-gray-600 hover:text-primary-600 transition-colors">功能</a>
-          <a href="#pricing" class="text-gray-600 hover:text-primary-600 transition-colors">定价</a>
-          <a href="/docs" class="text-gray-600 hover:text-primary-600 transition-colors">帮助</a>
+          <a href="#features" class="text-gray-600 hover:text-primary-600 transition-colors" data-i18n="nav.features">功能</a>
+          <a href="#pricing" class="text-gray-600 hover:text-primary-600 transition-colors" data-i18n="nav.pricing">定价</a>
+          <a href="/docs" class="text-gray-600 hover:text-primary-600 transition-colors" data-i18n="nav.help">帮助</a>
         </div>
-        
+
         <!-- 按钮组 -->
         <div class="flex items-center space-x-4">
-          <a href="/login" class="text-gray-600 hover:text-primary-600 transition-colors font-medium">登录</a>
-          <a href="/register" class="bg-primary-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/30">免费试用</a>
+          <span data-i18n-toggle></span>
+          <a href="/login" class="text-gray-600 hover:text-primary-600 transition-colors font-medium" data-i18n="nav.login">登录</a>
+          <a href="/register" class="bg-primary-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/30" data-i18n="nav.trial">免费试用</a>
         </div>
         
         <!-- 移动端菜单按钮 -->
@@ -103,9 +105,10 @@
     <!-- 移动端菜单 -->
     <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
       <div class="px-4 py-4 space-y-3">
-        <a href="#features" class="block text-gray-600 hover:text-primary-600">功能</a>
-        <a href="#pricing" class="block text-gray-600 hover:text-primary-600">定价</a>
-        <a href="/docs" class="block text-gray-600 hover:text-primary-600">帮助</a>
+        <span data-i18n-toggle class="block"></span>
+        <a href="#features" class="block text-gray-600 hover:text-primary-600" data-i18n="nav.features">功能</a>
+        <a href="#pricing" class="block text-gray-600 hover:text-primary-600" data-i18n="nav.pricing">定价</a>
+        <a href="/docs" class="block text-gray-600 hover:text-primary-600" data-i18n="nav.help">帮助</a>
       </div>
     </div>
   </nav>
@@ -114,23 +117,23 @@
   <section class="hero-gradient pt-24 pb-16 md:pt-32 md:pb-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center max-w-4xl mx-auto">
-        <!-- 标题 -->
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 animate-fade-in-up">
+        <!-- 标题（slogan，唯一 key：brand.tagline） -->
+        <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 animate-fade-in-up" data-i18n-html="brand.tagline">
           让知识库<span class="text-primary-600">为你工作</span>
         </h1>
-        
+
         <!-- 副标题 -->
-        <p class="text-lg md:text-xl text-gray-600 mb-8 animate-fade-in-up animation-delay-200">
+        <p class="text-lg md:text-xl text-gray-600 mb-8 animate-fade-in-up animation-delay-200" data-i18n-html="hero.subtitle">
           AI驱动的智能问答，育儿知识和职场文档触手可及。<br>
           上传文档，立即获得精准回答。
         </p>
-        
+
         <!-- CTA按钮 -->
         <div class="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up animation-delay-400">
-          <a href="/register" class="bg-primary-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-primary-700 transition-all shadow-xl shadow-primary-600/30 hover:shadow-2xl hover:shadow-primary-600/40">
+          <a href="/register" class="bg-primary-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-primary-700 transition-all shadow-xl shadow-primary-600/30 hover:shadow-2xl hover:shadow-primary-600/40" data-i18n="hero.cta.start">
             免费开始
           </a>
-          <a href="#pricing" class="bg-white text-primary-600 px-8 py-4 rounded-xl font-semibold text-lg border-2 border-primary-200 hover:border-primary-400 transition-all">
+          <a href="#pricing" class="bg-white text-primary-600 px-8 py-4 rounded-xl font-semibold text-lg border-2 border-primary-200 hover:border-primary-400 transition-all" data-i18n="hero.cta.pricing">
             查看定价
           </a>
         </div>
@@ -152,7 +155,7 @@
               <div class="aspect-video bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
                 <div class="text-center p-8">
                   <div class="text-6xl mb-4">💬</div>
-                  <p class="text-gray-500 text-lg">产品截图展示区</p>
+                  <p class="text-gray-500 text-lg" data-i18n="hero.screenshot">产品截图展示区</p>
                 </div>
               </div>
             </div>
@@ -166,60 +169,60 @@
   <section id="use-cases" class="py-16 md:py-24 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">为谁设计？</h2>
-        <p class="text-gray-600 text-lg">无论你是育儿达人还是职场精英，DocuChat都能帮你高效管理知识</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4" data-i18n="use-cases.title">为谁设计？</h2>
+        <p class="text-gray-600 text-lg" data-i18n="use-cases.subtitle">无论你是育儿达人还是职场精英，DocuChat都能帮你高效管理知识</p>
       </div>
-      
+
       <!-- 场景切换Tabs -->
       <div class="flex justify-center mb-8">
         <div class="bg-gray-100 rounded-lg p-1 inline-flex">
-          <button id="tab-parenting" class="tab-btn px-6 py-3 rounded-lg font-medium bg-primary-600 text-white transition-all">
+          <button id="tab-parenting" class="tab-btn px-6 py-3 rounded-lg font-medium bg-primary-600 text-white transition-all" data-i18n="use-cases.tab.parenting">
             👶 育儿人士
           </button>
-          <button id="tab-work" class="tab-btn px-6 py-3 rounded-lg font-medium text-gray-600 hover:text-gray-900 transition-all">
+          <button id="tab-work" class="tab-btn px-6 py-3 rounded-lg font-medium text-gray-600 hover:text-gray-900 transition-all" data-i18n="use-cases.tab.work">
             💼 职场人士
           </button>
         </div>
       </div>
-      
+
       <!-- 育儿场景 -->
       <div id="content-parenting" class="tab-content">
         <div class="grid md:grid-cols-3 gap-8">
           <div class="bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl p-6 card-hover">
             <div class="text-4xl mb-4">📚</div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">育儿知识库</h3>
-            <p class="text-gray-600">整合育儿书籍、专家建议、经验分享，一个问题找到所有答案。</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="use-cases.parenting.kb.title">育儿知识库</h3>
+            <p class="text-gray-600" data-i18n="use-cases.parenting.kb.desc">整合育儿书籍、专家建议、经验分享，一个问题找到所有答案。</p>
           </div>
           <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-6 card-hover">
             <div class="text-4xl mb-4">🎓</div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">教育方法</h3>
-            <p class="text-gray-600">蒙特梭利、瑞吉欧、华德福...快速检索适合你家的教育理念。</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="use-cases.parenting.edu.title">教育方法</h3>
+            <p class="text-gray-600" data-i18n="use-cases.parenting.edu.desc">蒙特梭利、瑞吉欧、华德福...快速检索适合你家的教育理念。</p>
           </div>
           <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 card-hover">
             <div class="text-4xl mb-4">🏥</div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">健康护理</h3>
-            <p class="text-gray-600">儿童常见病、疫苗接种、营养搭配，专业信息触手可及。</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="use-cases.parenting.health.title">健康护理</h3>
+            <p class="text-gray-600" data-i18n="use-cases.parenting.health.desc">儿童常见病、疫苗接种、营养搭配，专业信息触手可及。</p>
           </div>
         </div>
       </div>
-      
+
       <!-- 职场场景 -->
       <div id="content-work" class="tab-content hidden">
         <div class="grid md:grid-cols-3 gap-8">
           <div class="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 card-hover">
             <div class="text-4xl mb-4">📁</div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">项目文档</h3>
-            <p class="text-gray-600">需求文档、会议记录、技术方案，团队知识一键检索。</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="use-cases.work.docs.title">项目文档</h3>
+            <p class="text-gray-600" data-i18n="use-cases.work.docs.desc">需求文档、会议记录、技术方案，团队知识一键检索。</p>
           </div>
           <div class="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-6 card-hover">
             <div class="text-4xl mb-4">📝</div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">技能笔记</h3>
-            <p class="text-gray-600">学习笔记、最佳实践、代码片段，打造个人知识体系。</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="use-cases.work.notes.title">技能笔记</h3>
+            <p class="text-gray-600" data-i18n="use-cases.work.notes.desc">学习笔记、最佳实践、代码片段，打造个人知识体系。</p>
           </div>
           <div class="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-6 card-hover">
             <div class="text-4xl mb-4">⚡</div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">工作流程</h3>
-            <p class="text-gray-600">SOP、操作手册、常见问题，新员工快速上手。</p>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="use-cases.work.flow.title">工作流程</h3>
+            <p class="text-gray-600" data-i18n="use-cases.work.flow.desc">SOP、操作手册、常见问题，新员工快速上手。</p>
           </div>
         </div>
       </div>
@@ -230,45 +233,45 @@
   <section id="features" class="py-16 md:py-24 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">核心功能</h2>
-        <p class="text-gray-600 text-lg">强大而简洁，让知识管理变得轻松</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4" data-i18n="features.title">核心功能</h2>
+        <p class="text-gray-600 text-lg" data-i18n="features.subtitle">强大而简洁，让知识管理变得轻松</p>
       </div>
-      
+
       <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
         <!-- AI问答 -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover">
           <div class="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mb-4">
             <span class="text-3xl">🤖</span>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">AI智能问答</h3>
-          <p class="text-gray-600">自然语言提问，AI理解上下文，给出精准回答。</p>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="features.qa.title">AI智能问答</h3>
+          <p class="text-gray-600" data-i18n="features.qa.desc">自然语言提问，AI理解上下文，给出精准回答。</p>
         </div>
-        
+
         <!-- 全文搜索 -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover">
           <div class="w-14 h-14 bg-accent-100 rounded-xl flex items-center justify-center mb-4">
             <span class="text-3xl">🔍</span>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">全文搜索</h3>
-          <p class="text-gray-600">关键词检索整个知识库，毫秒级响应。</p>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="features.search.title">全文搜索</h3>
+          <p class="text-gray-600" data-i18n="features.search.desc">关键词检索整个知识库，毫秒级响应。</p>
         </div>
-        
+
         <!-- 知识图谱 -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover">
           <div class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
             <span class="text-3xl">🕸️</span>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">知识图谱</h3>
-          <p class="text-gray-600">可视化文档关联，发现隐藏的知识网络。</p>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="features.graph.title">知识图谱</h3>
+          <p class="text-gray-600" data-i18n="features.graph.desc">可视化文档关联，发现隐藏的知识网络。</p>
         </div>
-        
+
         <!-- 安全私密 -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover">
           <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mb-4">
             <span class="text-3xl">🔒</span>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">安全私密</h3>
-          <p class="text-gray-600">数据加密存储，隐私保护，只有你能访问。</p>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="features.security.title">安全私密</h3>
+          <p class="text-gray-600" data-i18n="features.security.desc">数据加密存储，隐私保护，只有你能访问。</p>
         </div>
       </div>
     </div>
@@ -278,39 +281,39 @@
   <section class="py-16 md:py-24 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">三步开始</h2>
-        <p class="text-gray-600 text-lg">简单几步，即可拥有自己的AI知识库</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4" data-i18n="steps.title">三步开始</h2>
+        <p class="text-gray-600 text-lg" data-i18n="steps.subtitle">简单几步，即可拥有自己的AI知识库</p>
       </div>
-      
+
       <div class="grid md:grid-cols-3 gap-8 relative">
         <!-- 连接线（桌面端） -->
         <div class="hidden md:block absolute top-24 left-1/6 right-1/6 h-0.5 bg-gradient-to-r from-primary-200 via-primary-400 to-primary-200"></div>
-        
+
         <!-- 步骤1 -->
         <div class="text-center relative">
           <div class="w-16 h-16 bg-primary-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 relative z-10 shadow-lg shadow-primary-600/30">
             1
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">上传文档</h3>
-          <p class="text-gray-600">支持PDF、Word、Markdown等多种格式</p>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="steps.1.title">上传文档</h3>
+          <p class="text-gray-600" data-i18n="steps.1.desc">支持PDF、Word、Markdown等多种格式</p>
         </div>
-        
+
         <!-- 步骤2 -->
         <div class="text-center relative">
           <div class="w-16 h-16 bg-primary-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 relative z-10 shadow-lg shadow-primary-600/30">
             2
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">AI自动整理</h3>
-          <p class="text-gray-600">AI分析内容，建立索引，生成知识图谱</p>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="steps.2.title">AI自动整理</h3>
+          <p class="text-gray-600" data-i18n="steps.2.desc">AI分析内容，建立索引，生成知识图谱</p>
         </div>
-        
+
         <!-- 步骤3 -->
         <div class="text-center relative">
           <div class="w-16 h-16 bg-primary-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 relative z-10 shadow-lg shadow-primary-600/30">
             3
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">智能问答</h3>
-          <p class="text-gray-600">用自然语言提问，获取精准回答</p>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="steps.3.title">智能问答</h3>
+          <p class="text-gray-600" data-i18n="steps.3.desc">用自然语言提问，获取精准回答</p>
         </div>
       </div>
     </div>
@@ -320,87 +323,87 @@
   <section id="pricing" class="py-16 md:py-24 bg-gradient-to-br from-primary-50 to-blue-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">简单透明的定价</h2>
-        <p class="text-gray-600 text-lg">选择适合你的方案</p>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4" data-i18n="pricing.title">简单透明的定价</h2>
+        <p class="text-gray-600 text-lg" data-i18n="pricing.subtitle">选择适合你的方案</p>
       </div>
-      
+
       <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         <!-- 免费版 -->
         <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">免费版</h3>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="pricing.free.name">免费版</h3>
           <div class="mb-6">
             <span class="text-4xl font-bold text-gray-900">$0</span>
-            <span class="text-gray-500">/永久</span>
+            <span class="text-gray-500" data-i18n="pricing.free.period">/永久</span>
           </div>
           <ul class="space-y-3 mb-8">
             <li class="flex items-center text-gray-600">
               <svg class="w-5 h-5 text-accent-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
               </svg>
-              每天3个AI问题
+              <span data-i18n="pricing.free.questions">每天3个AI问题</span>
             </li>
             <li class="flex items-center text-gray-600">
               <svg class="w-5 h-5 text-accent-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
               </svg>
-              全文搜索
+              <span data-i18n="pricing.free.search">全文搜索</span>
             </li>
             <li class="flex items-center text-gray-600">
               <svg class="w-5 h-5 text-accent-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
               </svg>
-              知识图谱
+              <span data-i18n="pricing.free.graph">知识图谱</span>
             </li>
           </ul>
-          <a href="/register" class="block text-center py-3 px-6 border-2 border-primary-600 text-primary-600 rounded-xl font-semibold hover:bg-primary-50 transition-colors">
+          <a href="/register" class="block text-center py-3 px-6 border-2 border-primary-600 text-primary-600 rounded-xl font-semibold hover:bg-primary-50 transition-colors" data-i18n="pricing.free.cta">
             免费开始
           </a>
         </div>
-        
+
         <!-- 专业版 -->
         <div class="bg-white rounded-2xl p-8 shadow-lg border-2 border-primary-500 relative">
           <div class="absolute -top-4 left-1/2 -translate-x-1/2">
-            <span class="bg-primary-600 text-white text-sm font-semibold px-4 py-1 rounded-full">推荐</span>
+            <span class="bg-primary-600 text-white text-sm font-semibold px-4 py-1 rounded-full" data-i18n="pricing.pro.badge">推荐</span>
           </div>
-          <h3 class="text-xl font-semibold text-gray-900 mb-2">专业版</h3>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2" data-i18n="pricing.pro.name">专业版</h3>
           <div class="mb-6">
             <span class="text-4xl font-bold text-gray-900">$19</span>
-            <span class="text-gray-500">/月</span>
+            <span class="text-gray-500" data-i18n="pricing.pro.period">/月</span>
           </div>
           <ul class="space-y-3 mb-8">
             <li class="flex items-center text-gray-600">
               <svg class="w-5 h-5 text-accent-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
               </svg>
-              <span class="font-medium text-gray-900">无限AI问题</span>
+              <span class="font-medium text-gray-900" data-i18n="pricing.pro.unlimited">无限AI问题</span>
             </li>
             <li class="flex items-center text-gray-600">
               <svg class="w-5 h-5 text-accent-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
               </svg>
-              高级搜索
+              <span data-i18n="pricing.pro.advancedSearch">高级搜索</span>
             </li>
             <li class="flex items-center text-gray-600">
               <svg class="w-5 h-5 text-accent-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
               </svg>
-              优先支持
+              <span data-i18n="pricing.pro.priority">优先支持</span>
             </li>
             <li class="flex items-center text-gray-600">
               <svg class="w-5 h-5 text-accent-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
               </svg>
-              导出功能
+              <span data-i18n="pricing.pro.export">导出功能</span>
             </li>
           </ul>
-          <a href="/register" class="block text-center py-3 px-6 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/30">
+          <a href="/register" class="block text-center py-3 px-6 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/30" data-i18n="pricing.pro.cta">
             立即订阅
           </a>
         </div>
       </div>
-      
+
       <div class="text-center mt-8">
-        <a href="/pricing" class="text-primary-600 hover:text-primary-700 font-medium">
+        <a href="/pricing" class="text-primary-600 hover:text-primary-700 font-medium" data-i18n="pricing.fullCompare">
           查看完整功能对比 →
         </a>
       </div>
@@ -411,71 +414,71 @@
   <section class="py-16 md:py-24 bg-white">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">常见问题</h2>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4" data-i18n="faq.title">常见问题</h2>
       </div>
-      
+
       <div class="space-y-4">
         <!-- FAQ项1 -->
         <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
           <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
-            <span class="font-medium text-gray-900">免费版有什么限制？</span>
+            <span class="font-medium text-gray-900" data-i18n="faq.1.q">免费版有什么限制？</span>
             <svg class="faq-icon w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
-          <div class="faq-content hidden px-6 pb-4 text-gray-600">
+          <div class="faq-content hidden px-6 pb-4 text-gray-600" data-i18n="faq.1.a">
             免费版每天可以提出3个AI问题，支持全文搜索和知识图谱功能。如果需要更多问题次数或高级功能，可以升级到专业版。
           </div>
         </div>
-        
+
         <!-- FAQ项2 -->
         <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
           <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
-            <span class="font-medium text-gray-900">可以随时取消订阅吗？</span>
+            <span class="font-medium text-gray-900" data-i18n="faq.2.q">可以随时取消订阅吗？</span>
             <svg class="faq-icon w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
-          <div class="faq-content hidden px-6 pb-4 text-gray-600">
+          <div class="faq-content hidden px-6 pb-4 text-gray-600" data-i18n="faq.2.a">
             可以，随时可以在账户设置中取消订阅。取消后，当前订阅周期仍有效，到期后自动降级为免费版。
           </div>
         </div>
-        
+
         <!-- FAQ项3 -->
         <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
           <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
-            <span class="font-medium text-gray-900">支持哪些文档格式？</span>
+            <span class="font-medium text-gray-900" data-i18n="faq.3.q">支持哪些文档格式？</span>
             <svg class="faq-icon w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
-          <div class="faq-content hidden px-6 pb-4 text-gray-600">
+          <div class="faq-content hidden px-6 pb-4 text-gray-600" data-i18n="faq.3.a">
             支持PDF、Word文档、Markdown、纯文本等常见格式。未来会支持更多格式。
           </div>
         </div>
-        
+
         <!-- FAQ项4 -->
         <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
           <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
-            <span class="font-medium text-gray-900">我的数据安全吗？</span>
+            <span class="font-medium text-gray-900" data-i18n="faq.4.q">我的数据安全吗？</span>
             <svg class="faq-icon w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
-          <div class="faq-content hidden px-6 pb-4 text-gray-600">
+          <div class="faq-content hidden px-6 pb-4 text-gray-600" data-i18n="faq.4.a">
             完全安全。数据加密存储在服务器上，只有您本人可以访问。我们不会与第三方共享您的数据。
           </div>
         </div>
-        
+
         <!-- FAQ项5 -->
         <div class="faq-item border border-gray-200 rounded-xl overflow-hidden">
           <button class="faq-toggle w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors">
-            <span class="font-medium text-gray-900">有团队版或企业版吗？</span>
+            <span class="font-medium text-gray-900" data-i18n="faq.5.q">有团队版或企业版吗？</span>
             <svg class="faq-icon w-5 h-5 text-gray-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
             </svg>
           </button>
-          <div class="faq-content hidden px-6 pb-4 text-gray-600">
+          <div class="faq-content hidden px-6 pb-4 text-gray-600" data-i18n="faq.5.a">
             目前提供个人版，团队版正在开发中。如有企业需求，请联系我们获取定制方案。
           </div>
         </div>
@@ -486,9 +489,9 @@
   <!-- CTA区 -->
   <section class="py-16 md:py-24 bg-primary-600">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">准备好开始了吗？</h2>
-      <p class="text-primary-100 text-lg mb-8">免费注册，立即体验AI知识库的强大功能</p>
-      <a href="/register" class="inline-block bg-white text-primary-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-primary-50 transition-colors shadow-xl">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4" data-i18n="cta.title">准备好开始了吗？</h2>
+      <p class="text-primary-100 text-lg mb-8" data-i18n="cta.subtitle">免费注册，立即体验AI知识库的强大功能</p>
+      <a href="/register" class="inline-block bg-white text-primary-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-primary-50 transition-colors shadow-xl" data-i18n="cta.button">
         免费开始
       </a>
     </div>
@@ -500,35 +503,35 @@
       <div class="grid md:grid-cols-4 gap-8">
         <!-- 品牌 -->
         <div class="md:col-span-2">
-          <div class="text-2xl font-bold text-white mb-4">DocuChat</div>
-          <p class="text-gray-400 mb-4">AI驱动的智能知识库问答平台</p>
-          <p class="text-sm text-gray-500">让育儿知识和职场文档触手可及</p>
+          <div class="text-2xl font-bold text-white mb-4" data-i18n="brand.name">DocuChat</div>
+          <p class="text-gray-400 mb-4" data-i18n="footer.desc">AI驱动的智能知识库问答平台</p>
+          <p class="text-sm text-gray-500" data-i18n="footer.tagline">让育儿知识和职场文档触手可及</p>
         </div>
-        
+
         <!-- 产品 -->
         <div>
-          <h4 class="text-white font-semibold mb-4">产品</h4>
+          <h4 class="text-white font-semibold mb-4" data-i18n="footer.product">产品</h4>
           <ul class="space-y-2">
-            <li><a href="#features" class="hover:text-white transition-colors">功能</a></li>
-            <li><a href="#pricing" class="hover:text-white transition-colors">定价</a></li>
-            <li><a href="/docs" class="hover:text-white transition-colors">帮助中心</a></li>
+            <li><a href="#features" class="hover:text-white transition-colors" data-i18n="footer.product.feat">功能</a></li>
+            <li><a href="#pricing" class="hover:text-white transition-colors" data-i18n="footer.product.price">定价</a></li>
+            <li><a href="/docs" class="hover:text-white transition-colors" data-i18n="footer.product.help">帮助中心</a></li>
           </ul>
         </div>
-        
+
         <!-- 公司 -->
         <div>
-          <h4 class="text-white font-semibold mb-4">公司</h4>
+          <h4 class="text-white font-semibold mb-4" data-i18n="footer.company">公司</h4>
           <ul class="space-y-2">
-            <li><a href="/about" class="hover:text-white transition-colors">关于我们</a></li>
-            <li><a href="/privacy" class="hover:text-white transition-colors">隐私政策</a></li>
-            <li><a href="/terms" class="hover:text-white transition-colors">服务条款</a></li>
-            <li><a href="mailto:support@docuchat.com" class="hover:text-white transition-colors">联系我们</a></li>
+            <li><a href="/about" class="hover:text-white transition-colors" data-i18n="footer.company.about">关于我们</a></li>
+            <li><a href="/privacy" class="hover:text-white transition-colors" data-i18n="footer.company.privacy">隐私政策</a></li>
+            <li><a href="/terms" class="hover:text-white transition-colors" data-i18n="footer.company.terms">服务条款</a></li>
+            <li><a href="mailto:support@docuchat.com" class="hover:text-white transition-colors" data-i18n="footer.company.contact">联系我们</a></li>
           </ul>
         </div>
       </div>
-      
+
       <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
-        © 2024 DocuChat. All rights reserved.
+        <span data-i18n="footer.copyright">© 2024 DocuChat. All rights reserved.</span>
       </div>
     </div>
   </footer>

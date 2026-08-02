@@ -306,6 +306,8 @@ These will cost you hours if you don't know about them. Full list in [docs/部�
 | `--delete` on `upstream/dist/` | Vite emits hashed chunk files; old ones pile up forever | `sync-artifacts.sh` uses `--delete` for `dist/` (intentional) |
 | musl not actually static | `file` says `dynamically linked` or `ldd` lists glibc deps | Check `.cargo/config.toml` has `linker = "musl-gcc"` and `--target x86_64-unknown-linux-musl` is passed |
 | `upstream/src` not on server | ingest subprocess fails to import `@/lib/llm-client` (only relevant if you run ingest on the remote; chat is unaffected) | `deploy-ecs.sh` rsyncs `upstream/src` (with package.json + tsconfig.json for tsx path resolution) |
+| 静态文件 1h 缓存 | `serve_file`/`serve_static` 对所有静态文件发 `Cache-Control: max-age=3600`。改 landing HTML / JS（如 i18n.js 文案）后用户刷新看不到变化，被浏览器缓存 1 小时 | i18n.js 已特判 `no-cache`（文案源必须刷新即生效）；其他静态文件若需立即生效同样在 `serve_file` 特判 |
+| server 编译慢（LTO） | `release` profile 用 `-C lto` + `codegen-units=1`，改任一 server 源文件都触发整 crate 单单元重链接，**7-10 分钟**（哪怕 1 行改动） | 把多次 server 改动合并成一次编译；纯静态页/前端改动（overlay/static）无需重编译，可直接用旧二进制测试 |
 
 ## Quick Onboarding Checklist (fresh machine / fresh LLM session)
 
@@ -335,6 +337,7 @@ If any of these fail, the corresponding `docs/` section is the next place to loo
 - [docs/邮件配置-SMTP-Resend.md](./docs/邮件配置-SMTP-Resend.md) — **SMTP email** (Resend signup, SPF/DKIM/DMARC, smtp config, troubleshooting)
 - [docs/备份与恢复.md](./docs/备份与恢复.md) — **Backup & recovery** (auth DB hot backup, wiki rsync, restore drill)
 - [docs/站内审计.md](./docs/站内审计.md) — **In-house access audit** (non-Cloudflare visitor/request log, audit-summary.sh, privacy)
+- [docs/国际化-i18n.md](./docs/国际化-i18n.md) — **公开页面中英双语** (i18n.js 唯一文案源、改文案工作流、语言检测、错误码本地化)
 - [docs/远端服务器ingest.md](./docs/远端服务器ingest.md) — **Remote ingest runbook** (do ingest on ECS, agent-friendly quick start)
 - [docs/部署-低配ECS一键脚本.md](./docs/部署-低配ECS一键脚本.md) — **Low-spec ECS runbook** (deploy-ecs.sh / sync-artifacts.sh, pitfalls, ssh config)
 - [docs/低配机交叉编译CLI.md](./docs/低配机交叉编译CLI.md) — musl cross-compile details

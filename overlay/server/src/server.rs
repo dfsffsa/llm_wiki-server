@@ -256,6 +256,7 @@ fn dispatch_request(
             "/" => Some("index.html"),
             "/landing.css" => Some("landing.css"),
             "/landing.js" => Some("landing.js"),
+            "/i18n.js" => Some("i18n.js"),
             "/login" => Some("auth/login.html"),
             "/register" => Some("auth/register.html"),
             "/reset-password" => Some("auth/reset.html"),

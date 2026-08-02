@@ -3,38 +3,40 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>重置密码 — LLM Wiki</title>
+  <title>DocuChat</title>
   <link rel="stylesheet" href="/auth/auth.css">
+  <script src="/i18n.js" defer></script>
 </head>
 <body>
   <main class="card">
-    <h1>重置密码</h1>
+    <span data-i18n-toggle style="display:block;text-align:right;margin:-0.5rem 0 0.5rem;"></span>
+    <h1 data-i18n="auth.reset.title">重置密码</h1>
     <form id="step1">
-      <p style="font-size:0.85rem;color:#666;margin:0 0 0.5rem 0;">
+      <p style="font-size:0.85rem;color:#666;margin:0 0 0.5rem 0;" data-i18n="auth.reset.step1Hint">
         输入邮箱,我们会向你的邮箱发送重置 Token(若邮箱已注册)。
       </p>
-      <label>邮箱
+      <label><span data-i18n="auth.reset.email">邮箱</span>
         <input type="email" name="email" required>
       </label>
-      <button type="submit">发送重置链接</button>
+      <button type="submit" data-i18n="auth.reset.step1Button">发送重置链接</button>
       <div id="step1-msg" class="error" style="color:#16a34a"></div>
     </form>
 
     <form id="step2" style="display:none">
-      <p style="font-size:0.85rem;color:#666;margin:0 0 0.5rem 0;">
+      <p style="font-size:0.85rem;color:#666;margin:0 0 0.5rem 0;" data-i18n="auth.reset.step2Hint">
         粘贴邮件中的 token,然后输入新密码。
       </p>
-      <label>Token
+      <label><span data-i18n="auth.reset.token">Token</span>
         <input type="text" name="token" required>
       </label>
-      <label>新密码
+      <label><span data-i18n="auth.reset.newPassword">新密码</span>
         <input type="password" name="password" required minlength="8">
       </label>
-      <button type="submit">设置新密码</button>
+      <button type="submit" data-i18n="auth.reset.step2Button">设置新密码</button>
       <div id="step2-msg" class="error"></div>
     </form>
 
-    <p class="link"><a href="/login">返回登录</a></p>
+    <p class="link"><a href="/login" data-i18n="auth.reset.backToLogin">返回登录</a></p>
   </main>
 
   <script>
@@ -61,7 +63,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      m1.textContent = r.ok ? '若该邮箱已注册,你将收到一封带 token 的邮件' : '请求失败';
+      m1.textContent = r.ok ? I18N.t('auth.reset.msg.sent') : I18N.t('auth.reset.msg.failed');
       if (r.ok) s2.style.display = 'flex';
     });
 
@@ -76,7 +78,7 @@
       });
       if (r.ok) { location.href = '/login'; return; }
       const d = await r.json().catch(() => ({}));
-      m2.textContent = d.error?.message || '重置失败';
+      m2.textContent = I18N.localizeServerError(d.error?.code, d.error?.message || I18N.t('auth.reset.msg.resetFailed'));
     });
   </script>
 </body>

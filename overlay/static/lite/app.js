@@ -124,7 +124,7 @@ function renderSidebarUser() {
   if (uel) uel.textContent = state.user?.display_name || state.user?.email || "";
   if (usageEl && state.usage) {
     const remaining = Math.max(0, state.usage.limit - state.usage.used);
-    usageEl.textContent = `今日剩余 ${remaining}/${state.usage.limit}`;
+    usageEl.textContent = I18N.tpl("lite.usage.remaining", { used: remaining, limit: state.usage.limit });
     usageEl.classList.toggle("low", remaining <= Math.max(1, Math.floor(state.usage.limit * 0.2)));
   } else if (usageEl) {
     usageEl.textContent = "";
@@ -336,7 +336,7 @@ function initCitationCard() {
       const sources = window.__lastSources || [];
       const s = sources[idx];
       if (!s) { hideCard(); return; }
-      card.innerHTML = `<div class="citation-header"><span class="citation-num">[${idx + 1}]</span><span class="citation-title">${escapeHtml(s.title || s.path || "")}</span></div><div class="citation-snippet">${escapeHtml((s.snippet || s.content || "").slice(0, 200))}</div><a class="citation-link" href="/api/v1/projects/${encodeURIComponent(state.activeProject?.id || "")}/files/content?path=${encodeURIComponent(s.path || "")}" target="_blank">查看原文 →</a>`;
+      card.innerHTML = `<div class="citation-header"><span class="citation-num">[${idx + 1}]</span><span class="citation-title">${escapeHtml(s.title || s.path || "")}</span></div><div class="citation-snippet">${escapeHtml((s.snippet || s.content || "").slice(0, 200))}</div><a class="citation-link" href="/api/v1/projects/${encodeURIComponent(state.activeProject?.id || "")}/files/content?path=${encodeURIComponent(s.path || "")}" target="_blank">${escapeHtml(I18N.t("lite.sourceCard.view"))}</a>`;
       card.hidden = false;
       const rect = el.getBoundingClientRect();
       const top = rect.bottom + 6;
@@ -377,7 +377,7 @@ function renderSourceCards(bubble, sources) {
   window.__lastSources = sources;
   const wrap = document.createElement("div");
   wrap.className = "sources-grid";
-  let html = '<div class="sources-label">📎 参考来源</div>';
+  let html = '<div class="sources-label">' + escapeHtml(I18N.t("lite.sources.label")) + '</div>';
   for (let i = 0; i < sources.length; i++) {
     const r = sources[i];
     const title = r.title || r.path || "";
@@ -423,7 +423,7 @@ function renderEmptyState() {
   msgs.innerHTML = "";
   const welcome = document.createElement("div");
   welcome.className = "empty-state";
-  welcome.innerHTML = `<h2 class="empty-title">How can I help?</h2>` +
+  welcome.innerHTML = `<h2 class="empty-title">${escapeHtml(I18N.t("lite.empty.title"))}</h2>` +
     (state.activeProject?.starters?.length > 0
       ? `<div class="suggestion-list">` +
         state.activeProject.starters.map(s =>
@@ -459,12 +459,12 @@ async function doSearch(query) {
   if (!q || !state.activeProject) return;
   _lastQuery = q;
   const el = $("#search-results");
-  el.innerHTML = '<div class="search-status">正在搜索…</div>';
+  el.innerHTML = '<div class="search-status">' + escapeHtml(I18N.t("lite.searchStatus.searching")) + '</div>';
   try {
     const res = await apiPost(`/api/v1/projects/${encodeURIComponent(state.activeProject.id)}/search`, { query: q, topK: 30, includeContent: true });
     const data = await res.json();
     const results = data.results || [];
-    if (!results.length) { el.innerHTML = '<div class="search-status search-empty">未找到相关内容</div>'; return; }
+    if (!results.length) { el.innerHTML = '<div class="search-status search-empty">' + escapeHtml(I18N.t("lite.searchStatus.empty")) + '</div>'; return; }
     el.innerHTML = results.map((r, i) => {
       const snippet = r.snippet || r.content || "";
       const title = r.title || r.path || "";
@@ -472,7 +472,7 @@ async function doSearch(query) {
       const link = `/api/v1/projects/${encodeURIComponent(pid)}/files/content?path=${encodeURIComponent(r.path || "")}`;
       return `<div class="result-item"><h3 class="result-title"><a href="${link}" target="_blank">${escapeHtml(title)}</a></h3><p class="result-snippet">${highlightQuery(escapeHtml(snippet), q)}</p><div class="result-meta"><span class="meta-file">${escapeHtml(r.path || "")}</span></div></div>`;
     }).join("");
-  } catch { el.innerHTML = '<div class="search-status search-empty">搜索请求失败</div>'; }
+  } catch { el.innerHTML = '<div class="search-status search-empty">' + escapeHtml(I18N.t("lite.searchStatus.failed")) + '</div>'; }
 }
 
 function highlightQuery(text, q) {
@@ -537,7 +537,7 @@ function renderMessages(messages, opts = {}) {
       reasoning.id = "streaming-reasoning";
       reasoning.open = true;
       const summary = document.createElement("summary");
-      summary.textContent = "思考过程";
+      summary.textContent = I18N.t("lite.reasoning.title");
       reasoning.appendChild(summary);
       const reasoningText = document.createElement("div");
       reasoningText.className = "msg-reasoning-text";
@@ -549,7 +549,7 @@ function renderMessages(messages, opts = {}) {
       status.className = "stream-status";
       status.id = "stream-status";
       status.setAttribute("aria-live", "polite");
-      status.innerHTML = '<span class="stream-dots" aria-hidden="true"><i></i><i></i><i></i></span>正在回复…';
+      status.innerHTML = '<span class="stream-dots" aria-hidden="true"><i></i><i></i><i></i></span>' + escapeHtml(I18N.t("lite.streamStatus.replying"));
       stack.appendChild(status);
       row.appendChild(stack);
     } else { row.appendChild(bubble); }
@@ -610,12 +610,12 @@ function setComposerStreaming(active) {
   const composer = document.querySelector(".composer");
   if (active) {
     composer?.classList.add("is-streaming");
-    input.placeholder = "正在回复中，请稍候…";
+    input.placeholder = I18N.t("lite.composer.replying");
     input.disabled = true;
     btnSend.disabled = true;
   } else {
     composer?.classList.remove("is-streaming");
-    input.placeholder = "输入你的问题…";
+    input.placeholder = I18N.t("lite.composer.placeholder");
     input.disabled = false;
     btnSend.disabled = !input.value.trim() || !state.chatEnabled;
   }
@@ -631,7 +631,7 @@ async function renderHistoryList() {
   for (const c of here) {
     const li = document.createElement("li");
     li.className = "history-row";
-    li.innerHTML = `<button type="button" class="history-item${c.id === state.conversationId ? " active" : ""}" data-id="${c.id}"><span class="history-item-title">${escapeHtml(c.title)}</span></button><button type="button" class="history-del" data-id="${c.id}" aria-label="删除">&times;</button>`;
+    li.innerHTML = `<button type="button" class="history-item${c.id === state.conversationId ? " active" : ""}" data-id="${c.id}"><span class="history-item-title">${escapeHtml(c.title)}</span></button><button type="button" class="history-del" data-id="${c.id}" aria-label="${escapeHtml(I18N.t("lite.history.delete"))}">&times;</button>`;
     list.appendChild(li);
   }
   list.querySelectorAll(".history-item").forEach((b) => { b.addEventListener("click", () => selectConversation(b.dataset.id)); });
@@ -664,7 +664,7 @@ function abortActiveStream() {
 async function sendMessage(text) {
   const trimmed = text.trim();
   if (!trimmed || !state.activeProject || !state.chatEnabled) return;
-  if (state.usage && state.usage.used >= state.usage.limit) { alert("今日额度已用完,明日重置"); return; }
+  if (state.usage && state.usage.used >= state.usage.limit) { alert(I18N.t("lite.chat.quotaAlert")); return; }
   if (state.abortController) state.abortController.abort();
   state.abortController = new AbortController();
   const generation = ++state.sendGeneration;
@@ -680,7 +680,7 @@ async function sendMessage(text) {
   messages.push(assistant);
   renderMessages(messages, { streaming: true });
   setComposerStreaming(true);
-  updateStreamStatus("正在检索资料…");
+  updateStreamStatus(I18N.t("lite.streamStatus.searching"));
   appendMessageToServer(state.conversationId, "user", trimmed);
   const input = $("#input");
   input.value = "";
@@ -692,26 +692,26 @@ async function sendMessage(text) {
     const ctx = await buildContext(state.activeProject.id, trimmed);
     if (generation !== state.sendGeneration) return;
     state.lastSources = ctx.sources;
-    updateStreamStatus("正在思考…");
-    const systemParts = [`你是「${state.activeProject.title}」知识库助手，用简洁中文回答家长/职场新人的实际问题。`, "优先依据下方检索到的资料；若无相关资料，请诚实说明并给出通用建议。"];
+    updateStreamStatus(I18N.t("lite.streamStatus.thinking"));
+    const systemParts = [I18N.tpl("lite.systemPrompt.role", { title: state.activeProject.title }), I18N.t("lite.systemPrompt.noContext")];
     if (ctx.text) {
-      systemParts.push("\n--- 检索资料 ---\n" + ctx.text);
+      systemParts.push(I18N.t("lite.systemPrompt.contextLabel") + ctx.text);
       if (ctx.sources.length > 0) {
-        systemParts.push("回答时若引用具体资料，请在引用处标注对应的编号 [1][2] 等。");
+        systemParts.push(I18N.t("lite.systemPrompt.cite"));
       }
     }
     const historyForApi = messages.slice(0, -1).filter((m) => m.role === "user" || (m.role === "assistant" && m.content.trim().length > 0)).map((m) => ({ role: m.role, content: m.content }));
     const apiMessages = [{ role: "system", content: systemParts.join("\n") }, ...historyForApi];
     await streamChat(state.activeProject.id, apiMessages,
-      (token) => { if (firstAnswerToken) { firstAnswerToken = false; updateStreamStatus("正在生成回答…"); } assistant.content += token; streamPendingContent = assistant.content; scheduleStreamRender(); },
+      (token) => { if (firstAnswerToken) { firstAnswerToken = false; updateStreamStatus(I18N.t("lite.streamStatus.generating")); } assistant.content += token; streamPendingContent = assistant.content; scheduleStreamRender(); },
       (token) => { streamPendingReasoning += token; scheduleStreamRender(); },
       signal);
     if (generation !== state.sendGeneration) return;
-    if (!assistant.content) assistant.content = "（无回复内容）";
+    if (!assistant.content) assistant.content = I18N.t("lite.chat.noReply");
     appendMessageToServer(state.conversationId, "assistant", assistant.content);
   } catch (err) {
     if (generation !== state.sendGeneration) return;
-    if (isAbortError(err)) { aborted = true; if (timedOut && !assistant.content.trim()) { assistant.content = "回复超时，请稍后重试。"; assistant.error = true; } return; }
+    if (isAbortError(err)) { aborted = true; if (timedOut && !assistant.content.trim()) { assistant.content = I18N.t("lite.chat.timeout"); assistant.error = true; } return; }
     const msg = err instanceof Error ? err.message : String(err);
     assistant.content = msg;
     assistant.error = true;
@@ -743,14 +743,24 @@ async function init() {
     state.meta = metaRes;
     state.projects = (projectsRes.projects || []).map(mergeProject);
     state.chatEnabled = runtimeRes.chatEnabled !== false;
-    if (!state.chatEnabled) showBanner("问答功能暂不可用，请检查服务端 LLM 配置。");
-    if (!state.projects.length) showBanner("暂无可用知识库，请在服务端配置 projects。");
+    if (!state.chatEnabled) showBanner(I18N.t("lite.banner.chatDisabled"));
+    if (!state.projects.length) showBanner(I18N.t("lite.banner.noProjects"));
     renderProjectList();
     if (state.projects.length > 0) {
       await openProject(state.projects[0]);
     }
     renderSidebarUser();
-  } catch (err) { showBanner(`无法连接服务：${err instanceof Error ? err.message : err}`); }
+  } catch (err) { showBanner(I18N.tpl("lite.banner.connection", { msg: err instanceof Error ? err.message : err })); }
+  // 语言切换时刷新动态文本（用量、占位符、空态问候等）
+  document.addEventListener("i18n:changed", () => {
+    renderSidebarUser();
+    renderEmptyState();
+    const composer = document.querySelector(".composer");
+    if (composer && !composer.classList.contains("is-streaming")) {
+      const inputEl = $("#input");
+      if (inputEl) inputEl.placeholder = I18N.t("lite.composer.placeholder");
+    }
+  });
   // Sidebar actions
   $("#btn-new-chat").addEventListener("click", () => newConversation());
   $("#btn-search-sidebar")?.addEventListener("click", () => showSearch());
