@@ -348,6 +348,7 @@ If any of these fail, the corresponding `docs/` section is the next place to loo
 - [docs/备份与恢复.md](./docs/备份与恢复.md) — **Backup & recovery** (auth DB hot backup, wiki rsync, restore drill)
 - [docs/站内审计.md](./docs/站内审计.md) — **In-house access audit** (non-Cloudflare visitor/request log, audit-summary.sh, privacy)
 - [docs/国际化-i18n.md](./docs/国际化-i18n.md) — **公开页面中英双语** (i18n.js 唯一文案源、改文案工作流、语言检测、错误码本地化)
+- [docs/开发交接-2026-08-02.md](./docs/开发交接-2026-08-02.md) — **跨机器交接** (main 已合并 billing+audit+i18n、未完成部署、新机器上手、踩坑速查)
 - [docs/远端服务器ingest.md](./docs/远端服务器ingest.md) — **Remote ingest runbook** (do ingest on ECS, agent-friendly quick start)
 - [docs/部署-低配ECS一键脚本.md](./docs/部署-低配ECS一键脚本.md) — **Low-spec ECS runbook** (deploy-ecs.sh / sync-artifacts.sh, pitfalls, ssh config)
 - [docs/低配机交叉编译CLI.md](./docs/低配机交叉编译CLI.md) — musl cross-compile details
