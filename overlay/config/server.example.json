@@ -33,5 +33,17 @@
     "pass": "${SMTP_PASS}",
     "from": "DocuChat <noreply@sship.online>",
     "publicBaseUrl": "https://www.sship.online"
+  },
+  "billing": {
+    "enabled": true,
+    "waffoMerchantId": "${WAFFO_MERCHANT_ID}",
+    "waffoPrivateKey": "${WAFFO_PRIVATE_KEY}",
+    "proProductId": "${WAFFO_PRO_PRODUCT_ID}",
+    "webhookPublicKey": "${WAFFO_WEBHOOK_PUBLIC_KEY}",
+    "environment": "test",
+    "freeTierDailyLimit": 3,
+    "proTierDailyLimit": 10000,
+    "checkoutSuccessUrl": "https://www.sship.online/pricing?upgraded=1",
+    "language": "zh-Hans"
   }
 }

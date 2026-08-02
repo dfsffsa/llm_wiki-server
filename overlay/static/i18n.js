@@ -141,6 +141,9 @@
     'pricing.pro.priority':   { zh: '优先支持', en: 'Priority support' },
     'pricing.pro.export':     { zh: '导出功能', en: 'Export' },
     'pricing.pro.cta':        { zh: '立即订阅', en: 'Subscribe now' },
+    'pricing.pro.checkout.loading':  { zh: '正在跳转支付…', en: 'Redirecting to payment…' },
+    'pricing.pro.checkout.error':    { zh: '无法创建订单，请稍后再试', en: 'Could not create order, please try again later' },
+    'pricing.pro.checkout.network':  { zh: '网络错误，请稍后再试', en: 'Network error, please try again later' },
     'pricing.fullCompare':    { zh: '查看完整功能对比 →', en: 'View full feature comparison →' },
 
     // ── landing：FAQ ──

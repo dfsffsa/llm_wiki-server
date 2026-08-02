@@ -105,6 +105,8 @@ fn user_to_json(u: &llm_wiki_auth::User) -> Value {
         "email": u.email,
         "display_name": u.display_name,
         "is_admin": u.is_admin,
+        "plan": u.plan,
+        "plan_period_end": u.plan_period_end,
     })
 }
 
@@ -247,8 +249,15 @@ fn handle_me(
         Err(e) => return respond_err(request, &e),
     };
 
-    // Usage info (today, UTC).
-    let limit = state.daily_chat_limit() as i64;
+    // `user` already carries plan + period_end from the session lookup;
+    // avoid a second read of the same row.
+    let plan = user.plan.clone();
+    let period_end = user.plan_period_end;
+    let limit = crate::api::billing::resolve_daily_limit(
+        state.load_app_state().as_ref(),
+        &plan,
+        state.daily_chat_limit(),
+    );
     let date = today_utc();
     let used = auth.store().get_usage(user.id, &date).unwrap_or(0);
 
@@ -257,6 +266,7 @@ fn handle_me(
         200,
         json!({
             "user": user_to_json(&user),
+            "plan": { "name": plan, "periodEnd": period_end },
             "usage": { "used": used, "limit": limit, "date": date },
         }),
     );

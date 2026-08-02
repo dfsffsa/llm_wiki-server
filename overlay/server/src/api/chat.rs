@@ -155,7 +155,15 @@ pub fn try_handle_chat_sse(
     if let api::AuthOutcome::Cookie(user_id) = auth_outcome {
         if let Some(auth) = state.auth() {
             let date = today_utc_for_chat();
-            let limit = state.daily_chat_limit() as i64;
+            let plan = auth.store().get_plan(user_id).unwrap_or_else(|e| {
+                tracing::warn!(%user_id, error = %e, "plan lookup failed, falling back to free tier");
+                "free".to_string()
+            });
+            let limit = crate::api::billing::resolve_daily_limit(
+                state.load_app_state().as_ref(),
+                &plan,
+                state.daily_chat_limit(),
+            );
             // Atomic check-and-increment in one SQL statement (see
             // Store::try_increment_usage): closes the TOCTOU window that
             // separate get_usage + increment_usage had under concurrent

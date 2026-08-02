@@ -180,19 +180,6 @@ impl Store {
         Ok(())
     }
 
-    /// Atomically record a webhook event if not already present. Returns `true`
-    /// if THIS call inserted the row (caller should process the event), `false`
-    /// if it already existed (caller must skip — duplicate delivery).
-    pub fn try_record_webhook_event(&self, event_id: &str, event_type: &str, now: i64) -> Result<bool, AuthError> {
-        let conn = self.lock();
-        let changed = conn.execute(
-            "INSERT OR IGNORE INTO waffo_webhook_events (event_id, event_type, created_at)
-             VALUES (?1, ?2, ?3)",
-            params![event_id, event_type, now],
-        )?;
-        Ok(changed == 1)
-    }
-
     pub fn touch_user_seen(&self, id: i64, now: i64) -> Result<(), AuthError> {
         let conn = self.lock();
         conn.execute("UPDATE users SET last_seen_at = ?1 WHERE id = ?2", params![now, id])?;
@@ -887,14 +874,6 @@ mod tests {
         assert_eq!(u.id, uid);
         assert_eq!(u.plan, "pro");
         assert!(store.find_user_by_order_id("ORD_nope").unwrap().is_none());
-    }
-
-    #[test]
-    fn try_record_webhook_event_is_atomic() {
-        let store = open_test_store();
-        assert!(store.try_record_webhook_event("evt_9", "order.completed", 1000).unwrap());
-        // Second delivery: already present → false (skip processing)
-        assert!(!store.try_record_webhook_event("evt_9", "order.completed", 1000).unwrap());
     }
 
     #[test]

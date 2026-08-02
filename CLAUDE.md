@@ -118,6 +118,13 @@ Multi-user routes — active only when `LLM_WIKI_AUTH_DB` is set (cookie/bearer 
 | DELETE | `/api/v1/conversations/{id}` | Delete conversation |
 | GET/POST | `/api/v1/conversations/{id}/messages` | List / send chat messages |
 
+Billing routes — active only when `billing` config block is present (Waffo Pancake, see [docs/付款-Waffo-Pancake.md](./docs/付款-Waffo-Pancake.md)):
+
+| Method | Path | Handler |
+|--------|------|---------|
+| POST | `/api/v1/billing/checkout` | Create Waffo checkout session (cookie auth; `{plan:"pro"}` → `{checkoutUrl}`; 409 if already subscribed) |
+| POST | `/api/v1/billing/webhook` | Waffo webhook (RSA-SHA256 verified, raw body, idempotent) → updates per-user plan |
+
 ### Web Adapter (HTTP Mode)
 
 When `VITE_BACKEND=http`, Vite aliases redirect upstream imports to overlay:
@@ -150,6 +157,8 @@ When `VITE_BACKEND=http`, Vite aliases redirect upstream imports to overlay:
 | `LLM_WIKI_AUDIT_DIR` | Directory for in-house access audit log (`access-YYYY-MM-DD.jsonl`). Unset → auditing off (zero cost) |
 | `LLM_WIKI_AUDIT_RETENTION_DAYS` | Keep audit files this many days (default 30; pruned at startup) |
 | `RUST_LOG` | tracing log level (default `info`; e.g. `debug,llm_wiki_server=trace`) |
+| `billing` config block | Waffo Pancake: `waffoMerchantId`/`waffoPrivateKey`/`proProductId`/`webhookPublicKey`/`environment`/`freeTierDailyLimit`(3)/`proTierDailyLimit`(10000)/`checkoutSuccessUrl`/`language`. Present → per-plan chat quota + checkout/webhook routes; absent → global `LLM_WIKI_DAILY_CHAT_LIMIT` unchanged |
+| `WAFFO_MERCHANT_ID` / `WAFFO_PRIVATE_KEY` / `WAFFO_PRO_PRODUCT_ID` / `WAFFO_WEBHOOK_PUBLIC_KEY` | Waffo credentials, injected via `deploy-ecs.sh` sed into `server.local.json` (chmod 600). Unset `${VAR}` → billing fail-closed with a warn log |
 
 ## Wiki Project Structure
 
@@ -335,6 +344,7 @@ If any of these fail, the corresponding `docs/` section is the next place to loo
 - [overlay/static/lite/README.md](overlay/static/lite/README.md) — `/lite/` minimal QA page
 - [docs/日常运维.md](docs/日常运维.md) — Daily operations
 - [docs/邮件配置-SMTP-Resend.md](./docs/邮件配置-SMTP-Resend.md) — **SMTP email** (Resend signup, SPF/DKIM/DMARC, smtp config, troubleshooting)
+- [docs/付款-Waffo-Pancake.md](./docs/付款-Waffo-Pancake.md) — **Waffo 付款** (Pro 订阅: Dashboard 准备、billing 配置、webhook、e2e、排错、开发经验与坑、上线检查清单)
 - [docs/备份与恢复.md](./docs/备份与恢复.md) — **Backup & recovery** (auth DB hot backup, wiki rsync, restore drill)
 - [docs/站内审计.md](./docs/站内审计.md) — **In-house access audit** (non-Cloudflare visitor/request log, audit-summary.sh, privacy)
 - [docs/国际化-i18n.md](./docs/国际化-i18n.md) — **公开页面中英双语** (i18n.js 唯一文案源、改文案工作流、语言检测、错误码本地化)

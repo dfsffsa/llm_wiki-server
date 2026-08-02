@@ -8,7 +8,12 @@ use rsa::pkcs1::{DecodeRsaPrivateKey, DecodeRsaPublicKey};
 use rsa::pkcs8::LineEnding;
 use rsa::pkcs8::{DecodePrivateKey, DecodePublicKey};
 use rsa::{Pkcs1v15Sign, RsaPrivateKey, RsaPublicKey};
+use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
+use tiny_http::{Method, Request, StatusCode};
+
+use crate::api::{self, AuthOutcome};
+use crate::state::ServerState;
 
 pub fn now_secs() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -179,6 +184,18 @@ pub fn parse_billing_config(app_state: &serde_json::Value) -> Option<BillingConf
                 .map(|s| s.trim().to_owned()),
         })
     })();
+    if let Some(c) = &cfg {
+        if c.merchant_id.starts_with("${")
+            || c.private_key_pem.starts_with("${")
+            || c.pro_product_id.starts_with("${")
+            || c.webhook_public_key_pem.starts_with("${")
+        {
+            tracing::warn!(
+                "billing config contains unexpanded ${{VAR}} placeholder — WAFFO_* env vars not set; billing disabled"
+            );
+            return None;
+        }
+    }
     if cfg.is_none() {
         tracing::warn!("billing block present but required field missing or wrong type — billing disabled");
     }
@@ -262,7 +279,16 @@ pub fn process_webhook_event(
 ) -> Result<(), String> {
     let now = now_secs();
     match apply_event(event_type, data) {
-        PlanAction::Noop | PlanAction::KeepPro => Ok(()),
+        PlanAction::Noop => Ok(()),
+        PlanAction::KeepPro => {
+            if event_type == "subscription.past_due" {
+                tracing::warn!(
+                    order_id = %data.get("orderId").and_then(serde_json::Value::as_str).unwrap_or(""),
+                    "subscription past_due — payment failed, keeping pro in grace period"
+                );
+            }
+            Ok(())
+        }
         PlanAction::GrantPro { order_id, period_end } => {
             let uid = resolve_user_id(store, data)?.ok_or("cannot map webhook to a user")?;
             store
@@ -292,6 +318,198 @@ pub fn process_webhook_event(
             }
             Ok(())
         }
+    }
+}
+
+pub fn build_checkout_request_body(cfg: &BillingConfig, user_id: i64, email: &str, now: i64) -> Value {
+    let mut body = json!({
+        "productId": cfg.pro_product_id,
+        "productType": "subscription",
+        "currency": "USD",
+        "buyerEmail": email,
+        "successUrl": cfg.checkout_success_url,
+        "metadata": { "userId": user_id.to_string() },
+        "orderMerchantExternalId": format!("dllm-{user_id}-{now}"),
+    });
+    if let Some(lang) = &cfg.language {
+        body["language"] = Value::String(lang.clone());
+    }
+    body
+}
+
+/// Entry point from server.rs dispatch for `/api/v1/billing/*`.
+pub fn handle(
+    state: &ServerState,
+    method: &Method,
+    parts: &[&str],
+    body: &str,
+    headers: &[(String, String)],
+    request: Request,
+) {
+    match (method, parts) {
+        (&Method::Post, ["billing", "checkout"]) => handle_checkout(state, body, headers, request),
+        (&Method::Post, ["billing", "webhook"]) => handle_webhook(state, body, headers, request),
+        _ => api::respond_json(
+            request,
+            404,
+            json!({ "error": { "code": "not_found", "message": "Not found" } }),
+        ),
+    }
+}
+
+fn handle_checkout(
+    state: &ServerState,
+    body: &str,
+    headers: &[(String, String)],
+    request: Request,
+) {
+    let Some(auth) = state.auth() else {
+        api::respond_json(request, 503, json!({"ok": false, "error": "auth disabled"}));
+        return;
+    };
+    let Some(cfg) = state.load_app_state().as_ref().and_then(parse_billing_config) else {
+        api::respond_json(request, 503, json!({"ok": false, "error": "billing not configured"}));
+        return;
+    };
+    let Some(AuthOutcome::Cookie(user_id)) = api::authorize(state, "", headers) else {
+        api::respond_json(
+            request,
+            401,
+            json!({ "error": { "code": "not_authenticated", "message": "需要登录" } }),
+        );
+        return;
+    };
+    // 只支持 pro 套餐
+    let parsed: Value = serde_json::from_str(body).unwrap_or(Value::Null);
+    if parsed.get("plan").and_then(Value::as_str) != Some("pro") {
+        api::respond_json(request, 400, json!({"ok": false, "error": "unsupported plan"}));
+        return;
+    }
+    let (plan, period_end) = auth.store().get_plan_info(user_id).unwrap_or(("free".to_string(), None));
+    if plan == "pro" && period_end.map(|pe| pe > now_secs()).unwrap_or(false) {
+        api::respond_json(request, 409, json!({"ok": false, "error": "already subscribed"}));
+        return;
+    }
+    let user = match auth.store().find_user_by_id(user_id) {
+        Ok(Some(u)) => u,
+        _ => {
+            api::respond_json(request, 404, json!({"ok": false, "error": "user not found"}));
+            return;
+        }
+    };
+    let Some(runtime) = state.runtime() else {
+        api::respond_json(request, 503, json!({"ok": false, "error": "async runtime unavailable"}));
+        return;
+    };
+    let req_body = build_checkout_request_body(&cfg, user_id, &user.email, now_secs());
+    let path = "/v1/actions/checkout/create-session".to_string();
+    match runtime.block_on(post_signed_json(&cfg, &path, &req_body)) {
+        Ok(checkout_url) => api::respond_json(request, 200, json!({"ok": true, "checkoutUrl": checkout_url})),
+        Err(e) => api::respond_json(request, 502, json!({"ok": false, "error": format!("waffo: {e}")})),
+    }
+}
+
+fn handle_webhook(
+    state: &ServerState,
+    raw_body: &str,
+    headers: &[(String, String)],
+    request: Request,
+) {
+    let Some(cfg) = state.load_app_state().as_ref().and_then(parse_billing_config) else {
+        api::respond_json(request, 503, json!({"ok": false, "error": "billing not configured"}));
+        return;
+    };
+    let sig_header = headers
+        .iter()
+        .find(|(k, _)| k == "x-waffo-signature")
+        .map(|(_, v)| v.as_str())
+        .unwrap_or("");
+    if let Err(e) = verify_webhook_signature(raw_body, sig_header, &cfg.webhook_public_key_pem, now_secs()) {
+        tracing::warn!(error = %e, "webhook signature verification failed");
+        api::respond_json(request, 401, json!({"ok": false, "error": e}));
+        return;
+    }
+    let parsed: Value = match serde_json::from_str(raw_body) {
+        Ok(v) => v,
+        Err(_) => {
+            api::respond_json(request, 400, json!({"ok": false, "error": "invalid json"}));
+            return;
+        }
+    };
+    let event_id = parsed.get("id").and_then(Value::as_str).unwrap_or("").to_string();
+    let event_type = parsed.get("eventType").and_then(Value::as_str).unwrap_or("").to_string();
+    let mode = parsed.get("mode").and_then(Value::as_str).unwrap_or("");
+    if !mode.is_empty() && mode != cfg.environment {
+        tracing::info!(event = %event_type, mode = %mode, "webhook environment mismatch — ignored");
+        respond_ok(request);
+        return;
+    }
+    let Some(auth) = state.auth() else {
+        api::respond_json(request, 503, json!({"ok": false, "error": "auth disabled"}));
+        return;
+    };
+    let store = auth.store();
+    // Dedup is best-effort check-then-record: a concurrent duplicate delivery
+    // can pass the gate and double-process, but the entitlement writes are
+    // idempotent (set_plan is an UPSERT), so the end state is identical.
+    if store.has_webhook_event(&event_id).unwrap_or(false) {
+        respond_ok(request);
+        return;
+    }
+    let data = parsed.get("data").cloned().unwrap_or(Value::Null);
+    match process_webhook_event(store, &event_type, &data) {
+        Ok(()) => {
+            if let Err(e) = store.record_webhook_event(&event_id, &event_type, now_secs()) {
+                // Not fatal: the primary key still guards against replay rows.
+                tracing::warn!(event = %event_type, error = %e, "failed to record webhook dedup row");
+            }
+            tracing::info!(event = %event_type, "webhook processed");
+            respond_ok(request);
+        }
+        Err(e) => {
+            // 不记幂等 → Waffo 按退避重试
+            tracing::warn!(event = %event_type, error = %e, "webhook processing failed");
+            api::respond_json(request, 500, json!({"ok": false, "error": e}));
+        }
+    }
+}
+
+fn respond_ok(request: Request) {
+    let mut resp = tiny_http::Response::from_string("OK").with_status_code(StatusCode(200));
+    resp.add_header(tiny_http::Header::from_bytes("Content-Type", "text/plain; charset=utf-8").unwrap());
+    let _ = request.respond(resp);
+}
+
+async fn post_signed_json(cfg: &BillingConfig, path: &str, body: &Value) -> Result<String, String> {
+    let body_bytes = serde_json::to_vec(body).map_err(|e| e.to_string())?;
+    let headers = sign_headers("POST", path, &body_bytes, &cfg.merchant_id, &cfg.private_key_pem)?;
+    let client = reqwest::Client::new();
+    let mut req = client
+        .post(format!("https://api.waffo.ai{path}"))
+        .header("Content-Type", "application/json")
+        .body(body_bytes);
+    for (k, v) in headers {
+        req = req.header(k, v);
+    }
+    let resp = req.send().await.map_err(|e| e.to_string())?;
+    let status = resp.status();
+    let text = resp.text().await.map_err(|e| e.to_string())?;
+    let parsed: Value = serde_json::from_str(&text).map_err(|_| format!("bad response {status}: {text}"))?;
+    if status.is_success() {
+        parsed
+            .get("data")
+            .and_then(|d| d.get("checkoutUrl"))
+            .and_then(Value::as_str)
+            .map(ToOwned::to_owned)
+            .ok_or_else(|| format!("missing checkoutUrl: {text}"))
+    } else {
+        let msg = parsed
+            .get("errors")
+            .and_then(|e| e.get(0))
+            .and_then(|e| e.get("message"))
+            .and_then(Value::as_str)
+            .unwrap_or("unknown");
+        Err(format!("{status}: {msg}"))
     }
 }
 
@@ -648,5 +866,20 @@ mod tests {
         process_webhook_event(&store, "subscription.activated", &data).unwrap();
         let (plan, _) = store.get_plan_info(uid).unwrap();
         assert_eq!(plan, "pro");
+    }
+
+    #[test]
+    fn build_checkout_request_body_shape() {
+        let app = billing_json();
+        let cfg = parse_billing_config(&app).unwrap();
+        let body = build_checkout_request_body(&cfg, 42, "u@x.com", 1_700_000_000);
+        assert_eq!(body["productId"], "PROD_1");
+        assert_eq!(body["productType"], "subscription");
+        assert_eq!(body["currency"], "USD");
+        assert_eq!(body["buyerEmail"], "u@x.com");
+        assert_eq!(body["successUrl"], "https://www.sship.online/pricing?upgraded=1");
+        assert_eq!(body["metadata"]["userId"], "42");
+        assert_eq!(body["language"], "zh-Hans");
+        assert!(body["orderMerchantExternalId"].as_str().unwrap().starts_with("dllm-42-"));
     }
 }

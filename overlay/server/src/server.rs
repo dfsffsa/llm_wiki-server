@@ -239,6 +239,20 @@ fn dispatch_request(
             return;
         }
 
+        // Billing (Waffo Pancake): /api/v1/billing/checkout + /api/v1/billing/webhook.
+        // Webhook is signature-verified (no cookie) and must bypass handle_request's
+        // generic auth, so route it here alongside conversations.
+        let billing_parts: Vec<&str> = path
+            .trim_start_matches(API_PREFIX)
+            .trim_start_matches('/')
+            .split('/')
+            .filter(|p| !p.is_empty())
+            .collect();
+        if billing_parts.first().copied() == Some("billing") {
+            api::billing::handle(&state, &method, &billing_parts, &body, &headers, request);
+            return;
+        }
+
         let response = api::handle_request(&state, &method, &url, &body, &headers);
         if response.status >= 500 {
             crate::metrics::inc_errors();

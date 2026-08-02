@@ -396,9 +396,9 @@
               <span data-i18n="pricing.pro.export">导出功能</span>
             </li>
           </ul>
-          <a href="/register" class="block text-center py-3 px-6 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/30" data-i18n="pricing.pro.cta">
+          <button id="btn-subscribe" class="block w-full text-center py-3 px-6 bg-primary-600 text-white rounded-xl font-semibold hover:bg-primary-700 transition-colors shadow-lg shadow-primary-600/30" data-i18n="pricing.pro.cta">
             立即订阅
-          </a>
+          </button>
         </div>
       </div>
 
@@ -591,6 +591,36 @@
           target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
+    });
+  </script>
+  <script>
+    document.getElementById('btn-subscribe')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.textContent = I18N.t('pricing.pro.checkout.loading');
+      try {
+        const r = await fetch('/api/v1/billing/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan: 'pro' }),
+        });
+        if (r.status === 401) { location.href = '/login?next=/pricing'; return; }
+        const j = await r.json();
+        if (r.ok && j.checkoutUrl) {
+          const win = window.open(j.checkoutUrl, '_blank', 'noopener,noreferrer');
+          if (!win) { location.href = j.checkoutUrl; } // popup blocked — same-tab fallback
+        }
+        else {
+          const e = j.error;
+          const fallback = I18N.t('pricing.pro.checkout.error');
+          const msg = (e && typeof e === 'object' && e.code)
+            ? I18N.localizeServerError(e.code, e.message || fallback)
+            : (typeof e === 'string' ? e : fallback);
+          alert(msg || fallback);
+        }
+      } catch (err) { alert(I18N.t('pricing.pro.checkout.network')); }
+      btn.disabled = false;
+      btn.textContent = I18N.t('pricing.pro.cta');
     });
   </script>
 </body>
