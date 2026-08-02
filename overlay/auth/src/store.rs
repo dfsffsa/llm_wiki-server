@@ -26,6 +26,8 @@ pub struct User {
     pub created_at: i64,
     pub last_seen_at: i64,
     pub email_verified_at: Option<i64>,
+    pub plan: String,
+    pub plan_period_end: Option<i64>,
 }
 
 #[derive(Debug, Clone)]
@@ -79,7 +81,7 @@ impl Store {
         let conn = self.lock();
         conn.query_row(
             "SELECT id, email, password_hash, display_name, is_admin, created_at, last_seen_at,
-                    email_verified_at
+                    email_verified_at, plan, plan_period_end
              FROM users WHERE email = ?1",
             params![email],
             row_to_user,
@@ -92,13 +94,90 @@ impl Store {
         let conn = self.lock();
         conn.query_row(
             "SELECT id, email, password_hash, display_name, is_admin, created_at, last_seen_at,
-                    email_verified_at
+                    email_verified_at, plan, plan_period_end
              FROM users WHERE id = ?1",
             params![id],
             row_to_user,
         )
         .optional()
         .map_err(AuthError::from)
+    }
+
+    pub fn get_plan(&self, user_id: i64) -> Result<String, AuthError> {
+        let conn = self.lock();
+        Ok(conn.query_row(
+            "SELECT COALESCE(plan, 'free') FROM users WHERE id = ?1",
+            params![user_id],
+            |row| row.get(0),
+        )?)
+    }
+
+    pub fn get_plan_info(&self, user_id: i64) -> Result<(String, Option<i64>), AuthError> {
+        let conn = self.lock();
+        Ok(conn.query_row(
+            "SELECT COALESCE(plan, 'free'), plan_period_end FROM users WHERE id = ?1",
+            params![user_id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )?)
+    }
+
+    pub fn set_plan(
+        &self,
+        user_id: i64,
+        plan: &str,
+        order_id: Option<&str>,
+        period_end: Option<i64>,
+        now: i64,
+    ) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "UPDATE users SET
+               plan = ?1,
+               waffo_order_id = ?2,
+               plan_period_end = ?3,
+               pro_since = CASE WHEN ?1 = 'pro' AND pro_since IS NULL THEN ?4 ELSE pro_since END
+             WHERE id = ?5",
+            params![plan, order_id, period_end, now, user_id],
+        )?;
+        Ok(())
+    }
+
+    pub fn find_user_by_order_id(&self, order_id: &str) -> Result<Option<User>, AuthError> {
+        let conn = self.lock();
+        conn.query_row(
+            "SELECT id, email, password_hash, display_name, is_admin, created_at, last_seen_at,
+                    email_verified_at, plan, plan_period_end
+             FROM users WHERE waffo_order_id = ?1",
+            params![order_id],
+            row_to_user,
+        )
+        .optional()
+        .map_err(AuthError::from)
+    }
+
+    pub fn has_webhook_event(&self, event_id: &str) -> Result<bool, AuthError> {
+        let conn = self.lock();
+        let count: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM waffo_webhook_events WHERE event_id = ?1",
+            params![event_id],
+            |row| row.get(0),
+        )?;
+        Ok(count > 0)
+    }
+
+    pub fn record_webhook_event(
+        &self,
+        event_id: &str,
+        event_type: &str,
+        now: i64,
+    ) -> Result<(), AuthError> {
+        let conn = self.lock();
+        conn.execute(
+            "INSERT OR IGNORE INTO waffo_webhook_events (event_id, event_type, created_at)
+             VALUES (?1, ?2, ?3)",
+            params![event_id, event_type, now],
+        )?;
+        Ok(())
     }
 
     pub fn touch_user_seen(&self, id: i64, now: i64) -> Result<(), AuthError> {
@@ -552,6 +631,8 @@ fn row_to_user(row: &rusqlite::Row<'_>) -> rusqlite::Result<User> {
         created_at: row.get(5)?,
         last_seen_at: row.get(6)?,
         email_verified_at: row.get::<_, Option<i64>>(7)?,
+        plan: row.get::<_, String>(8)?,
+        plan_period_end: row.get::<_, Option<i64>>(9)?,
     })
 }
 
@@ -728,5 +809,83 @@ mod tests {
         make_user(&store, "exists@test.com");
         assert!(store.verify_email_exists("exists@test.com").unwrap());
         assert!(!store.verify_email_exists("nope@test.com").unwrap());
+    }
+
+    #[test]
+    fn plan_defaults_to_free() {
+        let store = open_test_store();
+        let uid = store
+            .create_user(NewUser {
+                email: "p@example.com",
+                password_hash: "h",
+                display_name: None,
+                is_admin: false,
+                now: 1000,
+            })
+            .unwrap();
+        assert_eq!(store.get_plan(uid).unwrap(), "free");
+        let (plan, period_end) = store.get_plan_info(uid).unwrap();
+        assert_eq!(plan, "free");
+        assert_eq!(period_end, None);
+    }
+
+    #[test]
+    fn set_plan_roundtrip() {
+        let store = open_test_store();
+        let uid = store
+            .create_user(NewUser {
+                email: "p2@example.com",
+                password_hash: "h",
+                display_name: None,
+                is_admin: false,
+                now: 1000,
+            })
+            .unwrap();
+        store
+            .set_plan(uid, "pro", Some("ORD_abc"), Some(1_752_000_000), 2000)
+            .unwrap();
+        let (plan, period_end) = store.get_plan_info(uid).unwrap();
+        assert_eq!(plan, "pro");
+        assert_eq!(period_end, Some(1_752_000_000));
+        // downgrade clears order + period
+        store.set_plan(uid, "free", None, None, 3000).unwrap();
+        let (plan, period_end) = store.get_plan_info(uid).unwrap();
+        assert_eq!(plan, "free");
+        assert_eq!(period_end, None);
+    }
+
+    #[test]
+    fn find_user_by_order_id() {
+        let store = open_test_store();
+        let uid = store
+            .create_user(NewUser {
+                email: "p3@example.com",
+                password_hash: "h",
+                display_name: None,
+                is_admin: false,
+                now: 1000,
+            })
+            .unwrap();
+        store
+            .set_plan(uid, "pro", Some("ORD_xyz"), None, 2000)
+            .unwrap();
+        let u = store.find_user_by_order_id("ORD_xyz").unwrap().expect("found");
+        assert_eq!(u.id, uid);
+        assert_eq!(u.plan, "pro");
+        assert!(store.find_user_by_order_id("ORD_nope").unwrap().is_none());
+    }
+
+    #[test]
+    fn webhook_event_dedup() {
+        let store = open_test_store();
+        assert!(!store.has_webhook_event("evt_1").unwrap());
+        store
+            .record_webhook_event("evt_1", "subscription.activated", 1000)
+            .unwrap();
+        assert!(store.has_webhook_event("evt_1").unwrap());
+        store
+            .record_webhook_event("evt_1", "subscription.activated", 1000)
+            .unwrap(); // idempotent
+        assert!(store.has_webhook_event("evt_1").unwrap());
     }
 }
