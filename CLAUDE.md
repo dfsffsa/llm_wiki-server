@@ -48,6 +48,7 @@ export LLM_WIKI_STATIC=upstream/dist
 # Tests
 ./scripts/e2e-full.sh           # Full pipeline: patch → build → CLI → HTTP API
 ./scripts/e2e-local.sh           # Local headless (no Docker)
+./scripts/e2e-auth.sh            # Cookie-auth path: register/login/me/conversations/usage-limit/logout
 npm run test:mocks --prefix upstream  # Upstream unit tests
 ```
 
@@ -60,10 +61,14 @@ llm_wiki-server/
 │   └── dist/           # Vite build output (static UI)
 ├── overlay/            # 100% custom code
 │   ├── server/         # Headless HTTP server (Rust + tiny_http)
+│   ├── auth/           # llm-wiki-auth crate: sessions, password hashing, rate limits, per-user history + usage quotas
 │   ├── cli/
-│   │   ├── rust/       # CLI binary: search, rescan, ingest
-│   │   └── node/       # Wraps upstream ingest.ts via shims
+│   │   ├── rust/       # CLI binary: search, rescan, ingest, reindex, preprocess, vector
+│   │   └── node/       # Wraps upstream ingest.ts via shims (only Node still required)
 │   ├── web/            # HTTP React adapter (Vite alias replacements)
+│   ├── eval/           # RAG eval: ingest_check / rag_eval / generate_test_cases (v1 + v2 schemas)
+│   ├── static/         # Public landing pages: auth HTML (login/register/reset), /lite/ QA page, pricing, docs
+│   ├── embedding/      # Embedding exploration scripts (no API keys)
 │   ├── crates/llm-wiki-common/  # Shared Rust lib (search, rescan, project, vector/LanceDB, hybrid fusion)
 │   └── patches/        # Applied to upstream at build time
 ├── scripts/             # Build, test, sync scripts
@@ -95,6 +100,21 @@ llm_wiki-server/
 | GET | `/api/v1/runtime-config` | LLM config summary |
 | POST | `/api/v1/projects/{id}/chat` | SSE streaming chat (non-JSON route, Rust reqwest, no Node) |
 
+Multi-user routes — active only when `LLM_WIKI_AUTH_DB` is set (cookie/bearer auth):
+
+| Method | Path | Handler |
+|--------|------|---------|
+| POST | `/auth/register` | Register user (403 if `LLM_WIKI_DISABLE_REGISTRATION`) |
+| POST | `/auth/login` | Login → sets `session` cookie |
+| POST | `/auth/logout` | Clears session cookie |
+| GET | `/auth/me` | Current user (cookie required) |
+| POST | `/auth/forgot-password` | Send reset email (needs SMTP config) |
+| POST | `/auth/reset-password` | Reset password via emailed token |
+| GET | `/api/v1/conversations` | Per-user chat history — list / create |
+| POST | `/api/v1/conversations` | Create conversation |
+| DELETE | `/api/v1/conversations/{id}` | Delete conversation |
+| GET/POST | `/api/v1/conversations/{id}/messages` | List / send chat messages |
+
 ### Web Adapter (HTTP Mode)
 
 When `VITE_BACKEND=http`, Vite aliases redirect upstream imports to overlay:
@@ -123,7 +143,7 @@ When `VITE_BACKEND=http`, Vite aliases redirect upstream imports to overlay:
 | `LLM_WIKI_DRAIN_SECS` | Graceful-shutdown drain window before forcing exit (default 15) |
 | `LLM_WIKI_ADMIN_EMAIL` | Email auto-marked `is_admin` on registration |
 | `LLM_WIKI_SESSION_TTL_DAYS` | Session cookie lifetime (default 30) |
-| `LLM_WIKI_PUBLIC_LANDING_DIR` | Public landing page dir (login/register/reset HTML) |
+| `LLM_WIKI_PUBLIC_LANDING_DIR` | Public landing page dir (login/register/reset HTML; default `overlay/static/`) |
 | `RUST_LOG` | tracing log level (default `info`; e.g. `debug,llm_wiki_server=trace`) |
 
 ## Wiki Project Structure
@@ -179,6 +199,26 @@ After `build-all.sh`, you get three categories of artifacts (all `.gitignore`d):
 | `musl` variant of CLI + server | same sizes | static-pie linked, runs on any x86_64 Linux (incl. low-spec ECS) | under `target/x86_64-unknown-linux-musl/release/` |
 
 `scripts/llm-wiki` is a 364-byte bash wrapper: it sets `LLM_WIKI_REPO=$PWD` and `exec`s the Rust binary, so CLI subcommands (`ingest`, `search`, `reindex`) all go through it. The Rust binary for `ingest` is itself a thin shim that drives `node <tsx cli.mjs> overlay/cli/node/src/cmd-ingest.ts` (TypeScript) which calls upstream's `autoIngest()`. **Only `ingest` still shells out to Node** — chat and search are now pure Rust (reqwest / LanceDB).
+
+## RAG Evaluation (`overlay/eval`)
+
+Three-layer eval of wiki quality (Python, run from the dev machine against a live server + wiki project):
+
+| Script | Purpose |
+|--------|---------|
+| `ingest_check.py` | Layer 1 — schema compliance, structure, wikilink density, coverage of generated wiki pages |
+| `rag_eval.py` | Layers 2–3 — retrieval Recall@K/MRR against `expected_sources`, chat answer + citation quality |
+| `generate_test_cases.py` | LLM-assisted test-case generation (`--mode auto` / `hybrid`), emits v1 or v2 schema |
+| `scripts/run_eval.sh` | One-shot: health check → ingest_check → rag_eval. **Needs server up on :8080** |
+
+```bash
+./overlay/eval/scripts/run_eval.sh ParentingBooks            # full (ingest + retrieval + chat)
+python overlay/eval/rag_eval.py --project <path> --mode retrieval
+python overlay/eval/generate_test_cases.py --project <path> --mode auto --schema v2
+python -m unittest discover -s overlay/eval/tests            # P0 metric-regression tests
+```
+
+Test cases live in `overlay/eval/test_cases/*.json` — **v1** (`expected_sources: [...]`) vs **v2** (`expected_sources: {must:[], should:[]}`, from July 2026). **Historical caveat:** eval metric numbers were unreliable before the v2 work — `recall_at_k` was actually MRR. See `overlay/eval/AUDIT_2026-06-23.md`; the v2 schema + match helpers (`match_at_k`, `matched_patterns`) fix that. Don't trust pre-July results for decisions.
 
 ## Deployment
 
@@ -272,9 +312,13 @@ If any of these fail, the corresponding `docs/` section is the next place to loo
 ## Related Documentation
 
 - [README.md](README.md) — Project overview
+- [文档指引.md](文档指引.md) — Global task-navigation entry (four modules)
 - [docs/代码结构总览.md](docs/代码结构总览.md) — Detailed architecture diagrams
 - [docs/开发与测试.md](docs/开发与测试.md) — Build, test, and FAQ
 - [docs/上游同步.md](docs/上游同步.md) — Submodule sync principles
+- [docs/ingest-flow-analysis.md](docs/ingest-flow-analysis.md) — Ingest call chain (Rust CLI → Node shim → upstream `autoIngest`)
+- [overlay/eval/README.md](overlay/eval/README.md) — RAG eval system (three layers, test-case formats, commands)
+- [overlay/static/lite/README.md](overlay/static/lite/README.md) — `/lite/` minimal QA page
 - [docs/日常运维.md](docs/日常运维.md) — Daily operations
 - [docs/邮件配置-SMTP-Resend.md](./docs/邮件配置-SMTP-Resend.md) — **SMTP email** (Resend signup, SPF/DKIM/DMARC, smtp config, troubleshooting)
 - [docs/备份与恢复.md](./docs/备份与恢复.md) — **Backup & recovery** (auth DB hot backup, wiki rsync, restore drill)
