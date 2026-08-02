@@ -116,6 +116,73 @@ fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
     era * 146097 + doe - 719468
 }
 
+#[derive(Debug, Clone)]
+pub struct BillingConfig {
+    pub merchant_id: String,
+    pub private_key_pem: String,
+    pub pro_product_id: String,
+    pub webhook_public_key_pem: String,
+    pub environment: String,
+    pub free_tier_daily_limit: u32,
+    pub pro_tier_daily_limit: u32,
+    pub checkout_success_url: String,
+    pub language: Option<String>,
+}
+
+pub fn parse_billing_config(app_state: &serde_json::Value) -> Option<BillingConfig> {
+    let b = app_state.get("billing")?;
+    if b.get("enabled").and_then(serde_json::Value::as_bool) == Some(false) {
+        return None;
+    }
+    Some(BillingConfig {
+        merchant_id: b.get("waffoMerchantId")?.as_str()?.trim().to_string(),
+        private_key_pem: b.get("waffoPrivateKey")?.as_str()?.trim().to_string(),
+        pro_product_id: b.get("proProductId")?.as_str()?.trim().to_string(),
+        webhook_public_key_pem: b.get("webhookPublicKey")?.as_str()?.trim().to_string(),
+        environment: b
+            .get("environment")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("test")
+            .to_string(),
+        free_tier_daily_limit: b
+            .get("freeTierDailyLimit")
+            .and_then(serde_json::Value::as_u64)
+            .map(|v| v as u32)
+            .unwrap_or(3),
+        pro_tier_daily_limit: b
+            .get("proTierDailyLimit")
+            .and_then(serde_json::Value::as_u64)
+            .map(|v| v as u32)
+            .unwrap_or(10_000),
+        checkout_success_url: b
+            .get("checkoutSuccessUrl")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("")
+            .to_string(),
+        language: b
+            .get("language")
+            .and_then(serde_json::Value::as_str)
+            .map(ToOwned::to_owned),
+    })
+}
+
+/// Per-user daily chat limit: pro -> proTierDailyLimit, free -> freeTierDailyLimit.
+/// No billing block / billing disabled -> falls back to the global limit.
+pub fn resolve_daily_limit(
+    app_state: Option<&serde_json::Value>,
+    plan: &str,
+    global_default: u32,
+) -> i64 {
+    let Some(cfg) = app_state.and_then(parse_billing_config) else {
+        return global_default as i64;
+    };
+    if plan == "pro" {
+        cfg.pro_tier_daily_limit as i64
+    } else {
+        cfg.free_tier_daily_limit as i64
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -271,5 +338,59 @@ mod tests {
         assert_eq!(iso_date_to_epoch("2026-02-30"), None); // impossible date
         assert_eq!(iso_date_to_epoch("2024-02-30"), None); // leap-year Feb also capped at 29
         assert_eq!(iso_date_to_epoch("garbage"), None);
+    }
+
+    use serde_json::json;
+
+    fn billing_json() -> serde_json::Value {
+        json!({
+            "billing": {
+                "waffoMerchantId": "MER_1",
+                "waffoPrivateKey": "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----",
+                "proProductId": "PROD_1",
+                "webhookPublicKey": "-----BEGIN PUBLIC KEY-----\ndef\n-----END PUBLIC KEY-----",
+                "environment": "test",
+                "freeTierDailyLimit": 3,
+                "proTierDailyLimit": 10000,
+                "checkoutSuccessUrl": "https://www.sship.online/pricing?upgraded=1",
+                "language": "zh-Hans"
+            }
+        })
+    }
+
+    #[test]
+    fn parse_billing_config_happy_path() {
+        let cfg = parse_billing_config(&billing_json()).expect("parsed");
+        assert_eq!(cfg.merchant_id, "MER_1");
+        assert_eq!(cfg.pro_product_id, "PROD_1");
+        assert_eq!(cfg.environment, "test");
+        assert_eq!(cfg.free_tier_daily_limit, 3);
+        assert_eq!(cfg.pro_tier_daily_limit, 10000);
+        assert_eq!(cfg.language.as_deref(), Some("zh-Hans"));
+    }
+
+    #[test]
+    fn parse_billing_config_disabled_returns_none() {
+        let mut v = billing_json();
+        v["billing"]["enabled"] = json!(false);
+        assert!(parse_billing_config(&v).is_none());
+    }
+
+    #[test]
+    fn parse_billing_config_missing_block_returns_none() {
+        assert!(parse_billing_config(&json!({"other": 1})).is_none());
+    }
+
+    #[test]
+    fn resolve_daily_limit_per_plan() {
+        let app = billing_json();
+        assert_eq!(resolve_daily_limit(Some(&app), "free", 50), 3);
+        assert_eq!(resolve_daily_limit(Some(&app), "pro", 50), 10000);
+    }
+
+    #[test]
+    fn resolve_daily_limit_no_billing_uses_global() {
+        assert_eq!(resolve_daily_limit(Some(&json!({"other": 1})), "free", 50), 50);
+        assert_eq!(resolve_daily_limit(None, "pro", 50), 50);
     }
 }
