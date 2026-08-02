@@ -226,29 +226,33 @@ pub fn apply_event(event_type: &str, data: &serde_json::Value) -> PlanAction {
     }
 }
 
-fn resolve_user_id(store: &llm_wiki_auth::Store, data: &serde_json::Value) -> Option<i64> {
+fn resolve_user_id(store: &llm_wiki_auth::Store, data: &serde_json::Value) -> Result<Option<i64>, String> {
     // 1) orderMetadata.userId (set at checkout, string or number)
     if let Some(s) = data.get("orderMetadata").and_then(|m| m.get("userId")) {
         if let Some(id) = s.as_i64() {
-            return Some(id);
+            return Ok(Some(id));
         }
         if let Some(Ok(id)) = s.as_str().map(|x| x.parse::<i64>()) {
-            return Some(id);
+            return Ok(Some(id));
         }
     }
     // 2) orderId → users.waffo_order_id
     if let Some(oid) = data.get("orderId").and_then(serde_json::Value::as_str) {
-        if let Ok(Some(u)) = store.find_user_by_order_id(oid) {
-            return Some(u.id);
+        match store.find_user_by_order_id(oid) {
+            Ok(Some(u)) => return Ok(Some(u.id)),
+            Ok(None) => {}
+            Err(e) => return Err(format!("lookup by order id failed: {e}")),
         }
     }
-    // 3) buyerEmail (normalized lowercase in DB)
+    // 3) buyerEmail (normalized to ASCII-lowercase, matching auth registration)
     if let Some(email) = data.get("buyerEmail").and_then(serde_json::Value::as_str) {
-        if let Ok(Some(u)) = store.find_user_by_email(email.trim().to_lowercase().as_str()) {
-            return Some(u.id);
+        match store.find_user_by_email(email.trim().to_ascii_lowercase().as_str()) {
+            Ok(Some(u)) => return Ok(Some(u.id)),
+            Ok(None) => {}
+            Err(e) => return Err(format!("lookup by email failed: {e}")),
         }
     }
-    None
+    Ok(None)
 }
 
 pub fn process_webhook_event(
@@ -260,13 +264,30 @@ pub fn process_webhook_event(
     match apply_event(event_type, data) {
         PlanAction::Noop | PlanAction::KeepPro => Ok(()),
         PlanAction::GrantPro { order_id, period_end } => {
-            let uid = resolve_user_id(store, data).ok_or("cannot map webhook to a user")?;
+            let uid = resolve_user_id(store, data)?.ok_or("cannot map webhook to a user")?;
             store
                 .set_plan(uid, "pro", Some(&order_id), period_end, now)
                 .map_err(|e| e.to_string())
         }
         PlanAction::DowngradeToFree => {
-            if let Some(uid) = resolve_user_id(store, data) {
+            // For refunds, only downgrade if the refunded order IS the user's
+            // subscription (waffo_order_id). A refund of an unrelated order
+            // must not revoke Pro — the email fallback is NOT consulted here.
+            let uid = if event_type == "refund.succeeded" {
+                // Only the subscription order qualifies; email fallback must NOT
+                // downgrade a user for a refund of an unrelated order.
+                match data.get("orderId").and_then(serde_json::Value::as_str) {
+                    Some(oid) => match store.find_user_by_order_id(oid) {
+                        Ok(Some(u)) => Some(u.id),
+                        Ok(None) => None,
+                        Err(e) => return Err(format!("refund order lookup failed: {e}")),
+                    },
+                    None => None,
+                }
+            } else {
+                resolve_user_id(store, data)?
+            };
+            if let Some(uid) = uid {
                 store.set_plan(uid, "free", None, None, now).map_err(|e| e.to_string())?;
             }
             Ok(())
@@ -569,5 +590,63 @@ mod tests {
         let (plan, period_end) = store.get_plan_info(uid).unwrap();
         assert_eq!(plan, "pro");
         assert_eq!(period_end, iso_date_to_epoch("2026-05-01"));
+    }
+
+    #[test]
+    fn refund_of_unrelated_order_does_not_downgrade() {
+        let store = tmp_store();
+        let uid = store
+            .create_user(llm_wiki_auth::store::NewUser {
+                email: "r@x.com", password_hash: "h", display_name: None, is_admin: false, now: 1000,
+            })
+            .unwrap();
+        store.set_plan(uid, "pro", Some("ORD_SUB"), Some(1_752_000_000), 2000).unwrap();
+        // Refund of a DIFFERENT order (one-time purchase); orderMetadata has no userId.
+        let data = serde_json::json!({
+            "orderId": "ORD_OTHER",
+            "buyerEmail": "r@x.com",
+            "orderMetadata": {}
+        });
+        process_webhook_event(&store, "refund.succeeded", &data).unwrap();
+        let (plan, _) = store.get_plan_info(uid).unwrap();
+        assert_eq!(plan, "pro"); // NOT downgraded
+    }
+
+    #[test]
+    fn refund_of_subscription_downgrades() {
+        let store = tmp_store();
+        let uid = store
+            .create_user(llm_wiki_auth::store::NewUser {
+                email: "r2@x.com", password_hash: "h", display_name: None, is_admin: false, now: 1000,
+            })
+            .unwrap();
+        store.set_plan(uid, "pro", Some("ORD_SUB2"), Some(1_752_000_000), 2000).unwrap();
+        let data = serde_json::json!({
+            "orderId": "ORD_SUB2",
+            "buyerEmail": "r2@x.com",
+            "orderMetadata": {}
+        });
+        process_webhook_event(&store, "refund.succeeded", &data).unwrap();
+        let (plan, _) = store.get_plan_info(uid).unwrap();
+        assert_eq!(plan, "free");
+    }
+
+    #[test]
+    fn activated_maps_by_email_fallback() {
+        let store = tmp_store();
+        let uid = store
+            .create_user(llm_wiki_auth::store::NewUser {
+                email: "m@x.com", password_hash: "h", display_name: None, is_admin: false, now: 1000,
+            })
+            .unwrap();
+        // No orderMetadata.userId, orderId not stored — must map via buyerEmail (case-insensitive).
+        let data = serde_json::json!({
+            "orderId": "ORD_NEW",
+            "buyerEmail": "M@X.com",
+            "currentPeriodEnd": "2026-06-01"
+        });
+        process_webhook_event(&store, "subscription.activated", &data).unwrap();
+        let (plan, _) = store.get_plan_info(uid).unwrap();
+        assert_eq!(plan, "pro");
     }
 }
