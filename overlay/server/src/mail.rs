@@ -178,9 +178,16 @@ pub async fn send_email(
         .multipart(MultiPart::alternative().singlepart(plain_part).singlepart(html_part))
         .map_err(|e| format!("build email: {e}"))?;
 
-    let mut transport_builder = AsyncSmtpTransport::<Tokio1Executor>::relay(&cfg.host)
-        .map_err(|e| format!("smtp relay: {e}"))?
-        .port(cfg.port);
+    // Use starttls_relay (STARTTLS on port 587) instead of relay()
+    // to avoid TLS-type auto-detection issues with rustls + Resend.
+    let mut transport_builder = if cfg.port == 465 {
+        AsyncSmtpTransport::<Tokio1Executor>::relay(&cfg.host)
+            .map_err(|e| format!("smtp relay: {e}"))?
+    } else {
+        AsyncSmtpTransport::<Tokio1Executor>::starttls_relay(&cfg.host)
+            .map_err(|e| format!("smtp starttls relay: {e}"))?
+    }
+    .port(cfg.port);
     if !cfg.user.is_empty() {
         transport_builder = transport_builder.credentials(Credentials::new(
             cfg.user.clone(),

@@ -190,7 +190,8 @@ fn dispatch_request(
             "/" => Some("index.html"),
             "/landing.css" => Some("landing.css"),
             "/landing.js" => Some("landing.js"),
-            "/login" | "/register" => Some("auth/login.html"),
+            "/login" => Some("auth/login.html"),
+            "/register" => Some("auth/register.html"),
             "/reset-password" => Some("auth/reset.html"),
             // Auth-page static assets (GET /auth/*.css|js). Excluded from
             // is_auth above so they reach here; strip the leading "/" to get
