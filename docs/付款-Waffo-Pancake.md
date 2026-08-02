@@ -22,9 +22,8 @@
 | `WAFFO_PRIVATE_KEY` | 私钥 PEM（标准 `-----BEGIN ...-----` 格式） |
 | `WAFFO_PRO_PRODUCT_ID` | `PROD_...` |
 | `WAFFO_WEBHOOK_PUBLIC_KEY` | Dashboard 复制的 Test/Prod 公钥 |
-| `WAFFO_ENVIRONMENT` | `test` 或 `prod` |
 
-示例 `billing` 块见 `overlay/config/server.example.json`。以下值通过 `deploy-ecs.sh` 的 sed 注入到 `server.local.json`（非运行时环境变量，chmod 600），部署前需 export 这些变量供 deploy 脚本使用；**不进 git、不打日志**。
+示例 `billing` 块见 `overlay/config/server.example.json`。`environment`（`test` 或 `prod`）直接在 `server.local.json` 的 `billing` 块里写死，无对应环境变量。以下值通过 `deploy-ecs.sh` 的 sed 注入到 `server.local.json`（非运行时环境变量，chmod 600），部署前需 export 这些变量供 deploy 脚本使用；**不进 git、不打日志**。
 
 > ⚠️ 未设置 `WAFFO_*` 环境变量时，`${WAFFO_*}` 占位符不会被替换，服务器会拒绝启用 billing 并打警告日志（见 `parse_billing_config`）。部署前务必 export 这四个变量。
 

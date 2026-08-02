@@ -279,7 +279,16 @@ pub fn process_webhook_event(
 ) -> Result<(), String> {
     let now = now_secs();
     match apply_event(event_type, data) {
-        PlanAction::Noop | PlanAction::KeepPro => Ok(()),
+        PlanAction::Noop => Ok(()),
+        PlanAction::KeepPro => {
+            if event_type == "subscription.past_due" {
+                tracing::warn!(
+                    order_id = %data.get("orderId").and_then(serde_json::Value::as_str).unwrap_or(""),
+                    "subscription past_due — payment failed, keeping pro in grace period"
+                );
+            }
+            Ok(())
+        }
         PlanAction::GrantPro { order_id, period_end } => {
             let uid = resolve_user_id(store, data)?.ok_or("cannot map webhook to a user")?;
             store

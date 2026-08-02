@@ -19,6 +19,7 @@ const state = {
   sendGeneration: 0,
   user: null,
   usage: null,
+  plan: null,
   currentMessages: [],
   lastSources: [], // structured search results for source cards
 };
@@ -84,7 +85,7 @@ async function fetchMe() {
     });
     if (res.ok) {
       const data = await res.json();
-      return { status: "ok", user: data.user, usage: data.usage };
+      return { status: "ok", user: data.user, usage: data.usage, plan: data.plan };
     }
     if (res.status === 401) return { status: "no-auth" };
     // 500 (auth disabled on server) or other — treat as "auth not configured",
@@ -104,6 +105,7 @@ async function ensureLogin() {
   if (me.status === "ok") {
     state.user = me.user;
     state.usage = me.usage;
+    state.plan = me.plan;
     renderSidebarUser();
   }
   // status === "disabled": proceed without user/quota (shared-token mode)
@@ -122,7 +124,14 @@ function renderSidebarUser() {
   const footer = document.querySelector(".sidebar-footer");
   if (footer) footer.style.display = "flex";
   if (uel) uel.textContent = state.user?.display_name || state.user?.email || "";
-  if (usageEl && state.usage) {
+  if (usageEl && state.plan && state.plan.name === "pro") {
+    // Pro member: show badge + period end instead of the free daily quota.
+    const end = state.plan.periodEnd
+      ? new Date(state.plan.periodEnd * 1000).toLocaleDateString("zh-CN")
+      : "";
+    usageEl.textContent = `Pro 会员${end ? ` · ${end} 到期` : ""}`;
+    usageEl.classList.remove("low");
+  } else if (usageEl && state.usage) {
     const remaining = Math.max(0, state.usage.limit - state.usage.used);
     usageEl.textContent = `今日剩余 ${remaining}/${state.usage.limit}`;
     usageEl.classList.toggle("low", remaining <= Math.max(1, Math.floor(state.usage.limit * 0.2)));
