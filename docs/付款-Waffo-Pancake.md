@@ -19,12 +19,12 @@
 | 变量 | 值 |
 |------|-----|
 | `WAFFO_MERCHANT_ID` | `MER_...` |
-| `WAFFO_PRIVATE_KEY` | 私钥 PEM（base64 或转义换行） |
+| `WAFFO_PRIVATE_KEY` | 私钥 PEM（标准 `-----BEGIN ...-----` 格式） |
 | `WAFFO_PRO_PRODUCT_ID` | `PROD_...` |
 | `WAFFO_WEBHOOK_PUBLIC_KEY` | Dashboard 复制的 Test/Prod 公钥 |
 | `WAFFO_ENVIRONMENT` | `test` 或 `prod` |
 
-示例 `billing` 块见 `overlay/config/server.example.json`。密钥经 `deploy-ecs.sh` 的 sed 注入 `server.local.json`（chmod 600），**不进 git、不打日志**。
+示例 `billing` 块见 `overlay/config/server.example.json`。以下值通过 `deploy-ecs.sh` 的 sed 注入到 `server.local.json`（非运行时环境变量，chmod 600），部署前需 export 这些变量供 deploy 脚本使用；**不进 git、不打日志**。
 
 > ⚠️ 未设置 `WAFFO_*` 环境变量时，`${WAFFO_*}` 占位符不会被替换，服务器会拒绝启用 billing 并打警告日志（见 `parse_billing_config`）。部署前务必 export 这四个变量。
 
@@ -33,6 +33,7 @@
 - 用 cloudflared 或 ngrok 把本机 8080 暴露成公网 HTTPS，把该 URL 配成 Dashboard 的 test webhook
 - Dashboard → Send Test Event 验证签名（若 401，见 §5 第一行）
 - 测试卡: 成功 `4576 7500 0000 0110` / 拒绝 `4576 7500 0000 0220`
+- 若 SMTP 已配置，验证 token 会通过邮件发送，不会出现在服务器日志中——请查收邮件而非从日志提取。
 
 ## 4. 验证流程
 
