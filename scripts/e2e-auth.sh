@@ -46,11 +46,20 @@ ok() { PASS=$((PASS+1)); echo "  ✅ $1"; }
 fail() { FAIL=$((FAIL+1)); echo "  ❌ $1: $2"; }
 
 echo; echo "==> Landing page"
-curl -sS "${BASE}/" | grep -q "开始使用" && ok "landing page" || fail "landing page" "no 开始使用"
+curl -sS "${BASE}/" | grep -q "免费注册" && ok "landing page" || fail "landing page" "no 免费注册"
 
 echo; echo "==> Register"
 REG=$(curl -sS -c "${TMPDIR}/cookies.txt" -X POST "${BASE}/auth/register" -H 'Content-Type: application/json' -d '{"email":"e2e@test.com","password":"longenough"}') || true
-echo "${REG}" | grep -q '"user"' && ok "register" || fail "register" "no user in response"
+echo "${REG}" | grep -q '"ok":true' && ok "register (email sent)" || fail "register" "no ok:true"
+
+echo; echo "==> Verify email (token from server log, SMTP not configured)"
+VT=$(grep 'verification token for e2e@test.com' "${TMPDIR}/server.log" | sed -E 's/.*verification token for e2e@test.com: ([^ ]*).*/\1/' | tail -1)
+VC=$(curl -sS -o /dev/null -w '%{http_code}' "${BASE}/auth/verify-email?token=${VT}")
+[[ "${VC}" == "302" ]] && ok "verify-email -> 302" || fail "verify-email" "got ${VC}"
+
+echo; echo "==> Login (fresh session for verified user)"
+LC=$(curl -sS -c "${TMPDIR}/cookies.txt" -o /dev/null -w '%{http_code}' -X POST "${BASE}/auth/login" -H 'Content-Type: application/json' -d '{"email":"e2e@test.com","password":"longenough"}')
+[[ "${LC}" == "200" ]] && ok "login" || fail "login" "got ${LC}"
 
 echo; echo "==> /auth/me with cookie"
 ME=$(curl -sS -b "${TMPDIR}/cookies.txt" "${BASE}/auth/me")
