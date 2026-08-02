@@ -202,6 +202,78 @@ pub fn resolve_daily_limit(
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PlanAction {
+    GrantPro { order_id: String, period_end: Option<i64> },
+    KeepPro,
+    DowngradeToFree,
+    Noop,
+}
+
+pub fn apply_event(event_type: &str, data: &serde_json::Value) -> PlanAction {
+    let order_id = data.get("orderId").and_then(serde_json::Value::as_str).unwrap_or("").to_string();
+    let period_end = data
+        .get("currentPeriodEnd")
+        .and_then(serde_json::Value::as_str)
+        .and_then(iso_date_to_epoch);
+    match event_type {
+        "subscription.activated" | "subscription.uncanceled" | "subscription.payment_succeeded" => {
+            PlanAction::GrantPro { order_id, period_end }
+        }
+        "subscription.canceling" | "subscription.past_due" => PlanAction::KeepPro,
+        "subscription.canceled" | "refund.succeeded" => PlanAction::DowngradeToFree,
+        _ => PlanAction::Noop,
+    }
+}
+
+fn resolve_user_id(store: &llm_wiki_auth::Store, data: &serde_json::Value) -> Option<i64> {
+    // 1) orderMetadata.userId (set at checkout, string or number)
+    if let Some(s) = data.get("orderMetadata").and_then(|m| m.get("userId")) {
+        if let Some(id) = s.as_i64() {
+            return Some(id);
+        }
+        if let Some(Ok(id)) = s.as_str().map(|x| x.parse::<i64>()) {
+            return Some(id);
+        }
+    }
+    // 2) orderId → users.waffo_order_id
+    if let Some(oid) = data.get("orderId").and_then(serde_json::Value::as_str) {
+        if let Ok(Some(u)) = store.find_user_by_order_id(oid) {
+            return Some(u.id);
+        }
+    }
+    // 3) buyerEmail (normalized lowercase in DB)
+    if let Some(email) = data.get("buyerEmail").and_then(serde_json::Value::as_str) {
+        if let Ok(Some(u)) = store.find_user_by_email(email.trim().to_lowercase().as_str()) {
+            return Some(u.id);
+        }
+    }
+    None
+}
+
+pub fn process_webhook_event(
+    store: &llm_wiki_auth::Store,
+    event_type: &str,
+    data: &serde_json::Value,
+) -> Result<(), String> {
+    let now = now_secs();
+    match apply_event(event_type, data) {
+        PlanAction::Noop | PlanAction::KeepPro => Ok(()),
+        PlanAction::GrantPro { order_id, period_end } => {
+            let uid = resolve_user_id(store, data).ok_or("cannot map webhook to a user")?;
+            store
+                .set_plan(uid, "pro", Some(&order_id), period_end, now)
+                .map_err(|e| e.to_string())
+        }
+        PlanAction::DowngradeToFree => {
+            if let Some(uid) = resolve_user_id(store, data) {
+                store.set_plan(uid, "free", None, None, now).map_err(|e| e.to_string())?;
+            }
+            Ok(())
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -411,5 +483,91 @@ mod tests {
     fn resolve_daily_limit_no_billing_uses_global() {
         assert_eq!(resolve_daily_limit(Some(&json!({"other": 1})), "free", 50), 50);
         assert_eq!(resolve_daily_limit(None, "pro", 50), 50);
+    }
+
+    use llm_wiki_auth::store::Store;
+
+    fn tmp_store() -> Store {
+        let f = tempfile::NamedTempFile::new().unwrap();
+        Store::open(f.path()).unwrap()
+    }
+
+    fn mk_data(oid: &str, period: Option<&str>, user_id: i64, email: &str) -> serde_json::Value {
+        let mut m = serde_json::Map::new();
+        m.insert("orderId".into(), serde_json::Value::String(oid.into()));
+        m.insert("buyerEmail".into(), serde_json::Value::String(email.into()));
+        if let Some(p) = period {
+            m.insert("currentPeriodEnd".into(), serde_json::Value::String(p.into()));
+        }
+        m.insert(
+            "orderMetadata".into(),
+            serde_json::json!({ "userId": user_id.to_string() }),
+        );
+        serde_json::Value::Object(m)
+    }
+
+    #[test]
+    fn apply_event_state_machine() {
+        let d = mk_data("ORD_1", Some("2026-04-10"), 1, "a@b.com");
+        assert_eq!(
+            apply_event("subscription.activated", &d),
+            PlanAction::GrantPro { order_id: "ORD_1".into(), period_end: iso_date_to_epoch("2026-04-10") }
+        );
+        assert_eq!(apply_event("subscription.canceling", &d), PlanAction::KeepPro);
+        assert_eq!(apply_event("subscription.past_due", &d), PlanAction::KeepPro);
+        assert_eq!(apply_event("subscription.canceled", &d), PlanAction::DowngradeToFree);
+        assert_eq!(apply_event("order.completed", &d), PlanAction::Noop);
+        assert_eq!(apply_event("refund.succeeded", &d), PlanAction::DowngradeToFree);
+    }
+
+    #[test]
+    fn process_webhook_activated_grants_pro() {
+        let store = tmp_store();
+        let uid = store
+            .create_user(llm_wiki_auth::store::NewUser {
+                email: "a@b.com", password_hash: "h", display_name: None, is_admin: false, now: 1000,
+            })
+            .unwrap();
+        let data = mk_data("ORD_9", Some("2026-04-10"), uid, "a@b.com");
+        process_webhook_event(&store, "subscription.activated", &data).unwrap();
+        let (plan, period_end) = store.get_plan_info(uid).unwrap();
+        assert_eq!(plan, "pro");
+        assert_eq!(period_end, iso_date_to_epoch("2026-04-10"));
+    }
+
+    #[test]
+    fn process_webhook_canceled_downgrades() {
+        let store = tmp_store();
+        let uid = store
+            .create_user(llm_wiki_auth::store::NewUser {
+                email: "c@d.com", password_hash: "h", display_name: None, is_admin: false, now: 1000,
+            })
+            .unwrap();
+        store.set_plan(uid, "pro", Some("ORD_7"), Some(1_752_000_000), 2000).unwrap();
+        let data = mk_data("ORD_7", None, uid, "c@d.com");
+        process_webhook_event(&store, "subscription.canceled", &data).unwrap();
+        let (plan, _) = store.get_plan_info(uid).unwrap();
+        assert_eq!(plan, "free");
+    }
+
+    #[test]
+    fn process_webhook_maps_by_order_id() {
+        let store = tmp_store();
+        let uid = store
+            .create_user(llm_wiki_auth::store::NewUser {
+                email: "e@f.com", password_hash: "h", display_name: None, is_admin: false, now: 1000,
+            })
+            .unwrap();
+        store.set_plan(uid, "pro", Some("ORD_42"), None, 2000).unwrap();
+        // No orderMetadata.userId; only orderId — must still map via waffo_order_id.
+        let data = serde_json::json!({
+            "orderId": "ORD_42",
+            "buyerEmail": "e@f.com",
+            "currentPeriodEnd": "2026-05-01",
+        });
+        process_webhook_event(&store, "subscription.payment_succeeded", &data).unwrap();
+        let (plan, period_end) = store.get_plan_info(uid).unwrap();
+        assert_eq!(plan, "pro");
+        assert_eq!(period_end, iso_date_to_epoch("2026-05-01"));
     }
 }
