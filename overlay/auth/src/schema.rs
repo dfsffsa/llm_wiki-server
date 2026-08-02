@@ -122,5 +122,12 @@ pub fn init_schema(conn: &Connection) -> rusqlite::Result<()> {
         }
     }
 
+    // Unique index on waffo_order_id — needed for fast lookups on every
+    // webhook event. NULLs are distinct in SQLite unique indexes, so free
+    // users (waffo_order_id IS NULL) are unaffected.
+    conn.execute_batch(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_order_id ON users(waffo_order_id)",
+    )?;
+
     Ok(())
 }
