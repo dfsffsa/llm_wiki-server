@@ -51,6 +51,8 @@ musl-gcc --version
 protoc --version   # 需 ≥ 3.21；Mint 仓库版本若太老见下方 3.3
 ```
 
+> **免 sudo 方案**（本机 sudo 要密码时）：`apt download musl-tools`（无需 sudo）→ `dpkg -x` 解包 → 打补丁 `musl-gcc.specs` 的 `/usr/` 路径指向本地前缀 → 自建 `musl-gcc` 驱动脚本。完整命令见 [部署实战与排错记录-2026-08-02.md §3](./部署实战与排错记录-2026-08-02.md)。`.cargo/config.toml` 的 `linker` 则写本地路径 `$HOME/.local/musl/bin/musl-gcc`。
+
 ### 3.3 protoc 版本不够时手动安装
 
 LanceDB 要求 protoc 3.21+。Ubuntu 22.04 / Mint 21 仓库的 `protobuf-compiler` 是 3.12，会失败。手动装：
@@ -241,7 +243,7 @@ scp overlay/server/target/x86_64-unknown-linux-musl/release/llm-wiki-server \
     "$SERVER:$SERVER_REPO/overlay/server/target/release/llm-wiki-server"
 ```
 
-> 注意：server **不依赖 lancedb**，编译比 CLI 快得多（通常 2–5 分钟），即使在 2GB 内存机上也能直接编。但用 musl 静态版本仍然方便分发。
+> 注意：server 通过 `llm-wiki-common` **同样链接 lancedb/arrow**（build script 需要 protoc），编译耗时与 CLI 相当（增量 7–12 分钟），不是"轻量"。用 musl 静态版本方便分发。
 
 ---
 

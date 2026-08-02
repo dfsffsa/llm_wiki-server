@@ -105,16 +105,27 @@ ldd overlay/server/target/x86_64-unknown-linux-musl/release/llm-wiki-server
 
 ### 5.1 准备 server 配置
 
-```bash
-# 复制样例
-cp overlay/config/server.example.json overlay/config/server.local.json
+> **⚠️ 不要直接复制 `server.example.json` 部署**——它是纯模板（`projects[].path` 是 `/path/to/...`、token `change-me`、LLM `api.example.com`），直接上传会把远端可用配置覆盖成坏值。正确做法：
 
-# 编辑：projects[].path 指向 /root/llm_wiki_projects/<项目>
-#       llmConfig.apiKey 改成 PLACEHOLDER_FILL_ON_SERVER（脚本会替换）
-#       llmConfig.model / customEndpoint 按你的 LLM 提供商填写
+```bash
+# 1. 先读远端现有配置，复用真实项目路径 / token / LLM key
+ssh -p 22022 root@47.103.39.152 \
+  'cat /root/llm_wiki-server/overlay/config/server.local.json' > /tmp/remote-config.json
+
+# 2. 基于它构建 per-server 配置（gitignored），只加 smtp 块
+#    overlay/config/server.<host>.local.json：
+#    {
+#      ...远端原样（projects/llmConfig/apiConfig）...,
+#      "smtp": {
+#        "enabled": true, "host": "smtp.resend.com", "port": 587,
+#        "user": "resend", "pass": "${SMTP_PASS}",
+#        "from": "DocuChat <noreply@sship.online>",
+#        "publicBaseUrl": "https://www.sship.online"
+#      }
+#    }
 ```
 
-> `server.local.json` 已被 `.gitignore`（`*.local.json`）忽略，不会进 git。
+> 部署时用 `CONFIG_LOCAL=overlay/config/server.<host>.local.json` 指定（脚本会 `sed` 注入 `LLM_API_KEY` 到占位符后 chmod 600）。`*.local.json` 已被 `.gitignore` 忽略，不会进 git。SMTP 未配置时 `forgot-password` 回退到把 token 打日志。
 
 ### 5.2 跑部署脚本
 
@@ -153,6 +164,14 @@ LLM_API_KEY="$LLM_API_KEY" \
 | `SERVER_PORT` | | 8080 | 远端监听端口（先 `ss -ltnp` 查占用） |
 | `SERVER_BIND` | | `127.0.0.1:${SERVER_PORT}` | 监听地址 |
 | `SERVER_TOKEN` | | `minmax2.7` | API Bearer token；生产建议改强随机 |
+| `SMTP_PASS` | | 空 | 设置后注入 systemd `Environment=SMTP_PASS`（配合 config `pass:"${SMTP_PASS}"`） |
+| `SERVER_AUTH_DB` | | `${SERVER_REPO}/auth.db` | 多用户认证 DB 路径（跟随仓库；覆盖时勿改掉已有用户库路径） |
+| `SERVER_REQUIRE_LOGIN` | | `true` | 强制登录 |
+| `SERVER_ADMIN_EMAIL` | | 空 | 该邮箱注册时自动 admin |
+| `SERVER_DAILY_CHAT_LIMIT` | | `50` | 每用户每日 chat 限额 |
+| `SERVER_SESSION_TTL_DAYS` | | `30` | 会话有效期 |
+| `CONFIG_LOCAL` | | `overlay/config/server.example.json` | 部署的配置源（用 per-server 真实配置，勿用模板） |
+| `SKIP_SYSTEMD` | | `0` | `1` 时只传文件 + 生成 unit 到仓库目录，不写 /etc、不重启（无 sudo 用户用） |
 
 ### 5.4 部署完成检查
 

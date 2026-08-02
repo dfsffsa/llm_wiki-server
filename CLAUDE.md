@@ -48,7 +48,7 @@ export LLM_WIKI_STATIC=upstream/dist
 # Tests
 ./scripts/e2e-full.sh           # Full pipeline: patch → build → CLI → HTTP API
 ./scripts/e2e-local.sh           # Local headless (no Docker)
-./scripts/e2e-auth.sh            # Cookie-auth path: register/login/me/conversations/usage-limit/logout
+./scripts/e2e-auth.sh            # Cookie-auth path: register → verify-email → login → me → conversations → usage-limit → logout
 npm run test:mocks --prefix upstream  # Upstream unit tests
 ```
 
@@ -104,10 +104,13 @@ Multi-user routes — active only when `LLM_WIKI_AUTH_DB` is set (cookie/bearer 
 
 | Method | Path | Handler |
 |--------|------|---------|
-| POST | `/auth/register` | Register user (403 if `LLM_WIKI_DISABLE_REGISTRATION`) |
-| POST | `/auth/login` | Login → sets `session` cookie |
+| POST | `/auth/register` | Register user → sends verification email (403 if `LLM_WIKI_DISABLE_REGISTRATION`) |
+| GET | `/auth/verify-email` | Verify registration email (`?token=`; redirects). **Login blocked until verified** |
+| POST | `/auth/login` | Login → sets `session` cookie (fails 403 if email unverified) |
 | POST | `/auth/logout` | Clears session cookie |
 | GET | `/auth/me` | Current user (cookie required) |
+| POST | `/auth/change-email` | Request email change (sends token to new address) |
+| POST | `/auth/confirm-email-change` | Confirm email change via token |
 | POST | `/auth/forgot-password` | Send reset email (needs SMTP config) |
 | POST | `/auth/reset-password` | Reset password via emailed token |
 | GET | `/api/v1/conversations` | Per-user chat history — list / create |
@@ -209,13 +212,18 @@ Three-layer eval of wiki quality (Python, run from the dev machine against a liv
 | `ingest_check.py` | Layer 1 — schema compliance, structure, wikilink density, coverage of generated wiki pages |
 | `rag_eval.py` | Layers 2–3 — retrieval Recall@K/MRR against `expected_sources`, chat answer + citation quality |
 | `generate_test_cases.py` | LLM-assisted test-case generation (`--mode auto` / `hybrid`), emits v1 or v2 schema |
-| `scripts/run_eval.sh` | One-shot: health check → ingest_check → rag_eval. **Needs server up on :8080** |
+| `llm_judge.py` | **LLM-as-Judge** content eval: role A (Extractor) pulls claims from source, role B (Evaluator) scores wiki page coverage. Dual-model via `--config-a`/`--config-b` (`overlay/config/llm.judge.{a,b}.json`); retry+backoff, hallucination grading, incremental rerun, `--auto-fix` via `judge/repairer.py` |
+| `auto_fix.py` | Ingest auto-repair pipeline (`fixers/frontmatter.py`, `fixers/wikilink.py`); `--dry-run` preview, `--budget N` cap, backups to `fix_backups/`, regression re-check |
+| `rerun_failed.py` / `run_auto_fix.py` | Re-run only failed cases / batch auto-fix driver |
+| `scripts/run_eval.sh` | One-shot: health check → ingest_check → rag_eval. `[project] [mode] [--fix]`. **Needs server up on :8080** |
 
 ```bash
 ./overlay/eval/scripts/run_eval.sh ParentingBooks            # full (ingest + retrieval + chat)
+./overlay/eval/scripts/run_eval.sh ParentingBooks all --fix  # ...then auto-repair ingest issues
 python overlay/eval/rag_eval.py --project <path> --mode retrieval
 python overlay/eval/generate_test_cases.py --project <path> --mode auto --schema v2
-python -m unittest discover -s overlay/eval/tests            # P0 metric-regression tests
+python overlay/eval/llm_judge.py --project <path> --config-a overlay/config/llm.judge.a.json --config-b overlay/config/llm.judge.b.json --sample 20
+python -m unittest discover -s overlay/eval/tests            # P0 + judge + auto-fix regression tests
 ```
 
 Test cases live in `overlay/eval/test_cases/*.json` — **v1** (`expected_sources: [...]`) vs **v2** (`expected_sources: {must:[], should:[]}`, from July 2026). **Historical caveat:** eval metric numbers were unreliable before the v2 work — `recall_at_k` was actually MRR. See `overlay/eval/AUDIT_2026-06-23.md`; the v2 schema + match helpers (`match_at_k`, `matched_patterns`) fix that. Don't trust pre-July results for decisions.
@@ -226,8 +234,8 @@ Two scripts in `scripts/`, both driven by `SSH_HOST` / `SSH_PORT` / `SSH_CONFIG`
 
 | Script | Scope | Use when | Time (incremental) |
 |--------|-------|----------|--------------------|
-| `scripts/deploy-ecs.sh` | full: binary + dist + node_modules + `server.local.json` + systemd unit + restart | first deploy, new machine, systemd/config change | 1–5 min |
-| `scripts/sync-artifacts.sh` | incremental: binary + dist + node_modules only (no systemd/config) | routine iteration after local rebuild | ~10s |
+| `scripts/deploy-ecs.sh` | full: binary + dist + node_modules + `overlay/static/` + `server.local.json` + systemd unit + restart. `SKIP_SYSTEMD=1` deploys files + writes the unit to the repo dir only (no `/etc`, no start) — for users without sudo | first deploy, new machine, systemd/config change | 1–5 min |
+| `scripts/sync-artifacts.sh` | incremental: binary + dist + node_modules + `overlay/static/` (no systemd/config) | routine iteration after local rebuild | ~10s |
 
 Both accept a server-side `LLM_API_KEY` env (read at deploy time, injected into `server.local.json` via `sed` + `chmod 600`); `server.local.json` itself is gitignored via `*.local.json`. **Never hardcode the key in either script.**
 
@@ -258,6 +266,8 @@ ssh -p 22022 root@47.103.39.152 'systemctl restart llm-wiki-server'
 ```
 
 The dev-machine (`wanghuacun`) is the build machine; remote ECS (47.103.39.152) only consumes artifacts over SSH. **Code lives in git on the dev machine, artifacts live on disk on both** (the 50 MB CLI binary never enters the git repo).
+
+> **部署实战记录（2026-08-02）**：完整跑通**双服务器**——ecs99（阿里云 47.103.39.152:22022，`/root`，root）服务 `cn.sship.online`，ecs199（腾讯 170.106.132.196，`/home/li/code/personal`，li 用户 sudo 需密码，用 `SKIP_SYSTEMD=1` 手动装 unit）服务 `glb.sship.online`；Resend 邮件（域名 sship.online 已验证）；火山 Ark LLM（`deepseek-v4-flash`，`apiMode` 必须 `chat_completions`）。`deploy-ecs.sh` 新增 `SMTP_PASS`/`SERVER_AUTH_DB`/`CONFIG_LOCAL`/`SKIP_SYSTEMD` 参数，且 rsync `overlay/static`。**`server.example.json` 是纯模板勿直接部署**（见 [docs/部署实战与排错记录-2026-08-02.md](./docs/部署实战与排错记录-2026-08-02.md)）。
 
 ## Patched Submodule Architecture
 
@@ -325,5 +335,6 @@ If any of these fail, the corresponding `docs/` section is the next place to loo
 - [docs/远端服务器ingest.md](./docs/远端服务器ingest.md) — **Remote ingest runbook** (do ingest on ECS, agent-friendly quick start)
 - [docs/部署-低配ECS一键脚本.md](./docs/部署-低配ECS一键脚本.md) — **Low-spec ECS runbook** (deploy-ecs.sh / sync-artifacts.sh, pitfalls, ssh config)
 - [docs/低配机交叉编译CLI.md](./docs/低配机交叉编译CLI.md) — musl cross-compile details
+- [docs/部署实战与排错记录-2026-08-02.md](./docs/部署实战与排错记录-2026-08-02.md) — **部署实战**（双服务器、Resend 邮件、Ark LLM、免 sudo musl、排错速查）
 - [docs/部署指引.md](./docs/部署指引.md) — Deployment options
 - [docs/文档索引.md](./docs/文档索引.md) — Full doc index

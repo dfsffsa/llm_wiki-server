@@ -152,6 +152,10 @@ Gmail/163/QQ 个人邮箱 SMTP 仅适合测试（几十封/天，量大封号）
 
 `smtp` 块缺失或 `enabled:false` → `forgot-password` 把重置 token 打印到 server 日志（`journalctl`），运维手动把链接给用户。适合开发/内测，**不适合正式商用**——用户拿不到邮件。
 
+**配了 SMTP 时（推荐）**：重置邮件会**直接显示可复制的 token**（`mail.rs` 的 `build_reset_html/plain`，等宽字体框），用户复制到 `/reset-password` 页面的 token 输入框粘贴即可，不依赖点击链接（链接仍保留作辅助）。这样地理分流下链接指向未部署一侧时也不至于死路。
+
+**端口注意**：Resend 587 是 **STARTTLS**，server 代码对 `port!=465` 用 `starttls_relay()`、465 用 `relay()`（隐式 TLS）。lettre 必须配 `tokio1-rustls-tls`（native-tls 依赖系统 OpenSSL，破坏 musl 静态部署）。
+
 ## 9. 相关代码与文档
 
 - 实现：[`overlay/server/src/mail.rs`](../overlay/server/src/mail.rs)（SMTP 客户端 + 重置链接构造，7 个单测）

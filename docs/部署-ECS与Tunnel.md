@@ -285,10 +285,12 @@ export LLM_WIKI_PUBLIC_LANDING_DIR=/opt/llm-wiki/overlay/static
 | 路径 | 显示 |
 |------|------|
 | `/` | 落地页 |
-| `/login` `/register` | 登录/注册(同一页,tab 切换) |
-| `/reset-password` | 重置密码(token 暂时打到 server stderr,通过 `journalctl -u llm-wiki-server` 取) |
+| `/login` `/register` | 登录 / 注册（**各自独立页面**） |
+| `/reset-password` | 重置密码（配置 SMTP 后**邮件直接显示可复制的 token**，用户粘贴设置新密码；未配 SMTP 时 token 打 server stderr） |
 | `/lite/` | 问答页(需登录) |
 | `/api/v1/*` | 仍接受 cookie 或 Bearer(CLI 不变) |
+
+> 注意：`deploy-ecs.sh` 生成的 unit 用**内联 `Environment=`** 注入这些变量（含 `LLM_WIKI_AUTH_DB`），且 auth DB 默认路径是 `${SERVER_REPO}/auth.db`（跟随仓库，避免覆盖已有用户库），不是本节的 `/var/lib/llm-wiki/auth.db`。本节是手工部署的参考写法。
 
 **备份:** 将 `/var/lib/llm-wiki/auth.db` 加入备份清单。生产建议用 `sqlite3 auth.db ".backup /backup/auth.db"`(WAL 模式下直接 `cp` 可能拿到部分写入)。
 
