@@ -428,6 +428,9 @@ fn handle_webhook(
         return;
     };
     let store = auth.store();
+    // Dedup is best-effort check-then-record: a concurrent duplicate delivery
+    // can pass the gate and double-process, but the entitlement writes are
+    // idempotent (set_plan is an UPSERT), so the end state is identical.
     if store.has_webhook_event(&event_id).unwrap_or(false) {
         respond_ok(request);
         return;
@@ -435,7 +438,10 @@ fn handle_webhook(
     let data = parsed.get("data").cloned().unwrap_or(Value::Null);
     match process_webhook_event(store, &event_type, &data) {
         Ok(()) => {
-            let _ = store.record_webhook_event(&event_id, &event_type, now_secs());
+            if let Err(e) = store.record_webhook_event(&event_id, &event_type, now_secs()) {
+                // Not fatal: the primary key still guards against replay rows.
+                tracing::warn!(event = %event_type, error = %e, "failed to record webhook dedup row");
+            }
             tracing::info!(event = %event_type, "webhook processed");
             respond_ok(request);
         }
@@ -448,7 +454,8 @@ fn handle_webhook(
 }
 
 fn respond_ok(request: Request) {
-    let resp = tiny_http::Response::from_string("OK").with_status_code(StatusCode(200));
+    let mut resp = tiny_http::Response::from_string("OK").with_status_code(StatusCode(200));
+    resp.add_header(tiny_http::Header::from_bytes("Content-Type", "text/plain; charset=utf-8").unwrap());
     let _ = request.respond(resp);
 }
 
