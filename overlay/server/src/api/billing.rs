@@ -129,43 +129,60 @@ pub struct BillingConfig {
     pub language: Option<String>,
 }
 
+/// Clamp a config numeric to u32, logging if it was absurdly large (typo guard).
+fn u32_clamp(v: u64) -> u32 {
+    match u32::try_from(v) {
+        Ok(n) => n,
+        Err(_) => {
+            tracing::warn!("billing limit value {v} exceeds u32::MAX — clamping");
+            u32::MAX
+        }
+    }
+}
+
 pub fn parse_billing_config(app_state: &serde_json::Value) -> Option<BillingConfig> {
     let b = app_state.get("billing")?;
     if b.get("enabled").and_then(serde_json::Value::as_bool) == Some(false) {
         return None;
     }
-    Some(BillingConfig {
-        merchant_id: b.get("waffoMerchantId")?.as_str()?.trim().to_string(),
-        private_key_pem: b.get("waffoPrivateKey")?.as_str()?.trim().to_string(),
-        pro_product_id: b.get("proProductId")?.as_str()?.trim().to_string(),
-        webhook_public_key_pem: b.get("webhookPublicKey")?.as_str()?.trim().to_string(),
-        environment: b
-            .get("environment")
-            .and_then(serde_json::Value::as_str)
-            .unwrap_or("test")
-            .trim()
-            .to_string(),
-        free_tier_daily_limit: b
-            .get("freeTierDailyLimit")
-            .and_then(serde_json::Value::as_u64)
-            .map(|v| v as u32)
-            .unwrap_or(3),
-        pro_tier_daily_limit: b
-            .get("proTierDailyLimit")
-            .and_then(serde_json::Value::as_u64)
-            .map(|v| v as u32)
-            .unwrap_or(10_000),
-        checkout_success_url: b
-            .get("checkoutSuccessUrl")
-            .and_then(serde_json::Value::as_str)
-            .unwrap_or("")
-            .trim()
-            .to_string(),
-        language: b
-            .get("language")
-            .and_then(serde_json::Value::as_str)
-            .map(|s| s.trim().to_owned()),
-    })
+    let cfg = (|| {
+        Some(BillingConfig {
+            merchant_id: b.get("waffoMerchantId")?.as_str()?.trim().to_string(),
+            private_key_pem: b.get("waffoPrivateKey")?.as_str()?.trim().to_string(),
+            pro_product_id: b.get("proProductId")?.as_str()?.trim().to_string(),
+            webhook_public_key_pem: b.get("webhookPublicKey")?.as_str()?.trim().to_string(),
+            environment: b
+                .get("environment")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("test")
+                .trim()
+                .to_string(),
+            free_tier_daily_limit: b
+                .get("freeTierDailyLimit")
+                .and_then(serde_json::Value::as_u64)
+                .map(u32_clamp)
+                .unwrap_or(3),
+            pro_tier_daily_limit: b
+                .get("proTierDailyLimit")
+                .and_then(serde_json::Value::as_u64)
+                .map(u32_clamp)
+                .unwrap_or(10_000),
+            checkout_success_url: b
+                .get("checkoutSuccessUrl")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("")
+                .trim()
+                .to_string(),
+            language: b
+                .get("language")
+                .and_then(serde_json::Value::as_str)
+                .map(|s| s.trim().to_owned()),
+        })
+    })();
+    if cfg.is_none() {
+        tracing::warn!("billing block present but required field missing or wrong type — billing disabled");
+    }
+    cfg
 }
 
 /// Per-user daily chat limit: pro -> proTierDailyLimit, free -> freeTierDailyLimit.
