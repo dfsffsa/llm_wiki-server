@@ -248,11 +248,10 @@ fn handle_me(
         Err(e) => return respond_err(request, &e),
     };
 
-    // Usage info (today, UTC) + subscription plan.
-    let (plan, period_end) = auth
-        .store()
-        .get_plan_info(user.id)
-        .unwrap_or_else(|_| ("free".to_string(), None));
+    // `user` already carries plan + period_end from the session lookup;
+    // avoid a second read of the same row.
+    let plan = user.plan.clone();
+    let period_end = user.plan_period_end;
     let limit = crate::api::billing::resolve_daily_limit(
         state.load_app_state().as_ref(),
         &plan,

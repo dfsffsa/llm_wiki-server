@@ -155,10 +155,10 @@ pub fn try_handle_chat_sse(
     if let api::AuthOutcome::Cookie(user_id) = auth_outcome {
         if let Some(auth) = state.auth() {
             let date = today_utc_for_chat();
-            let plan = auth
-                .store()
-                .get_plan(user_id)
-                .unwrap_or_else(|_| "free".to_string());
+            let plan = auth.store().get_plan(user_id).unwrap_or_else(|e| {
+                tracing::warn!(%user_id, error = %e, "plan lookup failed, falling back to free tier");
+                "free".to_string()
+            });
             let limit = crate::api::billing::resolve_daily_limit(
                 state.load_app_state().as_ref(),
                 &plan,
