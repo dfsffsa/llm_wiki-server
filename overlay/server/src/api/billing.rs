@@ -51,6 +51,7 @@ pub fn verify_webhook_signature(
     let mut ts: Option<i64> = None;
     let mut sig_b64: Option<&str> = None;
     for part in sig_header.split(',') {
+        let part = part.trim();
         if let Some(v) = part.strip_prefix("t=") {
             ts = v.parse().ok();
         } else if let Some(v) = part.strip_prefix("v1=") {
@@ -59,7 +60,7 @@ pub fn verify_webhook_signature(
     }
     let ts = ts.ok_or("missing t=")?;
     let sig_b64 = sig_b64.ok_or("missing v1=")?;
-    if (now - ts).abs() > 300 {
+    if ts > now + 60 || ts < now - 300 {
         return Err(format!(
             "webhook timestamp outside tolerance (now={now} ts={ts})"
         ));
@@ -87,10 +88,22 @@ pub fn iso_date_to_epoch(s: &str) -> Option<i64> {
     if it.next().is_some() {
         return None;
     }
-    if !(1..=12).contains(&m) || !(1..=31).contains(&d) {
+    if !(1..=12).contains(&m) || !(1..=days_in_month(y, m)).contains(&d) {
         return None;
     }
     Some(days_from_civil(y, m, d) * 86_400)
+}
+
+fn days_in_month(y: i64, m: i64) -> i64 {
+    match m {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 => {
+            let leap = (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0);
+            if leap { 29 } else { 28 }
+        }
+        _ => 0,
+    }
 }
 
 fn days_from_civil(y: i64, m: i64, d: i64) -> i64 {
@@ -208,12 +221,55 @@ mod tests {
     }
 
     #[test]
+    fn verify_webhook_rejects_future_timestamp() {
+        let (privk, pubk) = keypair();
+        let body = "{}";
+        let ts = 1_700_000_000i64;
+        let signed = format!("{ts}.{body}");
+        let sig = privk
+            .sign(Pkcs1v15Sign::new::<Sha256>(), &Sha256::digest(signed.as_bytes()))
+            .unwrap();
+        let header = format!("t={ts},v1={}", B64.encode(sig));
+        // now is 2 minutes behind ts → ts is 2 min in the future → reject (1 min max)
+        assert!(
+            verify_webhook_signature(body, &header, &pub_pem(&pubk), ts - 120).is_err()
+        );
+    }
+
+    #[test]
+    fn sign_and_verify_with_pkcs1_pem() {
+        let (privk, pubk) = keypair();
+        let priv_pkcs1 = rsa::pkcs1::EncodeRsaPrivateKey::to_pkcs1_pem(&privk, rsa::pkcs1::LineEnding::LF)
+            .unwrap()
+            .to_string();
+        let pub_pkcs1 = rsa::pkcs1::EncodeRsaPublicKey::to_pkcs1_pem(&pubk, rsa::pkcs1::LineEnding::LF)
+            .unwrap()
+            .to_string();
+        // Private-key path: sign_headers must parse the PKCS#1 PEM via the or_else fallback.
+        let headers = sign_headers("POST", "/p", b"{}", "MER_1", &priv_pkcs1).unwrap();
+        assert!(headers.iter().any(|(k, _)| k == "X-Signature"));
+        // Public-key path: verify_webhook_signature must parse the PKCS#1 public key PEM.
+        let body = r#"{"id":"evt_1","eventType":"subscription.activated","data":{}}"#;
+        let ts = 1_700_000_000i64;
+        let sig = privk
+            .sign(
+                Pkcs1v15Sign::new::<Sha256>(),
+                &Sha256::digest(format!("{ts}.{body}").as_bytes()),
+            )
+            .unwrap();
+        let header = format!("t={ts},v1={}", B64.encode(sig));
+        verify_webhook_signature(body, &header, &pub_pkcs1, ts).unwrap();
+    }
+
+    #[test]
     fn iso_date_to_epoch_known_values() {
         assert_eq!(iso_date_to_epoch("1970-01-01"), Some(0));
         assert_eq!(iso_date_to_epoch("1970-01-02"), Some(86_400));
         assert_eq!(iso_date_to_epoch("2026-03-10"), Some(1_773_100_800));
         assert_eq!(iso_date_to_epoch("2024-02-29"), Some(1_709_164_800)); // leap year
         assert_eq!(iso_date_to_epoch("2026-13-01"), None);
+        assert_eq!(iso_date_to_epoch("2026-02-30"), None); // impossible date
+        assert_eq!(iso_date_to_epoch("2024-02-30"), None); // leap-year Feb also capped at 29
         assert_eq!(iso_date_to_epoch("garbage"), None);
     }
 }
