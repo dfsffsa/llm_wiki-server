@@ -603,7 +603,10 @@
         });
         if (r.status === 401) { location.href = '/login?next=/pricing'; return; }
         const j = await r.json();
-        if (r.ok && j.checkoutUrl) { window.open(j.checkoutUrl, '_blank', 'noopener,noreferrer'); }
+        if (r.ok && j.checkoutUrl) {
+          const win = window.open(j.checkoutUrl, '_blank', 'noopener,noreferrer');
+          if (!win) { location.href = j.checkoutUrl; } // popup blocked — same-tab fallback
+        }
         else { alert((j.error && typeof j.error === 'string' ? j.error : '无法创建订单，请稍后再试')); }
       } catch (err) { alert('网络错误，请稍后再试'); }
       btn.disabled = false;

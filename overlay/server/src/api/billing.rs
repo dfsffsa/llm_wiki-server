@@ -184,6 +184,18 @@ pub fn parse_billing_config(app_state: &serde_json::Value) -> Option<BillingConf
                 .map(|s| s.trim().to_owned()),
         })
     })();
+    if let Some(c) = &cfg {
+        if c.merchant_id.starts_with("${")
+            || c.private_key_pem.starts_with("${")
+            || c.pro_product_id.starts_with("${")
+            || c.webhook_public_key_pem.starts_with("${")
+        {
+            tracing::warn!(
+                "billing config contains unexpanded ${{VAR}} placeholder — WAFFO_* env vars not set; billing disabled"
+            );
+            return None;
+        }
+    }
     if cfg.is_none() {
         tracing::warn!("billing block present but required field missing or wrong type — billing disabled");
     }
