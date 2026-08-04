@@ -97,6 +97,40 @@ def write_report(report_path, results, cache):
         f.write("\n".join(lines) + "\n")
 
 
+def fix_truncated(paths, cache, config, check_fn=call_llm):
+    """把「截断」块的末尾未完结段落到下一块正文开头。返回被改动块数。
+
+    仅当尾段不以句尾标点结尾时搬移(那才是真正被切开的句子);
+    其余截断判定(悬空/重复/可疑)留给 MANUAL_REVIEW。
+    """
+    changed = 0
+    for i, p in enumerate(paths[:-1]):
+        verdict, _ = check_chunk(p, config, cache, check_fn)
+        if verdict.get("severity") != "truncated":
+            continue
+        with open(p, encoding="utf-8") as f:
+            text = f.read()
+        paras = text.split("\n\n")
+        tail = paras[-1].rstrip()
+        if tail.endswith(tuple(SENTENCE_END)):
+            continue  # 尾段其实是完整句子 → 人工复核,不自动搬
+        nxt = paths[i + 1]
+        with open(nxt, encoding="utf-8") as f:
+            nxt_text = f.read()
+        # 下一块正文起点:frontmatter+标题(块0) / > 来源(块1)之后 → 插到 index 2
+        blocks = nxt_text.split("\n\n")
+        blocks.insert(2, tail)
+        with open(nxt, "w", encoding="utf-8") as f:
+            f.write("\n\n".join(blocks))
+        paras.pop()
+        with open(p, "w", encoding="utf-8") as f:
+            f.write("\n\n".join(paras))
+        changed += 1
+        cache.pop(os.path.basename(p), None)
+        cache.pop(os.path.basename(nxt), None)
+    return changed
+
+
 def main():
     ap = argparse.ArgumentParser(description="LLM 切分语义检查")
     ap.add_argument("--chunks", required=True)
@@ -120,9 +154,13 @@ def main():
         print(f"  {os.path.basename(p)}: {verdict.get('severity')} {verdict.get('issue', '')}")
     save_cache(cache, args.cache)
     if args.fix:
-        # fix_truncated 由 Task 5 定义;批处理用到 --fix 时必已实现
         n = fix_truncated(paths, cache, config)
         print(f"fixed {n} truncated chunk(s)")
+        # 重新检查被修改的块(缓存已失效),更新报告结果
+        for i, (p, _, _) in enumerate(results):
+            if os.path.basename(p) not in cache:
+                verdict, _ = check_chunk(p, config, cache)
+                results[i] = (p, verdict, False)
         save_cache(cache, args.cache)
     write_report(report, results, cache)
     print(f"report -> {report}")

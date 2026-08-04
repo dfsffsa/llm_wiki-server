@@ -102,6 +102,35 @@ class TestWriteReport(unittest.TestCase):
         self.assertNotIn("04.md", names)
         self.assertNotIn("05.md", names)
 
+class TestFixTruncated(unittest.TestCase):
+    def test_moves_partial_tail_to_next_chunk(self):
+        d = tempfile.mkdtemp()
+        p1 = make_chunk(d, "a.md", "第一段完整。\n\n第二段未")
+        p2 = make_chunk(d, "b.md", "完结的内容。")
+        config = {}
+
+        def fake(prompt, cfg):
+            if "第一段完整" in prompt:
+                return '{"ok": false, "severity": "truncated", "issue": "结尾缺句号"}'
+            return '{"ok": true, "severity": "ok", "issue": ""}'
+
+        changed = ebook_check.fix_truncated([p1, p2], {}, config, check_fn=fake)
+        self.assertEqual(changed, 1)
+        self.assertIn("第二段未", open(p2, encoding="utf-8").read())
+        self.assertNotIn("第二段未", open(p1, encoding="utf-8").read())
+
+    def test_complete_tail_not_moved(self):
+        d = tempfile.mkdtemp()
+        p1 = make_chunk(d, "a.md", "第一段完整。\n\n第二段也完整。")
+        p2 = make_chunk(d, "b.md", "完结。")
+        config = {}
+
+        def fake(prompt, cfg):
+            return '{"ok": false, "severity": "truncated", "issue": "x"}'
+
+        changed = ebook_check.fix_truncated([p1, p2], {}, config, check_fn=fake)
+        self.assertEqual(changed, 0)  # 尾段以句号结尾 → 不搬,留给人工复核
+
 
 if __name__ == "__main__":
     unittest.main()
