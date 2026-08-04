@@ -42,13 +42,12 @@ class TestFindChapterHeads(unittest.TestCase):
 
 class TestSubsplit(unittest.TestCase):
     def test_cuts_at_paragraph_boundary(self):
-        text = "\n\n".join(["一" * 1500, "二" * 1500, "三" * 1500])
+        paras = ["一" * 1500, "二" * 1500, "三" * 1500]
+        text = "\n\n".join(paras)
         chunks = ebook_split.subsplit(text, max_chars=2000)
-        self.assertGreater(len(chunks), 1)
+        self.assertEqual(chunks, paras)  # 三个整段各自成块,不腰斩
         for c in chunks:
             self.assertLessEqual(len(c), 2000)
-        # 段落不被腰斩
-        self.assertNotIn("一" * 1499 + "二", "".join(chunks))
 
     def test_sentence_fallback_never_mid_sentence(self):
         p = "。".join("句" * 800 for _ in range(6)) + "。"

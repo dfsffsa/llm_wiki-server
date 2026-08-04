@@ -84,7 +84,7 @@ def subsplit(text: str, max_chars: int):
         if cur:
             chunks.append(cur)
         if len(p) <= max_chars:
-            cur = ("\n\n" + p) if chunks else p
+            cur = p
             continue
         # 单段超长:按句尾标点硬切
         sentences = re.split(r"(?<=[。！？!?…])", p)
