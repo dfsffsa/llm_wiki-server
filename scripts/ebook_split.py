@@ -12,6 +12,8 @@ import os
 import re
 import subprocess
 
+import yaml
+
 # 正文章节标题:第X章 + 全角空格(区分 TOC 的半角空格)
 DEFAULT_CHAPTER_RE = r"^第[0-9]+章　"
 # 目录行(半角空格 或 第X部分),从 front 里剔除
@@ -57,7 +59,7 @@ def find_chapter_heads(lines, chapter_re=DEFAULT_CHAPTER_RE):
 def clean_title(heading: str, max_len: int = 30) -> str:
     """从章节标题行提取纯标题:去「第X章」前缀、去引号、截断、去非法字符。"""
     t = re.sub(r"^第[0-9]+章[　\s]+", "", heading).strip()
-    t = re.sub(r"[\"'\"\'“”「」『』《》]", "", t).strip()
+    t = re.sub(r"[\"'“”「」『』《》]", "", t).strip()
     if len(t) > max_len:
         t = t[:max_len].rstrip()
     t = re.sub(r'[\\/:*?"<>|\r\n]', "", t)
@@ -105,18 +107,15 @@ def subsplit(text: str, max_chars: int):
 
 
 def build_frontmatter(source: str, chapter: str, title: str) -> str:
-    return (
-        "---\n"
-        "type: source_lesson\n"
-        f"source: {source}\n"
-        f"chapter: {chapter}\n"
-        f"title_text: {title}\n"
-        "tags:\n"
-        "  - source_lesson\n"
-        f"  - {source}\n"
-        "split_status: ebook_split\n"
-        "---\n"
-    )
+    doc = {
+        "type": "source_lesson",
+        "source": source,
+        "chapter": chapter,
+        "title_text": title,
+        "tags": ["source_lesson", source],
+        "split_status": "ebook_split",
+    }
+    return "---\n" + yaml.dump(doc, allow_unicode=True, sort_keys=False) + "---\n"
 
 
 def write_chunks(front, chapters, book, source, out_dir, max_chars=2500, dry_run=False):

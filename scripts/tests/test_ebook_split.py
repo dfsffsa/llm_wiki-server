@@ -159,6 +159,14 @@ class TestWriteChunks(unittest.TestCase):
         self.assertEqual(len(written), 1)
         self.assertNotIn("第2章", written[0])
 
+    def test_dry_run_does_not_create_files(self):
+        import tempfile
+
+        d = tempfile.mkdtemp()
+        chapters = [("第1章　测试", ["正文" * 500])]
+        ebook_split.write_chunks([], chapters, "书", "书", d, dry_run=True)
+        self.assertEqual(os.listdir(d), [])
+
 
 if __name__ == "__main__":
     unittest.main()
