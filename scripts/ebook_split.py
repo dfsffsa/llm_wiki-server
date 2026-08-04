@@ -57,7 +57,7 @@ def find_chapter_heads(lines, chapter_re=DEFAULT_CHAPTER_RE):
 def clean_title(heading: str, max_len: int = 30) -> str:
     """从章节标题行提取纯标题:去「第X章」前缀、去引号、截断、去非法字符。"""
     t = re.sub(r"^第[0-9]+章[　\s]+", "", heading).strip()
-    t = re.sub(r"[\"'“”「」]", "", t).strip()
+    t = re.sub(r"[\"'\"\'“”「」『』《》]", "", t).strip()
     if len(t) > max_len:
         t = t[:max_len].rstrip()
     t = re.sub(r'[\\/:*?"<>|\r\n]', "", t)
@@ -73,12 +73,13 @@ def subsplit(text: str, max_chars: int):
     """超长文本在段落边界切成 <= max_chars 的块;单段超长时在句尾标点后硬切。
 
     绝不把句子腰斩:段落内只允许在句尾标点后切。
+    注意:单段超长且无句尾标点时无法切分,该块可能超过 max_chars。
     """
     paras = split_paragraphs(text)
     chunks = []
     cur = ""
     for p in paras:
-        if len(cur) + len(p) + 1 <= max_chars:
+        if len(cur) + len(p) + 2 <= max_chars:
             cur = (cur + "\n\n" + p).strip()
             continue
         if cur:
@@ -87,7 +88,7 @@ def subsplit(text: str, max_chars: int):
             cur = p
             continue
         # 单段超长:按句尾标点硬切
-        sentences = re.split(r"(?<=[。！？!?…])", p)
+        sentences = re.split(rf"(?<=[{re.escape(SENTENCE_END)}])", p)
         cur = ""
         for s in sentences:
             if not s:
