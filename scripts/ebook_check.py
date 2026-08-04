@@ -112,12 +112,14 @@ def fix_truncated(paths, cache, config, check_fn=call_llm):
             text = f.read()
         paras = text.split("\n\n")
         tail = paras[-1].rstrip()
+        if not tail:
+            continue
         if tail.endswith(tuple(SENTENCE_END)):
             continue  # 尾段其实是完整句子 → 人工复核,不自动搬
         nxt = paths[i + 1]
         with open(nxt, encoding="utf-8") as f:
             nxt_text = f.read()
-        # 下一块正文起点:frontmatter+标题(块0) / > 来源(块1)之后 → 插到 index 2
+        # 下一块正文:frontmatter+标题(块0)/来源行(块1),插到 index 2 → 来源行之后、正文之前
         blocks = nxt_text.split("\n\n")
         blocks.insert(2, tail)
         with open(nxt, "w", encoding="utf-8") as f:

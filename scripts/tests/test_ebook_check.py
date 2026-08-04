@@ -114,10 +114,15 @@ class TestFixTruncated(unittest.TestCase):
                 return '{"ok": false, "severity": "truncated", "issue": "结尾缺句号"}'
             return '{"ok": true, "severity": "ok", "issue": ""}'
 
-        changed = ebook_check.fix_truncated([p1, p2], {}, config, check_fn=fake)
+        cache = {}
+        changed = ebook_check.fix_truncated([p1, p2], cache, config, check_fn=fake)
         self.assertEqual(changed, 1)
-        self.assertIn("第二段未", open(p2, encoding="utf-8").read())
-        self.assertNotIn("第二段未", open(p1, encoding="utf-8").read())
+        self.assertNotIn(os.path.basename(p1), cache)
+        self.assertNotIn(os.path.basename(p2), cache)
+        with open(p2, encoding="utf-8") as f:
+            self.assertIn("第二段未", f.read())
+        with open(p1, encoding="utf-8") as f:
+            self.assertNotIn("第二段未", f.read())
 
     def test_complete_tail_not_moved(self):
         d = tempfile.mkdtemp()
