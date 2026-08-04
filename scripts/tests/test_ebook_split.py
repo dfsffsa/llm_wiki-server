@@ -99,5 +99,66 @@ class TestSubsplit(unittest.TestCase):
             self.assertIn(f"P{i}" * 300, joined)
 
 
+class TestWriteChunks(unittest.TestCase):
+    def test_naming_and_frontmatter(self):
+        import tempfile
+
+        d = tempfile.mkdtemp()
+        front = ["前言内容" * 100]
+        chapters = [("第1章　喂养", ["正文" * 500])]
+        written = ebook_split.write_chunks(
+            front, chapters, "好孕从卵子开始", "好孕，从卵子开始", d
+        )
+        self.assertEqual(
+            written,
+            [
+                "好孕从卵子开始-00-前言.md",
+                "好孕从卵子开始-01-喂养.md",
+            ],
+        )
+        with open(os.path.join(d, written[1]), encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("type: source_lesson", content)
+        self.assertIn("source: 好孕，从卵子开始", content)
+        self.assertIn("split_status: ebook_split", content)
+        self.assertIn("chapter: 第1章　喂养", content)
+
+    def test_toc_lines_removed_from_front(self):
+        import tempfile
+
+        d = tempfile.mkdtemp()
+        front = ["版权信息", "第2章 关于睡眠 非快速眼动睡眠", "第3章 尿床 尿床的原因"]
+        chapters = [("第1章　睡眠", ["正文" * 500])]
+        written = ebook_split.write_chunks(
+            front, chapters, "法伯睡眠宝典", "法伯睡眠宝典", d
+        )
+        self.assertEqual(written, ["法伯睡眠宝典-01-睡眠.md"])
+        # front 全是 TOC 行,过滤后 < FRONT_MIN_CHARS → 不出「前言」块
+
+    def test_subchunk_naming(self):
+        import tempfile
+
+        d = tempfile.mkdtemp()
+        text = "\n\n".join("内容" * 800 for _ in range(6))
+        chapters = [("第5章　百科", [text])]
+        written = ebook_split.write_chunks(
+            [], chapters, "定本育儿百科", "定本育儿百科", d, max_chars=1000
+        )
+        self.assertEqual(written[0], "定本育儿百科-05-百科.md")
+        self.assertEqual(written[1], "定本育儿百科-05-百科-2.md")
+        self.assertGreater(len(written), 2)
+
+    def test_empty_chapter_skipped(self):
+        import tempfile
+
+        d = tempfile.mkdtemp()
+        chapters = [("第1章　有内容", ["正文" * 500]), ("第2章　空章", ["", ""])]
+        written = ebook_split.write_chunks(
+            [], chapters, "西尔斯育儿经", "西尔斯育儿经", d
+        )
+        self.assertEqual(len(written), 1)
+        self.assertNotIn("第2章", written[0])
+
+
 if __name__ == "__main__":
     unittest.main()

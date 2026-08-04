@@ -102,3 +102,93 @@ def subsplit(text: str, max_chars: int):
     if cur:
         chunks.append(cur)
     return chunks
+
+
+def build_frontmatter(source: str, chapter: str, title: str) -> str:
+    return (
+        "---\n"
+        "type: source_lesson\n"
+        f"source: {source}\n"
+        f"chapter: {chapter}\n"
+        f"title_text: {title}\n"
+        "tags:\n"
+        "  - source_lesson\n"
+        f"  - {source}\n"
+        "split_status: ebook_split\n"
+        "---\n"
+    )
+
+
+def write_chunks(front, chapters, book, source, out_dir, max_chars=2500, dry_run=False):
+    """生成并(非 dry_run)写出所有块;返回文件名列表。"""
+    written = []
+    # 前言块:剔除 TOC 行后仍 >= FRONT_MIN_CHARS 才保留
+    front_text = "\n".join(l for l in front if not TOC_LINE_RE.match(l)).strip()
+    if len(front_text) >= FRONT_MIN_CHARS:
+        fname = f"{book}-00-前言.md"
+        fm = build_frontmatter(source, "前言", "前言")
+        body = f"# 前言\n\n{front_text}\n"
+        if not dry_run:
+            os.makedirs(out_dir, exist_ok=True)
+            with open(os.path.join(out_dir, fname), "w", encoding="utf-8") as f:
+                f.write(fm + body)
+        written.append(fname)
+
+    for idx, (heading, content) in enumerate(chapters, start=1):
+        text = "\n".join(content).strip()
+        if len(text) < 30:  # 空/过短章节(残留目录行)跳过
+            continue
+        title = clean_title(heading)
+        # 从标题提取章节编号(如 "第5章　..." → 5),维持原始顺序
+        m = re.match(r"第([0-9]+)章", heading)
+        ch_num = int(m.group(1)) if m else idx
+        parts = subsplit(text, max_chars)
+        for pi, part in enumerate(parts, start=1):
+            suffix = "" if pi == 1 else f"-{pi}"
+            fname = f"{book}-{ch_num:02d}-{title}{suffix}.md"
+            fm = build_frontmatter(source, heading, title)
+            body = f"# {title}\n\n> 来源:{source} / {heading}\n\n{part}\n"
+            if not dry_run:
+                os.makedirs(out_dir, exist_ok=True)
+                with open(os.path.join(out_dir, fname), "w", encoding="utf-8") as f:
+                    f.write(fm + body)
+            written.append(fname)
+    return written
+
+
+def main():
+    ap = argparse.ArgumentParser(description="ebook txt 按章节切分为源文件")
+    ap.add_argument("--epub", help="EPUB 路径(转换后切分)")
+    ap.add_argument("--txt", help="已转换的 txt 路径(跳过转换)")
+    ap.add_argument("--book", required=True, help="简化书名,用于文件名前缀")
+    ap.add_argument("--source", help="原书名(默认同 --book),写入 frontmatter")
+    ap.add_argument("--out", required=True, help="chunks 输出目录")
+    ap.add_argument("--max-chars", type=int, default=2500)
+    ap.add_argument("--heading-re", default=DEFAULT_CHAPTER_RE, help="章节标题正则")
+    ap.add_argument("--dry-run", action="store_true")
+    args = ap.parse_args()
+
+    if args.epub:
+        txt = args.txt or os.path.join(os.path.dirname(args.out), "book.txt")
+        os.makedirs(os.path.dirname(txt), exist_ok=True)
+        convert_epub(args.epub, txt)
+    elif args.txt:
+        txt = args.txt
+    else:
+        ap.error("需要 --epub 或 --txt 之一")
+
+    with open(txt, encoding="utf-8") as f:
+        lines = f.read().splitlines()
+
+    source = args.source or args.book
+    front, chapters = find_chapter_heads(lines, args.heading_re)
+    print(f"[{args.book}] front={len(front)} lines, chapters={len(chapters)}")
+    written = write_chunks(front, chapters, args.book, source, args.out,
+                           args.max_chars, args.dry_run)
+    for w in written:
+        print("  + " + w)
+    print(f"[{args.book}] total files: {len(written)}")
+
+
+if __name__ == "__main__":
+    main()
