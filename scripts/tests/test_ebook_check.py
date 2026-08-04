@@ -63,9 +63,44 @@ class TestWriteReport(unittest.TestCase):
                                               "issue": "悬空指代"}},
         }
         ebook_check.write_report(report, [], cache)
-        content = open(report, encoding="utf-8").read()
+        with open(report, encoding="utf-8") as f:
+            content = f.read()
         self.assertIn("MANUAL_REVIEW", content)
         self.assertIn("a.md", content)
+
+    def test_empty_results_still_writes_valid_report(self):
+        d = tempfile.mkdtemp()
+        report = os.path.join(d, "report.md")
+        ebook_check.write_report(report, [], {})
+        with open(report, encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("MANUAL_REVIEW", content)
+        self.assertIn("(无)", content)
+
+    def test_save_load_cache_roundtrip_preserves_chinese(self):
+        d = tempfile.mkdtemp()
+        cache_path = os.path.join(d, "cache.json")
+        cache = {"a.md": {"hash": "h1", "verdict": {"ok": False, "severity": "dangling", "issue": "悬空指代"}}}
+        ebook_check.save_cache(cache, cache_path)
+        loaded = ebook_check.load_cache(cache_path)
+        self.assertEqual(loaded, cache)
+
+    def test_sample_applied_after_only_long_filter(self):
+        d = tempfile.mkdtemp()
+        # 3 long + 2 short files
+        make_chunk(d, "01.md", "长" * 3000)
+        make_chunk(d, "02.md", "长" * 3000)
+        make_chunk(d, "03.md", "长" * 3000)
+        make_chunk(d, "04.md", "短" * 50)
+        make_chunk(d, "05.md", "短" * 50)
+        paths = ebook_check.collect_chunks(d, only_long=True, sample=2)
+        self.assertEqual(len(paths), 2)
+        names = [os.path.basename(p) for p in paths]
+        # 只保留前 2 个 long chunk (排序后),不含 short
+        self.assertIn("01.md", names)
+        self.assertIn("02.md", names)
+        self.assertNotIn("04.md", names)
+        self.assertNotIn("05.md", names)
 
 
 if __name__ == "__main__":

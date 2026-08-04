@@ -12,14 +12,13 @@ import argparse
 import hashlib
 import json
 import os
-import re
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPO_ROOT, "overlay", "eval"))
 from judge.llm_client import load_llm_config, call_llm, parse_json_response  # noqa: E402
 
-SENTENCE_END = "。！？!?…"
+SENTENCE_END = "。！？!?…"  # Task 5: used by fix_truncated
 PROMPT_TEMPLATE = """你是文本切分质检员。下面是从育儿书中切出的一段文本。判断:
 1. 是否被截断:句子/段落是否在中间断开(结尾无句号/引号/完整意思)。
 2. 是否语义自包含:脱离上下文能否独立理解;有无「见上文」「如前所述」等悬空指代。
@@ -44,7 +43,8 @@ def load_cache(path):
 
 def save_cache(cache, path):
     if path:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        d = os.path.dirname(path) or "."
+        os.makedirs(d, exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(cache, f, ensure_ascii=False, indent=2)
 
