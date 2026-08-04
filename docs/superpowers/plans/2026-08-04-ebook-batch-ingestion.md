@@ -12,6 +12,17 @@
 
 ---
 
+## 执行状态(2026-08-04 晚)
+
+- [x] **Task 1–7 已完成**(工具构建 + 8 本全量切分,1256 块,提交在 `main`,27 单测全过)
+- [ ] **Task 8 待执行**(⚠️ 有范围决策:全量检查 ~70min+token / 定本全检+其余抽样 / 仅超长块;见进度文档)
+- [ ] **Task 9–11 待执行**(promote + purpose.md / ingest / server+用例+eval)
+
+> 交接详情:`docs/notes/2026-08-04-ebook-ingestion-progress.md`。
+> ⚠️ 实际工作产物在主 checkout `/home/ab/overseas-github/llm_wiki-server`(branch `main`),不在 worktree `feat+ebook-ingestion`(空,可删)。
+
+---
+
 ## 关键事实(执行前必读)
 
 - **calibre txt 结构**:正文章节标题是独立行 `第1章　<标题>`(**全角空格**);目录(TOC)条目是 `第1章 <标题> <小节> <页码>`(**半角空格**)、紧挨在书前部。正文起点前的版权/目录/序言为 front matter。
