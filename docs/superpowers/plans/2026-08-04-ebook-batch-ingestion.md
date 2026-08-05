@@ -12,13 +12,15 @@
 
 ---
 
-## 执行状态(2026-08-04 晚)
+## 执行状态(2026-08-05)
 
-- [x] **Task 1–7 已完成**(工具构建 + 8 本全量切分,1256 块,提交在 `main`,27 单测全过)
-- [ ] **Task 8 待执行**(⚠️ 有范围决策:全量检查 ~70min+token / 定本全检+其余抽样 / 仅超长块;见进度文档)
-- [ ] **Task 9–11 待执行**(promote + purpose.md / ingest / server+用例+eval)
+- [x] **Task 1–7 已完成**(工具构建 + 8 本全量切分,1256 块,27 单测全过)
+- [x] **Task 8 已完成**(全量 LLM 检查 + `--fix` 修 114 块;复核清单 `.tools/ebooks/MANUAL_REVIEW.md`)
+- [x] **Task 9 已完成**(promote 到 raw/sources,1437 文件;purpose.md 已更新)
+- [ ] **Task 10 进行中**(并行入库 4 workers 后台跑 1265 文件,预计 ~10h;LLM 已切 deepseek-v4-flash-202605)
+- [ ] **Task 11 待执行**(server :8080 → 新书 v2 测试用例 → run_eval all --fix → rag_eval)
 
-> 交接详情:`docs/notes/2026-08-04-ebook-ingestion-progress.md`。
+> 交接详情:`docs/notes/2026-08-04-ebook-ingestion-progress.md`(2026-08-05 有续跑更新)。
 > ⚠️ 实际工作产物在主 checkout `/home/ab/overseas-github/llm_wiki-server`(branch `main`),不在 worktree `feat+ebook-ingestion`(空,可删)。
 
 ---

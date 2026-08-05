@@ -1,9 +1,28 @@
 # 电子书批量入库 — 进度交接(2026-08-04)
 
-> **交接时间**:2026-08-04 晚(执行中断,待续)
+> **交接时间**:2026-08-04 晚(执行中断,待续);2026-08-05 已续跑
 > **设计 spec**:`docs/superpowers/specs/2026-08-04-ebook-batch-ingestion-design.md`
 > **实现计划**:`docs/superpowers/plans/2026-08-04-ebook-batch-ingestion.md`(11 任务)
 > **执行方式**:subagent-driven-development(每任务 implementer + 规格评审 + 质量评审)
+
+---
+
+## 2026-08-05 续跑更新
+
+- **Task 8 完成 ✅**:8 本 1256 块全部 LLM 语义检查完毕。`--fix` 自动修复 114 个截断块。最终判定:ok 1156 / truncated 53 / dangling 39 / duplicate 4 / error 4。**人工复核清单**:`.tools/ebooks/MANUAL_REVIEW.md`(100 项)。
+- **过程中修的 3 个工具 bug**(均已提交):
+  - `parse_json_response` 无法解析结尾引号/if-else → 加平衡大括号提取 + if-else 清理(commit `8360cac`)
+  - `save_cache` 只整本写盘、崩溃丢进度 → 增量写(commit `f99031f`)
+  - LLM 拒绝/非 JSON 输出崩整本 → `check_chunk` 逐块容错,记 `error` verdict(commit `dd228c2`)
+- **Task 9 完成 ✅**:promote 到 `raw/sources/`(1437 文件 = 181 旧 + 1256 新),`purpose.md` 已更新。
+- **LLM 全部切到 Tencent tokenhub**(MiniMax 配额耗尽,429 阻塞):
+  - ingest + server chat:`server.local.json` llmConfig → `deepseek-v4-flash-202605`,`apiMode: chat_completions`(gitignored,不提交)
+  - llm_judge 评估者 B:`llm.judge.b.json` → `deepseek-v4-pro-202606`(commit `3a8dabc`)
+  - llm_judge 提取者 A:`llm.judge.a.json` → 保持 `deepseek-v4-flash-202605`
+- **Task 10 进行中**:单文件 ingest ≈ 2m11s(7 个 wiki 文件/源)。顺序 1256 文件 ≈ 42h 不可行 → 新增 `scripts/ingest-parallel.sh`(按 `wiki/sources/$base` 跳过已入库,多 worker 并行,`INGEST_WORKERS`/`INGEST_LIMIT` 可配)。冒烟 2 worker×4 文件通过、缓存无损坏。**当前 4 workers 后台全量入库 1265 文件,预计 ~10h,断点续跑**。缓存竞态可容忍(loadCache/saveCache 均 try/catch,损坏只退回空缓存;跳过靠 wiki/sources 存在性,不靠缓存)。
+- **模型探测结论**:tokenhub 上 `deepseek-v4-flash-202605` 与 `deepseek-v4-pro-202606` 可用;`deepseek-v4-pro`(裸)未授权、`deepseek-v4-pro-202605` TokenPlan 不支持。
+
+---
 
 ---
 
