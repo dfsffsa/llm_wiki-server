@@ -50,7 +50,10 @@ def save_cache(cache, path):
 
 
 def check_chunk(path, config, cache, check_fn=call_llm):
-    """检查单块;按内容 hash 命中缓存直接返回 (verdict, was_cached)。"""
+    """检查单块;按内容 hash 命中缓存直接返回 (verdict, was_cached)。
+
+    对 LLM 拒绝/输出异常容错:捕获后记录 error verdict 并缓存,不抛出。
+    """
     with open(path, encoding="utf-8") as f:
         content = f.read()
     fname = os.path.basename(path)
@@ -58,8 +61,12 @@ def check_chunk(path, config, cache, check_fn=call_llm):
     cached = cache.get(fname)
     if cached and cached.get("hash") == h:
         return cached["verdict"], True
-    resp = check_fn(PROMPT_TEMPLATE.format(chunk=content[:8000]), config)
-    verdict = parse_json_response(resp)
+    try:
+        resp = check_fn(PROMPT_TEMPLATE.format(chunk=content[:8000]), config)
+        verdict = parse_json_response(resp)
+    except Exception as e:  # noqa: BLE001 - LLM 拒绝/超时/解析失败不阻塞跑批
+        verdict = {"ok": False, "severity": "error",
+                   "issue": f"LLM 未返回有效判定: {str(e)[:120]}"}
     cache[fname] = {"hash": h, "verdict": verdict}
     return verdict, False
 
@@ -80,7 +87,7 @@ def collect_chunks(chunks_dir, only_long=False, sample=None):
 def write_report(report_path, results, cache):
     os.makedirs(os.path.dirname(report_path), exist_ok=True)
     manual = [k for k, v in cache.items()
-              if v["verdict"].get("severity") in ("dangling", "duplicate")]
+              if v["verdict"].get("severity") in ("dangling", "duplicate", "error")]
     lines = ["# 切分语义检查报告\n", "## 需人工复核(MANUAL_REVIEW)\n"]
     if manual:
         for k in manual:

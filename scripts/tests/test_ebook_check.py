@@ -46,6 +46,24 @@ class TestCheckChunk(unittest.TestCase):
         self.assertEqual(verdict["severity"], "truncated")
 
 
+    def test_error_verdict_on_llm_exception(self):
+        d = tempfile.mkdtemp()
+        p = make_chunk(d, "c.md", "敏感内容" * 50)
+        config = {}
+        cache = {}
+
+        def fake(prompt, cfg):
+            raise ValueError("Could not parse JSON from response: 你好，我无法给到相关内容。")
+
+        verdict, cached = ebook_check.check_chunk(p, config, cache, check_fn=fake)
+        self.assertFalse(cached)
+        self.assertEqual(verdict["severity"], "error")
+        self.assertIn("LLM 未返回有效判定", verdict["issue"])
+        # 已缓存,二次调用不重试
+        _, c2 = ebook_check.check_chunk(p, config, cache, check_fn=fake)
+        self.assertTrue(c2)
+
+
 class TestCollectChunks(unittest.TestCase):
     def test_filters_only_long_by_char_count(self):
         d = tempfile.mkdtemp()
@@ -176,15 +194,18 @@ class TestRunCheck(unittest.TestCase):
                 raise RuntimeError("simulated LLM failure")
             return '{"ok": true, "severity": "ok", "issue": ""}'
 
-        with self.assertRaises(RuntimeError):
-            ebook_check.run_check(paths, config, {}, cache_path, check_fn=fake, save_every=1)
+        # 不再抛出异常——check_chunk 捕获并转为 error verdict
+        results = ebook_check.run_check(paths, config, {}, cache_path, check_fn=fake, save_every=1)
+        self.assertEqual(len(results), 3)
 
-        # Cache on disk should contain the 1st (already-saved) chunk's entry
+        # Cache on disk should contain all 3 chunks' entries
         with open(cache_path, encoding="utf-8") as f:
             saved = json.load(f)
         self.assertIn("01.md", saved)
-        # 02.md was not saved because the error happened before its save point
-        self.assertNotIn("02.md", saved)
+        self.assertIn("02.md", saved)
+        self.assertIn("03.md", saved)
+        # 02.md 的 verdict 应为 error(LLM 拒绝/异常)
+        self.assertEqual(saved["02.md"]["verdict"]["severity"], "error")
 
 
 if __name__ == "__main__":
