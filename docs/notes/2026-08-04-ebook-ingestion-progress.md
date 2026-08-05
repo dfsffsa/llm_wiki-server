@@ -36,14 +36,23 @@
 
 ---
 
-## 2026-08-05 晚 Task 11(进行中)
+## 2026-08-05 晚 Task 11(完成)
 
-- [ ] 重建向量索引:`llm-wiki reindex --vectors`(新书内容入 LanceDB,rag_eval 检索需要)
-- [ ] 启动 server(:8080,`server.local.json` 已是 deepseek-v4-flash-202605)
-- [ ] 为新书生成 v2 测试用例(`generate_test_cases.py`,60 条)
-- [ ] `run_eval.sh ParentingBooks all --fix`(ingest_check + auto_fix + rag_eval)
-- [ ] 新书用例单独 rag_eval;指标分开看
-- 人工复核清单:`llm_wiki-server/.tools/ebooks/MANUAL_REVIEW.md`(100 项,待用户过目)
+**eval 结果:**
+- **ingest_check**:覆盖率 1437/1437 = **100%**;综合 **77.9/100**(Schema 40/40、wikilink 24.3/30、页面质量 13.7/30);auto_fix 修 10 处(15 可修、1 error)。
+- **新书检索(60 条 v2 用例)**:source_hit@5 **0.350** / @10 **0.417**;derived@5 0.633 / @10 **0.717**。
+- **旧书基线(15 条 v1)**:Recall@K 0.267,MRR 0.433 —— 同样偏低。
+- **Chat 生成**:无法评分(v2 用例缺 `expected_answers` → answer_match 恒 0,是评分伪象非质量问题)。
+- **检索偏低根因**:`server.local.json` 的 `embeddingConfig.enabled=false`(无 DashScope key),检索退化为纯关键词(hybrid 降级安全设计)。启用 embedding 才能测向量检索。
+- **两个执行教训**:
+  1. `rag_eval.py --project` 匹配的是**项目名**(如 `ParentingBooks`),不是路径;传完整路径会回退到项目列表第一个(CivilCareer)→ 搜到 bgs-* 内容、0 命中。`run_eval.sh` 的 rag_eval 因不带 token 会 401,需直接 `rag_eval.py --token` 跑。
+  2. `generate_test_cases.py` 按目录序处理源文件,撞到 target 就停 → 首本书(养育女孩)独占用例。跨书均衡用例需按书生成(后续)。
+
+**待办/建议:**
+- 人工复核清单 `llm_wiki-server/.tools/ebooks/MANUAL_REVIEW.md`(100 项)待用户过目。
+- 跨书测试用例(当前只有养育女孩)。
+- 若想测向量检索:配置 DashScope embedding key 并 `reindex --vectors`。
+- 新书 wiki 页 13.7/30 页面质量分偏低(部分词条块短),可接受。
 
 ---
 
