@@ -19,7 +19,16 @@
   - ingest + server chat:`server.local.json` llmConfig → `deepseek-v4-flash-202605`,`apiMode: chat_completions`(gitignored,不提交)
   - llm_judge 评估者 B:`llm.judge.b.json` → `deepseek-v4-pro-202606`(commit `3a8dabc`)
   - llm_judge 提取者 A:`llm.judge.a.json` → 保持 `deepseek-v4-flash-202605`
-- **Task 10 进行中**:单文件 ingest ≈ 2m11s(7 个 wiki 文件/源)。顺序 1256 文件 ≈ 42h 不可行 → 新增 `scripts/ingest-parallel.sh`(按 `wiki/sources/$base` 跳过已入库,多 worker 并行,`INGEST_WORKERS`/`INGEST_LIMIT` 可配)。冒烟 2 worker×4 文件通过、缓存无损坏。**当前 4 workers 后台全量入库 1265 文件,预计 ~10h,断点续跑**。缓存竞态可容忍(loadCache/saveCache 均 try/catch,损坏只退回空缓存;跳过靠 wiki/sources 存在性,不靠缓存)。
+- **Task 10 进行中**:单文件 ingest ≈ 2m11s(7 个 wiki 文件/源)。顺序 1256 文件 ≈ 42h 不可行 → 新增 `scripts/ingest-parallel.sh`(按 `wiki/sources/$base` 跳过已入库,多 worker 并行,`INGEST_WORKERS`/`INGEST_LIMIT` 可配)。冒烟 2 worker×4 文件通过、缓存无损坏。缓存竞态可容忍(loadCache/saveCache 均 try/catch,损坏只退回空缓存;跳过靠 wiki/sources 存在性,不靠缓存)。
+- **最终启动(脱离会话,可随会话关闭继续)**:
+  ```bash
+  setsid nohup env INGEST_WORKERS=4 LLM_WIKI_PROJECT="$HOME/overseas-github/llm_wiki_projects/ParentingBooks" \
+    LLM_WIKI_CONFIG=overlay/config/server.local.json bash scripts/ingest-parallel.sh \
+    > /tmp/ingest-parallel-detached.log 2>&1 &
+  ```
+  - **查看进度**:`tail /tmp/ingest-parallel-detached.log`、各 worker `/tmp/ingest-w{0..3}.log`、`ls wiki/sources/ | grep -cE "养育女孩|好孕|成就|定本|崔玉涛自然|法伯|西尔斯|第一次当奶爸"`
+  - **续跑**:中断后重跑上面命令即可(按 wiki/sources 存在性跳过已入库)
+  - **坑**:`pkill -f "llm-wiki ingest"` 会匹配到自身 shell(exit 144);杀进程用 `pkill -9 -f "[l]lm-wiki ingest"`(方括号防自匹配)。杀死会留孤儿 node/tsx 孙进程,需一并 `pkill -9 -f "[c]md-ingest"` 清掉,否则与新 run 双跑。
 - **模型探测结论**:tokenhub 上 `deepseek-v4-flash-202605` 与 `deepseek-v4-pro-202606` 可用;`deepseek-v4-pro`(裸)未授权、`deepseek-v4-pro-202605` TokenPlan 不支持。
 
 ---
