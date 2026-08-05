@@ -48,21 +48,23 @@ if [[ $npend -eq 0 ]]; then
   exit 0
 fi
 
-# 按序轮转分组(路径无空格,中文文件名安全)
-groups=()
-for i in $(seq 0 $((WORKERS - 1))); do groups[$i]=""; done
+# 按序轮转分组:写入逐行文件列表(文件名可能含半角空格,如"CHAPTER 17",须用 read -r 逐行读)
+TMPD="$(mktemp -d /tmp/ingest-groups.XXXXXX)"
+trap 'rm -rf "$TMPD"' EXIT
+for i in $(seq 0 $((WORKERS - 1))); do : > "$TMPD/group-$i.list"; done
 i=0
 for f in "${pending[@]}"; do
-  groups[$i]+=" $f"
+  printf '%s\n' "$f" >> "$TMPD/group-$i.list"
   i=$(( (i + 1) % WORKERS ))
 done
 
 pids=()
 for i in $(seq 0 $((WORKERS - 1))); do
-  [[ -z "${groups[$i]}" ]] && continue
+  list="$TMPD/group-$i.list"
+  [[ -s "$list" ]] || continue
   (
     n=0
-    for f in ${groups[$i]}; do
+    while IFS= read -r f; do
       base=$(basename "$f")
       n=$((n + 1))
       if "$ROOT/scripts/llm-wiki" ingest "$f" --project "$PROJECT" --config "$CONFIG" >>"/tmp/ingest-w${i}.log" 2>&1; then
@@ -70,7 +72,7 @@ for i in $(seq 0 $((WORKERS - 1))); do
       else
         echo "[w$i][$n] FAILED $base"
       fi
-    done
+    done < "$list"
     echo "[w$i] done ${n} files"
   ) &
   pids+=($!)
