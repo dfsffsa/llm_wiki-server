@@ -1,0 +1,1462 @@
+{
+  "project": "/home/ab/overseas-github/llm_wiki_projects/ParentingBooks",
+  "version": "2.0.0-auto",
+  "schema_version": "v2",
+  "generated_at": "2026-08-06T02:49:28.603400",
+  "mode": "auto",
+  "total_cases": 60,
+  "cases": [
+    {
+      "id": "auto_001",
+      "schema_version": "v2",
+      "question": "根据《养育女孩》前言，女孩的成长过程被划分为几个阶段？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-00-前言.md"
+        ],
+        "should": [
+          "wiki/concepts/女孩成长五阶段.md",
+          "wiki/sources/养育女孩-00-前言.md"
+        ]
+      },
+      "keywords": [
+        "女孩成长阶段",
+        "5个阶段",
+        "划分"
+      ],
+      "note": "考查对前言中核心概念的直接提取，对应女孩成长五阶段页面。",
+      "source_file": "养育女孩-00-前言.md"
+    },
+    {
+      "id": "auto_002",
+      "schema_version": "v2",
+      "question": "一位妈妈在阅读本书时，想通过互动测试更深入地了解自己和女儿的关系，她应该怎么做？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-00-前言.md"
+        ],
+        "should": [
+          "wiki/concepts/父母成长历程评估.md",
+          "wiki/sources/养育女孩-00-前言.md"
+        ]
+      },
+      "keywords": [
+        "互动测试",
+        "评估",
+        "问卷",
+        "养育女孩"
+      ],
+      "note": "考查对前言中关于参与评估测试和下载问卷建议的理解，应用于实际阅读场景。",
+      "source_file": "养育女孩-00-前言.md"
+    },
+    {
+      "id": "auto_003",
+      "schema_version": "v2",
+      "question": "我是一位职场妈妈，每天日程排得很满，下班回家后还要面对哭闹的小女儿，自己也很烦躁，不知道怎么与女儿建立亲密关系。我该怎么办？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-01-第一章-2.md"
+        ],
+        "should": [
+          "wiki/concepts/匆匆忙忙是爱的大敌.md",
+          "wiki/concepts/父母平静心态与婴儿情绪调节.md",
+          "wiki/concepts/父母爱的能力培养.md"
+        ]
+      },
+      "keywords": [
+        "职场妈妈",
+        "日程繁忙",
+        "哭闹",
+        "亲密关系",
+        "放缓节奏"
+      ],
+      "note": "考察用户面对忙碌生活与育儿冲突时的场景应对能力，需要综合运用放缓节奏、平静心态和爱的能力培养三个核心概念",
+      "source_file": "养育女孩-01-第一章-2.md"
+    },
+    {
+      "id": "auto_004",
+      "schema_version": "v2",
+      "question": "为什么婴幼儿会频繁'大发脾气'？父母应该如何正确应对？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-01-第一章-2.md"
+        ],
+        "should": [
+          "wiki/concepts/父母平静心态与婴儿情绪调节.md"
+        ]
+      },
+      "keywords": [
+        "婴幼儿",
+        "发脾气",
+        "情绪调节",
+        "抚慰",
+        "平静"
+      ],
+      "note": "考察对婴幼儿情绪调节能力发展特点的理解，以及父母在此时应扮演的角色",
+      "source_file": "养育女孩-01-第一章-2.md"
+    },
+    {
+      "id": "auto_005",
+      "schema_version": "v2",
+      "question": "材料中提到孩子存在'第二婴儿期'。请问孩子大约在什么年龄开始出现第二婴儿期？这个现象是由什么引发的？如果想计算出孩子当前正在重新经历的成长阶段，可以用什么方法？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-01-第一章-3.md"
+        ],
+        "should": [
+          "wiki/concepts/第二个婴儿期理论.md",
+          "wiki/sources/养育女孩-01-第一章-3.md"
+        ]
+      },
+      "keywords": [
+        "第二婴儿期",
+        "12岁",
+        "用进废退",
+        "修剪阶段",
+        "年龄减去12"
+      ],
+      "note": "测试对'第二个婴儿期理论'核心概念的理解，包括出现年龄、生理机制和阶段计算方法",
+      "source_file": "养育女孩-01-第一章-3.md"
+    },
+    {
+      "id": "auto_006",
+      "schema_version": "v2",
+      "question": "最近女儿经常调皮捣蛋、和我争吵，还在外面惹是生非，我作为妈妈感到很苦恼。根据材料，孩子的这些行为可能是在向父母传递什么信息？父母应该如何应对？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-01-第一章-3.md"
+        ],
+        "should": [
+          "wiki/concepts/孩子潜意识求助信号.md",
+          "wiki/sources/养育女孩-01-第一章-3.md"
+        ]
+      },
+      "keywords": [
+        "调皮捣蛋",
+        "争吵",
+        "惹是生非",
+        "需要关注",
+        "潜意识求助"
+      ],
+      "note": "测试对'孩子潜意识求助信号'的识别和理解，模拟真实育儿场景中的行为解读",
+      "source_file": "养育女孩-01-第一章-3.md"
+    },
+    {
+      "id": "auto_007",
+      "schema_version": "v2",
+      "question": "如果孩子小时候的某些需求没有得到充分满足，可能会在心理上出现什么现象？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-01-第一章-4.md"
+        ],
+        "should": [
+          "wiki/concepts/心理停滞与情感弥补.md"
+        ]
+      },
+      "keywords": [
+        "需求未被满足",
+        "心理停滞",
+        "成长阶段"
+      ],
+      "note": "考察对‘心理停滞与情感弥补’基础概念的理解，答案源于原文关于需求未满足导致孩子停滞不前的描述。",
+      "source_file": "养育女孩-01-第一章-4.md"
+    },
+    {
+      "id": "auto_008",
+      "schema_version": "v2",
+      "question": "女儿已经是个“大孩子”了，但我总觉得她小时候缺少安全感。现在还能弥补吗？具体可以怎么做？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-01-第一章-4.md"
+        ],
+        "should": [
+          "wiki/sources/养育女孩-01-第一章-4.md"
+        ]
+      },
+      "keywords": [
+        "大孩子",
+        "安全感",
+        "弥补",
+        "放慢节奏"
+      ],
+      "note": "考察将‘情感弥补’原则应用到育儿场景的能力，对应原文中即使孩子长大也可通过温柔、充满爱心和放慢节奏来补足安全感。",
+      "source_file": "养育女孩-01-第一章-4.md"
+    },
+    {
+      "id": "auto_009",
+      "schema_version": "v2",
+      "question": "根据妈妈压力自评量表的说明，总得分在什么范围说明妈妈的情况还不错？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-01-第一章.md"
+        ],
+        "should": [
+          "wiki/concepts/妈妈压力自评量表.md"
+        ]
+      },
+      "keywords": [
+        "妈妈压力自评量表",
+        "得分",
+        "评分标准",
+        "情况不错"
+      ],
+      "note": "测试对自评量表三个关键分数区间（<10、~15、>20）的准确记忆和提取能力。",
+      "source_file": "养育女孩-01-第一章.md"
+    },
+    {
+      "id": "auto_010",
+      "schema_version": "v2",
+      "question": "我女儿1岁时我出国留学一年，回来后她对我很认生，母女关系时亲时疏。根据书中的案例和理论，我该怎样弥补这段情感缺失，修复我们的关系？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-01-第一章.md"
+        ],
+        "should": [
+          "wiki/scenarios/宝宝认生与亲子关系疏远怎么办.md",
+          "wiki/concepts/婴儿安全感建立.md",
+          "wiki/concepts/第二个婴儿期理论.md"
+        ]
+      },
+      "keywords": [
+        "认生",
+        "亲子关系疏远",
+        "弥补情感缺失",
+        "婴儿安全感",
+        "第二个婴儿期"
+      ],
+      "note": "测试能否将材料中收养案例与第二个婴儿期理论迁移到妈妈因出国导致亲子疏远的实际场景中，提出有效的补救思路。",
+      "source_file": "养育女孩-01-第一章.md"
+    },
+    {
+      "id": "auto_011",
+      "schema_version": "v2",
+      "question": "什么是外控型人格？为什么女孩子容易形成这种人格？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-02-第二章-2.md"
+        ],
+        "should": [
+          "wiki/concepts/外控型人格与女孩追求完美.md"
+        ]
+      },
+      "keywords": [
+        "外控型人格",
+        "幸福来自别人的肯定",
+        "女孩追求完美"
+      ],
+      "note": "考察对材料中心理学概念的理解，原文直接定义",
+      "source_file": "养育女孩-02-第二章-2.md"
+    },
+    {
+      "id": "auto_012",
+      "schema_version": "v2",
+      "question": "我女儿3岁，平时很安静，有点洁癖，最喜欢玩平板电脑，不爱到户外探索。这种情况需要担心吗？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-02-第二章-2.md"
+        ],
+        "should": [
+          "wiki/concepts/女孩探索与冒险评估量表.md",
+          "wiki/concepts/女孩探索阶段养育原则.md"
+        ]
+      },
+      "keywords": [
+        "女孩安静",
+        "洁癖",
+        "探索评估",
+        "冒险",
+        "自由"
+      ],
+      "note": "结合评估量表判断孩子是否自由，而非仅看是否活泼好动",
+      "source_file": "养育女孩-02-第二章-2.md"
+    },
+    {
+      "id": "auto_013",
+      "schema_version": "v2",
+      "question": "为什么说爸爸在培养女儿的冒险精神方面作用巨大？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-02-第二章-4.md"
+        ],
+        "should": [
+          "wiki/concepts/爸爸的冒险教养.md"
+        ]
+      },
+      "keywords": [
+        "爸爸",
+        "冒险精神",
+        "女儿"
+      ],
+      "note": "考察对爸爸在女孩冒险教养中独特作用的理解",
+      "source_file": "养育女孩-02-第二章-4.md"
+    },
+    {
+      "id": "auto_014",
+      "schema_version": "v2",
+      "question": "当我在电视上看到瘦身广告，而两岁的女儿竟对着镜子模仿广告中的身材焦虑时，这个场景说明了什么？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-02-第二章-4.md"
+        ],
+        "should": [
+          "wiki/concepts/媒体信息守卫与识别.md",
+          "wiki/concepts/商业营销对女孩的侵蚀.md"
+        ]
+      },
+      "keywords": [
+        "电视广告",
+        "身材焦虑",
+        "媒体信息",
+        "女孩"
+      ],
+      "note": "考察对媒体信息影响女孩自我形象这一现实场景的识别与警惕",
+      "source_file": "养育女孩-02-第二章-4.md"
+    },
+    {
+      "id": "auto_015",
+      "schema_version": "v2",
+      "question": "为什么说过分在意10岁女孩的体重对她们没有好处？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-02-第二章-5.md"
+        ],
+        "should": [
+          "wiki/concepts/女孩身体意象与外貌焦虑.md",
+          "wiki/sources/养育女孩-02-第二章-5.md"
+        ]
+      },
+      "keywords": [
+        "10岁女孩体重",
+        "婴儿肥",
+        "雌激素"
+      ],
+      "note": "检查用户能否从材料中提取关于青春期前女孩体重变化的科学解释，明确体重焦虑的危害",
+      "source_file": "养育女孩-02-第二章-5.md"
+    },
+    {
+      "id": "auto_016",
+      "schema_version": "v2",
+      "question": "如果女儿对妈妈说“我恨自己的身体”，妈妈怎样回应才是真正有帮助的？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-02-第二章-5.md"
+        ],
+        "should": [
+          "wiki/concepts/父母以身作则与身体态度.md",
+          "wiki/concepts/女孩身体意象与外貌焦虑.md",
+          "wiki/sources/养育女孩-02-第二章-5.md"
+        ]
+      },
+      "keywords": [
+        "女儿恨自己的身体",
+        "妈妈回应",
+        "接受自己的身体"
+      ],
+      "note": "测试用户是否理解材料核心观点：仅口头夸女儿漂亮不够，妈妈需要先改变自己对外貌的态度，以身作则",
+      "source_file": "养育女孩-02-第二章-5.md"
+    },
+    {
+      "id": "auto_017",
+      "schema_version": "v2",
+      "question": "我家电视总是开着，女儿卧室里也有电视，这样大家互不干扰。但我发现她说话总是蹦单词，讲不完整故事。这跟电视常开有关系吗？我应该怎么做？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-02-第二章-6.md"
+        ],
+        "should": [
+          "wiki/concepts/电子产品对家庭交流的影响.md",
+          "wiki/concepts/电视对儿童语言与想象力发展的影响.md",
+          "wiki/scenarios/电子产品家庭使用规则.md"
+        ]
+      },
+      "keywords": [
+        "电视总是开着",
+        "孩子语言发展",
+        "家庭交流",
+        "电子产品使用规则"
+      ],
+      "note": "考察用户是否能将电视常开与儿童语言、家庭交流问题联系起来，并找到材料中给出的应对建议",
+      "source_file": "养育女孩-02-第二章-6.md"
+    },
+    {
+      "id": "auto_018",
+      "schema_version": "v2",
+      "question": "为什么电视节目（哪怕是谈话类节目）不能替代父母与孩子之间的交流？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-02-第二章-6.md"
+        ],
+        "should": [
+          "wiki/concepts/电视对儿童语言与想象力发展的影响.md",
+          "wiki/concepts/电子产品对家庭交流的影响.md"
+        ]
+      },
+      "keywords": [
+        "电视节目",
+        "替代交流",
+        "互动性",
+        "语言发展"
+      ],
+      "note": "考察对材料中电视缺乏互动性、无法替代真实交流这一核心观点的理解",
+      "source_file": "养育女孩-02-第二章-6.md"
+    },
+    {
+      "id": "auto_019",
+      "schema_version": "v2",
+      "question": "女儿才12岁，却开始浓妆艳抹、特别在意男孩子对自己的评价，父母按照材料中的建议应该怎么做？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-02-第二章.md"
+        ],
+        "should": [
+          "wiki/concepts/鼓励与屏蔽双策略.md",
+          "wiki/concepts/女孩当自强理念.md"
+        ]
+      },
+      "keywords": [
+        "童年缩短",
+        "鼓励探索",
+        "屏蔽不良信息",
+        "女孩当自强"
+      ],
+      "note": "考查用户能否将材料中‘鼓励与屏蔽’双策略应用到具体育儿场景中",
+      "source_file": "养育女孩-02-第二章.md"
+    },
+    {
+      "id": "auto_020",
+      "schema_version": "v2",
+      "question": "根据材料，有多少比例的女孩能够顺利成长，不受性别歧视等负面因素严重影响？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-02-第二章.md"
+        ],
+        "should": [
+          "wiki/concepts/女孩成长分布统计.md"
+        ]
+      },
+      "keywords": [
+        "顺利成长",
+        "比例",
+        "3/5",
+        "女孩成长分布"
+      ],
+      "note": "考查用户对材料中关键统计信息的提取能力",
+      "source_file": "养育女孩-02-第二章.md"
+    },
+    {
+      "id": "auto_021",
+      "schema_version": "v2",
+      "question": "材料中用来比喻青春期女儿与父母关系的'母舰'理论指的是什么？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-03-第三章-2.md"
+        ],
+        "should": [
+          "wiki/concepts/青春期女孩的母舰理论.md",
+          "wiki/sources/养育女孩-03-第三章-2.md"
+        ]
+      },
+      "keywords": [
+        "母舰理论",
+        "青春期女孩",
+        "随时待命"
+      ],
+      "note": "考察对母舰理论基本定义的理解，需从材料中找到原文支撑",
+      "source_file": "养育女孩-03-第三章-2.md"
+    },
+    {
+      "id": "auto_022",
+      "schema_version": "v2",
+      "question": "女儿因社交问题情绪低落一整天，晚上你正在忙家务时她走过来想谈谈。根据材料，你应该怎么做？请说明具体步骤和原因。",
+      "category": "scenario",
+      "difficulty": "hard",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-03-第三章-2.md"
+        ],
+        "should": [
+          "wiki/scenarios/女儿会考验你场景.md",
+          "wiki/concepts/确认感受式倾听.md",
+          "wiki/sources/养育女孩-03-第三章-2.md"
+        ]
+      },
+      "keywords": [
+        "女儿主动倾诉",
+        "放下手头事情",
+        "确认感受",
+        "先听后解决"
+      ],
+      "note": "综合考察在真实育儿场景中的应用能力，需要结合'随时为孩子腾出时间'和'确认感受式倾听'两个核心原则，且要能说出具体交流步骤",
+      "source_file": "养育女孩-03-第三章-2.md"
+    },
+    {
+      "id": "auto_023",
+      "schema_version": "v2",
+      "question": "什么是“悠悠球朋友”？如何识别和应对这样的情况？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-03-第三章-3.md"
+        ],
+        "should": [
+          "wiki/entities/悠悠球朋友.md",
+          "wiki/concepts/交友技巧谨慎信任.md",
+          "wiki/sources/养育女孩-03-第三章-3.md"
+        ]
+      },
+      "keywords": [
+        "悠悠球朋友",
+        "反复无常",
+        "交友技巧",
+        "如何应对"
+      ],
+      "note": "考察对悠悠球朋友概念的理解以及依据材料给出的识别和应对建议。",
+      "source_file": "养育女孩-03-第三章-3.md"
+    },
+    {
+      "id": "auto_024",
+      "schema_version": "v2",
+      "question": "我女儿今年8岁，最近对班里一个同学说了很刻薄的话，还联合其他小朋友排挤她。请问这是不是故意欺负？作为家长应该怎么办？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-03-第三章-3.md"
+        ],
+        "should": [
+          "wiki/concepts/8岁刻薄行为分界.md",
+          "wiki/entities/小女孩也刻薄.md",
+          "wiki/concepts/社交欺凌.md"
+        ]
+      },
+      "keywords": [
+        "8岁",
+        "刻薄",
+        "排挤",
+        "社交欺凌",
+        "家长怎么办"
+      ],
+      "note": "考察8岁后刻薄行为属于有意的观点，以及家长应如何引导孩子、理解社交欺凌的相关知识。",
+      "source_file": "养育女孩-03-第三章-3.md"
+    },
+    {
+      "id": "auto_025",
+      "schema_version": "v2",
+      "question": "我女儿5岁，最近特别依恋同伴，在幼儿园非要和某个固定的小朋友一起，不然就哭闹。材料中提到，太容易受同龄群体影响的孩子，通常和谁的关系比较疏离？父母应该怎么做？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-03-第三章-4.md"
+        ],
+        "should": [
+          "wiki/concepts/同龄群体影响力与跨龄友谊.md"
+        ]
+      },
+      "keywords": [
+        "同龄群体",
+        "亲子关系疏离",
+        "安全港湾",
+        "5岁女孩"
+      ],
+      "note": "测试用户能否将5~14岁女孩过度依赖同龄群体的现象，与亲子关系疏离联系起来，并知道父母应成为安全港湾",
+      "source_file": "养育女孩-03-第三章-4.md"
+    },
+    {
+      "id": "auto_026",
+      "schema_version": "v2",
+      "question": "为什么女孩版的阿斯伯格综合征比男孩更难被确诊？在诊断过程中容易发生哪些误诊，以及她们为掩饰社交障碍付出了什么代价？",
+      "category": "concept",
+      "difficulty": "hard",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-03-第三章-4.md"
+        ],
+        "should": [
+          "wiki/entities/女孩版阿斯伯格综合征识别指南.md",
+          "wiki/entities/感官超载.md"
+        ]
+      },
+      "keywords": [
+        "阿斯伯格综合征",
+        "女孩掩饰社交障碍",
+        "误诊",
+        "焦虑症",
+        "强迫症",
+        "感官超载"
+      ],
+      "note": "测试用户是否能理解女孩版阿斯伯格综合征的隐蔽性、误诊方向及掩饰行为带来的代价（焦虑、抑郁）",
+      "source_file": "养育女孩-03-第三章-4.md"
+    },
+    {
+      "id": "auto_027",
+      "schema_version": "v2",
+      "question": "女孩版阿斯伯格综合征有哪些区别于男孩的主要识别特征？请至少列出3条。",
+      "category": "fact",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-03-第三章-4.md"
+        ],
+        "should": [
+          "wiki/entities/女孩版阿斯伯格综合征识别指南.md"
+        ]
+      },
+      "keywords": [
+        "女孩版阿斯伯格综合征",
+        "识别特征",
+        "目光接触",
+        "用词正式",
+        "兴趣狭窄",
+        "动作笨拙"
+      ],
+      "note": "测试用户能否准确提取材料中列出的女孩版阿斯伯格综合征五条识别特征中的至少3条",
+      "source_file": "养育女孩-03-第三章-4.md"
+    },
+    {
+      "id": "auto_028",
+      "schema_version": "v2",
+      "question": "针对女孩的欺凌通常表现为哪种形式？为什么这种形式伤害更大？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-03-第三章-5.md"
+        ],
+        "should": [
+          "wiki/concepts/女孩社交欺凌识别与应对.md"
+        ]
+      },
+      "keywords": [
+        "女孩欺凌",
+        "社交欺凌",
+        "肢体欺凌"
+      ],
+      "note": "测试对材料中欺凌形式核心观点的提取能力",
+      "source_file": "养育女孩-03-第三章-5.md"
+    },
+    {
+      "id": "auto_029",
+      "schema_version": "v2",
+      "question": "如果一位家长发现女儿反复遭受同学的排挤、散布谣言等社交欺凌，学校应该怎么做？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-03-第三章-5.md"
+        ],
+        "should": [
+          "wiki/concepts/女孩社交欺凌识别与应对.md",
+          "wiki/sources/养育女孩-03-第三章-5.md"
+        ]
+      },
+      "keywords": [
+        "反复发生",
+        "社交欺凌",
+        "学校介入",
+        "处置"
+      ],
+      "note": "测试对材料中应对措施的实际应用理解",
+      "source_file": "养育女孩-03-第三章-5.md"
+    },
+    {
+      "id": "auto_030",
+      "schema_version": "v2",
+      "question": "《最好的朋友，最可怕的敌人》这本书里，迈克尔·汤普森列举了几个可以提升交友能力的技巧？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-03-第三章.md"
+        ],
+        "should": [
+          "wiki/entities/最好的朋友最可怕的敌人.md",
+          "wiki/entities/迈克尔-汤普森.md",
+          "wiki/concepts/交友能力七技巧.md",
+          "wiki/sources/养育女孩-03-第三章.md"
+        ]
+      },
+      "keywords": [
+        "迈克尔·汤普森",
+        "最好的朋友最可怕的敌人",
+        "交友能力技巧",
+        "7个技巧"
+      ],
+      "note": "考察对迈克尔·汤普森提出的交友能力技巧数量的准确记忆，验证实体与概念之间的关联",
+      "source_file": "养育女孩-03-第三章.md"
+    },
+    {
+      "id": "auto_031",
+      "schema_version": "v2",
+      "question": "我女儿在学校交朋友时总是太强势，容易吓到别的小朋友，但我又不在学校，没法当场指导她。根据书中的建议，我应该怎么做？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-03-第三章.md"
+        ],
+        "should": [
+          "wiki/concepts/女孩交友能力培养.md",
+          "wiki/sources/养育女孩-03-第三章.md"
+        ]
+      },
+      "keywords": [
+        "强势",
+        "学校",
+        "教练角色",
+        "帮助女儿交友",
+        "倾诉对象"
+      ],
+      "note": "考察家长如何运用书中'教练'角色理念，在无法现场干预的情况下，通过日常训练和沟通帮助女儿调整交友方式",
+      "source_file": "养育女孩-03-第三章.md"
+    },
+    {
+      "id": "auto_032",
+      "schema_version": "v2",
+      "question": "我女儿正进入青春期，我最近总觉得和她相处不自在，不敢像以前那样拥抱她、表达对她的爱，又怕她觉得爸爸不爱她了。作为爸爸，这时我该怎么办？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-04-第四章-2.md"
+        ],
+        "should": [
+          "wiki/concepts/父亲养育陷阱.md",
+          "wiki/sources/养育女孩-04-第四章-2.md"
+        ]
+      },
+      "keywords": [
+        "青春期",
+        "父亲冷淡",
+        "表达爱",
+        "养育陷阱"
+      ],
+      "note": "测试用户能否识别“青春期恐惧”这一养育陷阱，并理解正确应对方式",
+      "source_file": "养育女孩-04-第四章-2.md"
+    },
+    {
+      "id": "auto_033",
+      "schema_version": "v2",
+      "question": "在养育女孩中，什么叫作“供养者悲剧”？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-04-第四章-2.md"
+        ],
+        "should": [
+          "wiki/concepts/父亲养育陷阱.md"
+        ]
+      },
+      "keywords": [
+        "供养者悲剧",
+        "父爱表达",
+        "陪伴",
+        "工作"
+      ],
+      "note": "测试用户是否理解“供养者悲剧”这一常见养育陷阱的含义及其成因",
+      "source_file": "养育女孩-04-第四章-2.md"
+    },
+    {
+      "id": "auto_034",
+      "schema_version": "v2",
+      "question": "我是位爸爸，女儿上中学后我们关系有些僵，我想多花时间陪她，但又怕变成说教让关系更糟。布鲁斯·罗宾逊在“父亲计划”中建议的“和孩子约会”应该怎么做？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-04-第四章-3.md"
+        ],
+        "should": [
+          "wiki/concepts/和孩子约会.md",
+          "wiki/concepts/父亲倾听技巧.md"
+        ]
+      },
+      "keywords": [
+        "和孩子约会",
+        "改善女儿关系",
+        "倾听",
+        "不说教"
+      ],
+      "note": "测试用户能否从具体父女关系问题中联想到材料的‘和孩子约会’策略，并理解其‘专注倾听、避免说教’的核心要求",
+      "source_file": "养育女孩-04-第四章-3.md"
+    },
+    {
+      "id": "auto_035",
+      "schema_version": "v2",
+      "question": "布鲁斯的研究发现，一家人每周至少有多少天聚在一起吃晚饭，可以大大降低孩子染上毒瘾的概率？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-04-第四章-3.md"
+        ],
+        "should": [
+          "wiki/concepts/家庭晚餐的防护作用.md"
+        ]
+      },
+      "keywords": [
+        "家庭晚餐",
+        "毒瘾概率",
+        "每周至少四天"
+      ],
+      "note": "测试用户能否检索到材料中关于家庭晚餐防护作用的具体数值",
+      "source_file": "养育女孩-04-第四章-3.md"
+    },
+    {
+      "id": "auto_036",
+      "schema_version": "v2",
+      "question": "根据材料，布鲁斯建议爸爸在帮助孩子建立价值观时，应避免成为哪两种角色？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-04-第四章-4.md"
+        ],
+        "should": [
+          "wiki/concepts/父亲谈话技巧.md",
+          "wiki/concepts/父亲在女儿成长中的角色.md",
+          "wiki/sources/养育女孩-04-第四章-4.md"
+        ]
+      },
+      "keywords": [
+        "管道工",
+        "警察",
+        "价值观",
+        "爸爸"
+      ],
+      "note": "考察对父亲谈话技巧中核心比喻的原文理解",
+      "source_file": "养育女孩-04-第四章-4.md"
+    },
+    {
+      "id": "auto_037",
+      "schema_version": "v2",
+      "question": "如果爸爸发现女儿已经开始吸毒，根据材料中“父亲计划”的建议，爸爸应该怎样回应？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-04-第四章-4.md"
+        ],
+        "should": [
+          "wiki/entities/父亲计划.md",
+          "wiki/concepts/严苛父亲与药物滥用.md",
+          "wiki/sources/养育女孩-04-第四章-4.md"
+        ]
+      },
+      "keywords": [
+        "吸毒",
+        "父亲计划",
+        "回应",
+        "失望",
+        "信心"
+      ],
+      "note": "考察面对孩子吸毒这一具体场景时，材料建议的正确应对方式",
+      "source_file": "养育女孩-04-第四章-4.md"
+    },
+    {
+      "id": "auto_038",
+      "schema_version": "v2",
+      "question": "托尼·库克的父亲是一个什么样的人？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-04-第四章-5.md"
+        ],
+        "should": [
+          "wiki/entities/托尼-库克.md",
+          "wiki/sources/养育女孩-04-第四章-5.md"
+        ]
+      },
+      "keywords": [
+        "托尼·库克 父亲",
+        "连环杀人犯 西澳大利亚 绞刑"
+      ],
+      "note": "考察对材料中托尼·库克背景事实的定位与提取能力，答案有明确原文支持。",
+      "source_file": "养育女孩-04-第四章-5.md"
+    },
+    {
+      "id": "auto_039",
+      "schema_version": "v2",
+      "question": "我从小在爸爸缺位的家庭长大，现在自己也当了爸爸，很怕重蹈覆辙。材料里关于“打破父职恶性循环”说了什么？我可以通过哪些渠道学习怎么当个好爸爸？",
+      "category": "scenario",
+      "difficulty": "hard",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-04-第四章-5.md"
+        ],
+        "should": [
+          "wiki/concepts/打破父职恶性循环.md",
+          "wiki/concepts/父职学习渠道.md",
+          "wiki/entities/爸爸小组.md",
+          "wiki/entities/布鲁斯.md",
+          "wiki/sources/养育女孩-04-第四章-5.md"
+        ]
+      },
+      "keywords": [
+        "打破恶性循环 学习渠道",
+        "爸爸小组 书籍 讲座",
+        "没有好榜样 好爸爸"
+      ],
+      "note": "模拟原生家庭父职缺失的真实育儿困境，考察对打破循环理念与父职学习渠道的综合理解，需要串联托尼案例与策略清单上下文。",
+      "source_file": "养育女孩-04-第四章-5.md"
+    },
+    {
+      "id": "auto_040",
+      "schema_version": "v2",
+      "question": "我是一名爸爸，计划好周末带两岁的女儿去划独木舟，但她死活不肯配合，我该怎么处理？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-04-第四章.md"
+        ],
+        "should": [
+          "wiki/scenarios/爸爸参与育儿实操指南.md",
+          "wiki/concepts/爸爸在女孩成长中的角色.md"
+        ]
+      },
+      "keywords": [
+        "划独木舟",
+        "女儿抗拒",
+        "从孩子角度考虑",
+        "海滩闲逛"
+      ],
+      "note": "测试爸爸面对计划被打乱时是否懂得从孩子角度考虑问题，考察对材料中划船案例的理解和应用",
+      "source_file": "养育女孩-04-第四章.md"
+    },
+    {
+      "id": "auto_041",
+      "schema_version": "v2",
+      "question": "根据材料，有一个关心、体贴女儿的好父亲，对女孩的成长有哪些好处？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-04-第四章.md"
+        ],
+        "should": [
+          "wiki/concepts/好父亲的保护伞效应.md",
+          "wiki/concepts/爸爸在女孩成长中的角色.md"
+        ]
+      },
+      "keywords": [
+        "好父亲",
+        "保护伞",
+        "学习成绩",
+        "自尊心",
+        "不良习惯"
+      ],
+      "note": "测试对好父亲保护伞效应概念的掌握，能否列举材料中提到的具体益处",
+      "source_file": "养育女孩-04-第四章.md"
+    },
+    {
+      "id": "auto_042",
+      "schema_version": "v2",
+      "question": "材料中提到了大约多少百分比的英国女孩曾经上过舞蹈课？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-05-第五章-2.md"
+        ],
+        "should": [
+          "wiki/sources/养育女孩-05-第五章-2.md"
+        ]
+      },
+      "keywords": [
+        "英国女孩",
+        "舞蹈课",
+        "百分比",
+        "90%"
+      ],
+      "note": "测试对材料中具体数据信息的定位与提取能力",
+      "source_file": "养育女孩-05-第五章-2.md"
+    },
+    {
+      "id": "auto_043",
+      "schema_version": "v2",
+      "question": "我女儿6岁，她的舞蹈班要求她戴假睫毛、穿性感服装跳电臀舞，老师还当众吼她减肥，这样的舞蹈班对她有什么危害？我该怎么判断？",
+      "category": "scenario",
+      "difficulty": "hard",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-05-第五章-2.md"
+        ],
+        "should": [
+          "wiki/concepts/舞蹈的适龄性评估.md",
+          "wiki/scenarios/兴趣活动的健康评估.md",
+          "wiki/concepts/过度训练对女孩的危害.md"
+        ]
+      },
+      "keywords": [
+        "舞蹈班",
+        "性感化",
+        "适龄性",
+        "电臀舞",
+        "跳舞危害"
+      ],
+      "note": "测试家长面对舞蹈低龄性感化与老师不当督促时，能否识别危害并据此判断舞蹈班是否适合孩子",
+      "source_file": "养育女孩-05-第五章-2.md"
+    },
+    {
+      "id": "auto_044",
+      "schema_version": "v2",
+      "question": "我最近工作特别忙，一直在加班，感觉和女儿有些疏离，作为家长我应该怎么做来改善这种关系？",
+      "category": "scenario",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-05-第五章-3.md"
+        ],
+        "should": [
+          "wiki/concepts/兴趣的火花.md",
+          "wiki/sources/养育女孩-05-第五章-3.md"
+        ]
+      },
+      "keywords": [
+        "加班",
+        "疏离",
+        "兴趣的火花",
+        "情感联系",
+        "女儿"
+      ],
+      "note": "测试家长是否能从材料中提取具体的亲子沟通建议，对应原文中关于加班疏离时加入兴趣火花对话的指导。",
+      "source_file": "养育女孩-05-第五章-3.md"
+    },
+    {
+      "id": "auto_045",
+      "schema_version": "v2",
+      "question": "材料中提到的“生存模式”和“茁壮成长”两种养育目标，核心区别是什么？为什么说只关注前者是不够的？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-05-第五章-3.md"
+        ],
+        "should": [
+          "wiki/concepts/生存模式与茁壮成长.md",
+          "wiki/entities/彼得-本森.md",
+          "wiki/sources/养育女孩-05-第五章-3.md"
+        ]
+      },
+      "keywords": [
+        "生存模式",
+        "茁壮成长",
+        "管理控制",
+        "真正幸福",
+        "彼得·本森"
+      ],
+      "note": "测试对材料核心概念的深度理解，考查能否区分生存模式（管理控制层面）与茁壮成长（追求真正幸福）的本质差异，并引用本森关于1/4父母的数据作为支撑。",
+      "source_file": "养育女孩-05-第五章-3.md"
+    },
+    {
+      "id": "auto_046",
+      "schema_version": "v2",
+      "question": "根据“火花”理论，最常见的火花类型有哪些？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-05-第五章.md"
+        ],
+        "should": [
+          "wiki/concepts/火花理论.md",
+          "wiki/sources/养育女孩-05-第五章.md"
+        ]
+      },
+      "keywords": [
+        "火花理论",
+        "常见类型",
+        "兴趣热点",
+        "体育运动",
+        "文学艺术"
+      ],
+      "note": "验证对火花理论基础概念的掌握，考察材料中对最常见火花类型的准确回忆",
+      "source_file": "养育女孩-05-第五章.md"
+    },
+    {
+      "id": "auto_047",
+      "schema_version": "v2",
+      "question": "我女儿10岁，最近对海洋生物特别着迷，她想养热带鱼并画鱼类的画。我该怎样支持和帮助她，让这份兴趣的火花持续燃烧而不熄灭？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-05-第五章.md"
+        ],
+        "should": [
+          "wiki/scenarios/女孩兴趣火花培养指南.md",
+          "wiki/concepts/父母兴趣支持自评量表.md",
+          "wiki/sources/养育女孩-05-第五章.md"
+        ]
+      },
+      "keywords": [
+        "支持孩子兴趣",
+        "火花持续",
+        "家庭支持",
+        "外部支持"
+      ],
+      "note": "考察将火花理论转化为具体养育行动的能力，涉及家庭内和家庭外两个支持条件",
+      "source_file": "养育女孩-05-第五章.md"
+    },
+    {
+      "id": "auto_048",
+      "schema_version": "v2",
+      "question": "女孩月经初潮后，第二次月经一般需要等多久才会来？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-06-第六章-3.md"
+        ],
+        "should": [
+          "wiki/concepts/月经初潮实用应对指南.md"
+        ]
+      },
+      "keywords": [
+        "月经初潮",
+        "第二次月经",
+        "经期周期"
+      ],
+      "note": "考察对月经初潮后身体变化基本知识点的掌握，材料中明确说明第二次月经可能在几个月后或几周后出现。",
+      "source_file": "养育女孩-06-第六章-3.md"
+    },
+    {
+      "id": "auto_049",
+      "schema_version": "v2",
+      "question": "女儿月经初潮时，家长可以通过哪些具体方式让这一刻成为孩子生命中的特殊经历？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-06-第六章-3.md"
+        ],
+        "should": [
+          "wiki/concepts/月经初潮积极重构.md",
+          "wiki/concepts/女孩成人礼仪式.md",
+          "wiki/entities/阿姨角色与女孩成长.md"
+        ]
+      },
+      "keywords": [
+        "月经初潮",
+        "庆祝方式",
+        "特殊礼物",
+        "成人礼"
+      ],
+      "note": "考察如何将月经初潮转化为积极的人生体验，材料中列举了送礼物、写信、旅行、举办成人礼等多种方式。",
+      "source_file": "养育女孩-06-第六章-3.md"
+    },
+    {
+      "id": "auto_050",
+      "schema_version": "v2",
+      "question": "为什么说为女儿举办成人礼很重要？如果不举办，孩子可能会怎样？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-06-第六章-4.md"
+        ],
+        "should": [
+          "wiki/concepts/成人礼与女孩成长.md",
+          "wiki/sources/养育女孩-06-第六章-4.md"
+        ]
+      },
+      "keywords": [
+        "成人礼重要性",
+        "女孩成长",
+        "冒险行为"
+      ],
+      "note": "考察对成人礼核心意义的理解，原文明确说明成人礼可以改变孩子的生活，甚至挽救生命，否则孩子可能用鲁莽方式庆祝成年。",
+      "source_file": "养育女孩-06-第六章-4.md"
+    },
+    {
+      "id": "auto_051",
+      "schema_version": "v2",
+      "question": "我想给女儿办一个简单、不让她尴尬的成人礼，不想搞户外树林、蜡烛、唱圣歌那种仪式，有什么形式上的建议？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-06-第六章-4.md"
+        ],
+        "should": [
+          "wiki/sources/养育女孩-06-第六章-4.md"
+        ]
+      },
+      "keywords": [
+        "成人礼形式",
+        "简单不尴尬",
+        "量身定做"
+      ],
+      "note": "场景型问题，材料提到成人礼可以普通又特别，不一定要户外或蜡烛圣歌，应针对女儿量身定做，既具仪式感又让她舒适。",
+      "source_file": "养育女孩-06-第六章-4.md"
+    },
+    {
+      "id": "auto_052",
+      "schema_version": "v2",
+      "question": "我是单亲爸爸，女儿13岁，最近感觉她有些不对劲，想检查她的房间但又怕伤害她，我该怎么做才对？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-06-第六章-5.md"
+        ],
+        "should": [
+          "wiki/concepts/父女界限与青春期隐私.md",
+          "wiki/sources/养育女孩-06-第六章-5.md"
+        ]
+      },
+      "keywords": [
+        "单亲爸爸",
+        "检查房间",
+        "隐私",
+        "女儿",
+        "青春期"
+      ],
+      "note": "考察父亲在女儿青春期时如何尊重隐私界限，尤其是单亲情境下检查房间的正确做法",
+      "source_file": "养育女孩-06-第六章-5.md"
+    },
+    {
+      "id": "auto_053",
+      "schema_version": "v2",
+      "question": "为什么父亲在女儿青春期时表现出尴尬和疏离，会让女儿受到伤害？",
+      "category": "concept",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-06-第六章-5.md"
+        ],
+        "should": [
+          "wiki/lessons/父职疏离的伤害.md",
+          "wiki/sources/养育女孩-06-第六章-5.md"
+        ]
+      },
+      "keywords": [
+        "父亲疏离",
+        "青春期",
+        "尴尬",
+        "女儿受伤"
+      ],
+      "note": "考察对父职疏离伤害机制的理解，材料明确说明女儿会自责、觉得父亲不再喜欢自己",
+      "source_file": "养育女孩-06-第六章-5.md"
+    },
+    {
+      "id": "auto_054",
+      "schema_version": "v2",
+      "question": "一个14岁的女孩最近总和妈妈闹矛盾，觉得妈妈管得太多，也不想和妈妈谈心。根据材料，她最应该从谁那里获得支持和引导？为什么？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-06-第六章.md"
+        ],
+        "should": [
+          "wiki/entities/青春期女孩独立需求.md",
+          "wiki/sources/养育女孩-06-第六章.md"
+        ]
+      },
+      "keywords": [
+        "青春期的女孩",
+        "妈妈以外的成年女性",
+        "阿姨",
+        "独立"
+      ],
+      "note": "测试用户能否将青春期女孩与妈妈矛盾的情境关联到材料中‘需要妈妈以外的成年女性陪伴’的观点。",
+      "source_file": "养育女孩-06-第六章.md"
+    },
+    {
+      "id": "auto_055",
+      "schema_version": "v2",
+      "question": "为什么说当女孩遇到困难时，不能只依靠同龄女孩朋友来获得帮助？",
+      "category": "fact",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-06-第六章.md"
+        ],
+        "should": [
+          "wiki/entities/同龄女孩支持的局限性.md",
+          "wiki/sources/养育女孩-06-第六章.md"
+        ]
+      },
+      "keywords": [
+        "同龄女孩",
+        "帮助",
+        "局限性",
+        "不可靠"
+      ],
+      "note": "检验用户是否理解材料中关于同龄女孩缺乏经验和能力、无法提供真正有价值的帮助的论述。",
+      "source_file": "养育女孩-06-第六章.md"
+    },
+    {
+      "id": "auto_056",
+      "schema_version": "v2",
+      "question": "根据材料，为什么色情产品会变得越来越暴力、越来越露骨？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-07-第七章-2.md"
+        ],
+        "should": [
+          "wiki/concepts/色情产品暴力化机制.md",
+          "wiki/entities/性与女孩子.md",
+          "wiki/sources/养育女孩-07-第七章-2.md"
+        ]
+      },
+      "keywords": [
+        "色情产品",
+        "暴力化",
+        "内啡肽",
+        "新奇"
+      ],
+      "note": "考察对色情产品暴力化因果机制的直接理解，材料中有完整的因果链解释",
+      "source_file": "养育女孩-07-第七章-2.md"
+    },
+    {
+      "id": "auto_057",
+      "schema_version": "v2",
+      "question": "如果一个女孩因为担心伤害男孩而答应发送自己的裸照，她可能面临哪些实际风险？根据材料中梅琳达的观点，她应该怎样做才能保护自己？",
+      "category": "scenario",
+      "difficulty": "hard",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-07-第七章-2.md"
+        ],
+        "should": [
+          "wiki/entities/梅琳达.md",
+          "wiki/concepts/裸照勒索与网络安全.md",
+          "wiki/concepts/女孩性主体性丧失.md",
+          "wiki/sources/养育女孩-07-第七章-2.md"
+        ]
+      },
+      "keywords": [
+        "裸照",
+        "拒绝",
+        "梅琳达",
+        "自我意识",
+        "性权利"
+      ],
+      "note": "考察对裸照勒索多重风险的综合理解，以及运用梅琳达提出的自我意识策略进行实际应对的能力",
+      "source_file": "养育女孩-07-第七章-2.md"
+    },
+    {
+      "id": "auto_058",
+      "schema_version": "v2",
+      "question": "伊丽莎白指出，在50年前大约有多少比例的伴侣在婚后才有性行为？",
+      "category": "number",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-07-第七章-3.md"
+        ],
+        "should": [
+          "wiki/entities/伊丽莎白-克拉克.md",
+          "wiki/sources/养育女孩-07-第七章-3.md"
+        ]
+      },
+      "keywords": [
+        "伊丽莎白",
+        "50年前",
+        "婚后性行为",
+        "百分比"
+      ],
+      "note": "考察对材料中关键数据的定位与提取能力",
+      "source_file": "养育女孩-07-第七章-3.md"
+    },
+    {
+      "id": "auto_059",
+      "schema_version": "v2",
+      "question": "如果一位妈妈自己过去的性生活并不快乐，她该怎样向14岁的女儿讲述性的美好？",
+      "category": "scenario",
+      "difficulty": "medium",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-07-第七章-3.md"
+        ],
+        "should": [
+          "wiki/concepts/青少年性教育沟通原则.md",
+          "wiki/concepts/女孩性教育的情感转向.md"
+        ]
+      },
+      "keywords": [
+        "坦诚",
+        "性生活不快乐",
+        "14岁",
+        "母女沟通",
+        "性的美好"
+      ],
+      "note": "考察家长面对自身负面经历时，如何依据材料建议进行坦诚的性教育沟通",
+      "source_file": "养育女孩-07-第七章-3.md"
+    },
+    {
+      "id": "auto_060",
+      "schema_version": "v2",
+      "question": "伊丽莎白建议父母与孩子谈论性时，应该采用怎样的方式？",
+      "category": "concept",
+      "difficulty": "easy",
+      "expected_sources": {
+        "must": [
+          "wiki/sources/养育女孩-07-第七章-4.md"
+        ],
+        "should": [
+          "wiki/concepts/和风细雨式性教育.md",
+          "wiki/entities/伊丽莎白.md",
+          "wiki/concepts/与孩子谈性的预热谈话技巧.md"
+        ]
+      },
+      "keywords": [
+        "伊丽莎白",
+        "谈性方式",
+        "和风细雨"
+      ],
+      "note": "考察对伊丽莎白核心教育理念的理解，材料中明确强调应用自然、绵绵细雨般的方式而非暴风骤雨式长谈。",
+      "source_file": "养育女孩-07-第七章-4.md"
+    }
+  ]
+}
