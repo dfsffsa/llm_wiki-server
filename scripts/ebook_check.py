@@ -133,6 +133,22 @@ def fix_truncated(paths, cache, config, check_fn=call_llm):
     return changed
 
 
+def run_check(paths, config, cache, cache_path, check_fn=call_llm, save_every=1):
+    """检查所有块，每 save_every 个块自动保存缓存（崩溃安全）。
+
+    Returns:
+        results: list of (path, verdict, was_cached)
+    """
+    results = []
+    for i, p in enumerate(paths):
+        verdict, cached = check_chunk(p, config, cache, check_fn)
+        results.append((p, verdict, cached))
+        print(f"  {os.path.basename(p)}: {verdict.get('severity')} {verdict.get('issue', '')}")
+        if (i + 1) % save_every == 0:
+            save_cache(cache, cache_path)
+    return results
+
+
 def main():
     ap = argparse.ArgumentParser(description="LLM 切分语义检查")
     ap.add_argument("--chunks", required=True)
@@ -149,12 +165,7 @@ def main():
     paths = collect_chunks(args.chunks, args.only_long, args.sample)
     report = args.report or os.path.join(os.path.dirname(args.cache), "report.md")
     print(f"checking {len(paths)} chunks ...")
-    results = []
-    for p in paths:
-        verdict, cached = check_chunk(p, config, cache)
-        results.append((p, verdict, cached))
-        print(f"  {os.path.basename(p)}: {verdict.get('severity')} {verdict.get('issue', '')}")
-    save_cache(cache, args.cache)
+    results = run_check(paths, config, cache, args.cache)
     if args.fix:
         n = fix_truncated(paths, cache, config)
         print(f"fixed {n} truncated chunk(s)")

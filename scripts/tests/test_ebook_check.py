@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import tempfile
@@ -135,6 +136,55 @@ class TestFixTruncated(unittest.TestCase):
 
         changed = ebook_check.fix_truncated([p1, p2], {}, config, check_fn=fake)
         self.assertEqual(changed, 0)  # 尾段以句号结尾 → 不搬,留给人工复核
+
+
+class TestRunCheck(unittest.TestCase):
+    def test_cache_saved_incrementally(self):
+        d = tempfile.mkdtemp()
+        cache_path = os.path.join(d, "cache.json")
+        make_chunk(d, "01.md", "内容" * 100)
+        make_chunk(d, "02.md", "内容" * 100)
+        make_chunk(d, "03.md", "内容" * 100)
+        paths = ebook_check.collect_chunks(d)
+        config = {}
+
+        def fake(prompt, cfg):
+            return '{"ok": true, "severity": "ok", "issue": ""}'
+
+        results = ebook_check.run_check(paths, config, {}, cache_path, check_fn=fake, save_every=1)
+        self.assertEqual(len(results), 3)
+        with open(cache_path, encoding="utf-8") as f:
+            saved = json.load(f)
+        self.assertEqual(len(saved), 3)
+        self.assertIn("01.md", saved)
+        self.assertIn("02.md", saved)
+        self.assertIn("03.md", saved)
+
+    def test_cache_partially_saved_on_failure(self):
+        d = tempfile.mkdtemp()
+        cache_path = os.path.join(d, "cache.json")
+        make_chunk(d, "01.md", "内容" * 100)
+        make_chunk(d, "02.md", "内容" * 100)
+        make_chunk(d, "03.md", "内容" * 100)
+        paths = ebook_check.collect_chunks(d)
+        config = {}
+        call_count = [0]
+
+        def fake(prompt, cfg):
+            call_count[0] += 1
+            if call_count[0] == 2:
+                raise RuntimeError("simulated LLM failure")
+            return '{"ok": true, "severity": "ok", "issue": ""}'
+
+        with self.assertRaises(RuntimeError):
+            ebook_check.run_check(paths, config, {}, cache_path, check_fn=fake, save_every=1)
+
+        # Cache on disk should contain the 1st (already-saved) chunk's entry
+        with open(cache_path, encoding="utf-8") as f:
+            saved = json.load(f)
+        self.assertIn("01.md", saved)
+        # 02.md was not saved because the error happened before its save point
+        self.assertNotIn("02.md", saved)
 
 
 if __name__ == "__main__":
