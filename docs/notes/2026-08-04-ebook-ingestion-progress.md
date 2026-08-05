@@ -30,6 +30,20 @@
   - **续跑**:中断后重跑上面命令即可(按 wiki/sources 存在性跳过已入库)
   - **坑**:`pkill -f "llm-wiki ingest"` 会匹配到自身 shell(exit 144);杀进程用 `pkill -9 -f "[l]lm-wiki ingest"`(方括号防自匹配)。杀死会留孤儿 node/tsx 孙进程,需一并 `pkill -9 -f "[c]md-ingest"` 清掉,否则与新 run 双跑。
 - **模型探测结论**:tokenhub 上 `deepseek-v4-flash-202605` 与 `deepseek-v4-pro-202606` 可用;`deepseek-v4-pro`(裸)未授权、`deepseek-v4-pro-202605` TokenPlan 不支持。
+- **Task 10 完成 ✅(2026-08-05)**:并行 ingest 全部跑完,**新书 1256/1256 入库**,`wiki/sources` 共 1437 个源页(旧 181 + 新 1256 + 补齐旧书缺口)。
+- **过程中发现并修复一个大 bug**:`ingest-parallel.sh` 原用 `for f in ${groups[$i]}` 按空格拆词,而**西尔斯(`CHAPTER 17` 半角空格)/崔玉涛自然养育法/第一次当奶爸的文件名含半角空格**,被拆碎导致 765 次 FAILED、354 个文件未入库。修复:改为逐行文件列表 + `while IFS= read -r f`(commit `0f956d7`),修复后重跑补齐 354 个,0 FAILED。
+- **监控教训**:异常标记(FAILED/ok)在**主日志**(`/tmp/ingest-parallel-fixed.log`),不在 worker 日志(`ingest-w*.log`,只含 ingest 输出);监控两个都要看。
+
+---
+
+## 2026-08-05 晚 Task 11(进行中)
+
+- [ ] 重建向量索引:`llm-wiki reindex --vectors`(新书内容入 LanceDB,rag_eval 检索需要)
+- [ ] 启动 server(:8080,`server.local.json` 已是 deepseek-v4-flash-202605)
+- [ ] 为新书生成 v2 测试用例(`generate_test_cases.py`,60 条)
+- [ ] `run_eval.sh ParentingBooks all --fix`(ingest_check + auto_fix + rag_eval)
+- [ ] 新书用例单独 rag_eval;指标分开看
+- 人工复核清单:`llm_wiki-server/.tools/ebooks/MANUAL_REVIEW.md`(100 项,待用户过目)
 
 ---
 
