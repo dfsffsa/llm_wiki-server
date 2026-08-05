@@ -64,25 +64,99 @@ def call_llm(prompt: str, llm_config: dict, system: str = "",
             raise
 
 
+def _extract_balanced_json(text: str) -> Optional[str]:
+    """Find the first '{' and return the balanced {...} object string.
+
+    Tracks string literals and escapes so a '}' inside a string value
+    (e.g. {"a":"}"}) does not end the object early.
+    Returns None if no balanced object is found.
+    """
+    start = text.find("{")
+    if start < 0:
+        return None
+    depth = 0
+    in_string = False
+    escape = False
+    for i in range(start, len(text)):
+        c = text[i]
+        if escape:
+            escape = False
+            continue
+        if c == "\\":
+            escape = True
+            continue
+        if c == '"' and not in_string:
+            in_string = True
+            continue
+        if c == '"' and in_string:
+            in_string = False
+            continue
+        if in_string:
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : i + 1]
+    return None
+
+
+def _cleanup_if_else(text: str) -> str:
+    """Replace Python-style inline if/else in JSON string values.
+
+    Pattern: "valueA" if <cond> else "valueB" -> "valueB" (the else branch).
+    Applied repeatedly until stable.
+    """
+    pattern = r'"[^"]*"\s+if\s+.+?\s+else\s+("(?:[^"\\]|\\.)*")'
+    while True:
+        cleaned = re.sub(pattern, r"\1", text)
+        if cleaned == text:
+            break
+        text = cleaned
+    return text
+
+
 def parse_json_response(text: str) -> dict:
-    """Parse JSON from LLM response, handling markdown code block fences and truncation."""
+    """Parse JSON from LLM response, handling fences, trailing garbage, and Python if/else expressions."""
     text = text.strip()
-    # Try direct parsing first
+
+    # 1. Direct parse
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
-    # Try extracting from ```json ... ``` block
-    m = re.search(r"```(?:json)?\s*\n?(.*?)```", text, re.DOTALL)
-    if m:
+
+    # 2. Balanced extraction (handles trailing quotes/garbage, prose wrapping, ``` fences)
+    balanced = _extract_balanced_json(text)
+    if balanced is not None:
         try:
-            return json.loads(m.group(1).strip())
+            return json.loads(balanced)
         except json.JSONDecodeError:
             pass
-    # Try truncation recovery: append closing brackets
+
+        # 3. If/else cleanup on the balanced JSON text
+        cleaned = _cleanup_if_else(balanced)
+        if cleaned != balanced:
+            try:
+                return json.loads(cleaned)
+            except json.JSONDecodeError:
+                pass
+
+    # 3b. If/else cleanup on the original text (fallback when balanced extraction failed)
+    cleaned_raw = _cleanup_if_else(text)
+    if cleaned_raw != text:
+        try:
+            return json.loads(cleaned_raw)
+        except json.JSONDecodeError:
+            pass
+
+    # 4. Truncation recovery: append closing brackets
     for suffix in ['"}', '"]', '}', '"]}', '}']:
         try:
             return json.loads(text + suffix)
         except json.JSONDecodeError:
             continue
+
+    # 5. Unrecoverable
     raise ValueError(f"Could not parse JSON from response: {text[:200]}")
