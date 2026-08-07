@@ -1,6 +1,7 @@
 # 电子书批量入库 — 进度交接(2026-08-04)
 
 > **交接时间**:2026-08-04 晚(执行中断,待续);2026-08-05 已续跑
+> **经验教训回顾**:[2026-08-06-ebook-ingestion-lessons.md](./2026-08-06-ebook-ingestion-lessons.md)(17 条,含 worktree 隔离失效、空格拆词 bug、监控盲区等)
 > **设计 spec**:`docs/superpowers/specs/2026-08-04-ebook-batch-ingestion-design.md`
 > **实现计划**:`docs/superpowers/plans/2026-08-04-ebook-batch-ingestion.md`(11 任务)
 > **执行方式**:subagent-driven-development(每任务 implementer + 规格评审 + 质量评审)
