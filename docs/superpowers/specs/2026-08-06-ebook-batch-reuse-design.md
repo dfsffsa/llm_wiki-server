@@ -73,8 +73,9 @@
   - `check [BOOK...]` — 逐书 `ebook_check.py`
   - `fix [BOOK...]` — 逐书 `ebook_check.py --fix`
   - `promote [BOOK...]` — 拷 chunks → `~/overseas-github/llm_wiki_projects/<project>/raw/sources/`
-  - `pipeline [BOOK...]` — 顺序串 `split → check → fix → promote`(每步可失败续跑,因 split/check 幂等)
-- 默认 `split`(无子命令时)。
+  - `pipeline [BOOK...]` — 顺序串 `split → check → fix → promote`(**fail-fast**:任一步失败因 `set -e` 中止整个脚本,可对失败的书单独重跑某个子命令续跑;split/check 幂等)
+- **子命令必须显式指定**(无子命令时报 usage + exit 2,无默认值,防误触发写操作)。
+- **`outBase` 相对路径解析到仓库根**(`$ROOT/$OUT_BASE`),与 config 解析一致;`project` 名字校验(拒绝含 `/` 或 `..`)。
 - **空格安全**:所有文件路径经 `while IFS= read -r` / `"$var"` 处理(沿用 `ingest-parallel.sh` 修复后的模式)。
 
 ## 5. 自动正则探测 `ebook_detect.py`
