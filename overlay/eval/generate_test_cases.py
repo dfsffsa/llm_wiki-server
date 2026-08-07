@@ -16,6 +16,7 @@ LLM 辅助测试用例生成器
 import argparse
 import json
 import os
+import random
 import re
 import sys
 import glob
@@ -171,6 +172,13 @@ def generate_v2_from_source(source_path: str, derived_map: Dict[str, List[str]],
     return cases
 
 
+def shuffled_sources(raw_dir: str, seed: int = 42) -> List[str]:
+    """按固定种子洗牌源文件列表,避免首本书独占用例(跨书覆盖)。"""
+    files = sorted(glob.glob(f"{raw_dir}/*.md"))
+    random.Random(seed).shuffle(files)
+    return files
+
+
 def generate_v2_batch(project_dir: str, config: Dict, target_count: int = 100) -> List[Dict]:
     """批量生成 v2 用例，达到 target_count 即停。
 
@@ -186,7 +194,7 @@ def generate_v2_batch(project_dir: str, config: Dict, target_count: int = 100) -
     derived_map = scan_derived_pages(wiki_dir)
 
     # 收集源文件
-    source_files = sorted(glob.glob(f"{raw_dir}/*.md"))
+    source_files = shuffled_sources(raw_dir)
     print(f"准备生成 v2 用例：{len(source_files)} 个源文件，目标 {target_count} 个用例")
 
     all_cases = []
