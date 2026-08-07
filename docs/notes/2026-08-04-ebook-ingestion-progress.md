@@ -1,7 +1,33 @@
 # 电子书批量入库 — 进度交接(2026-08-04)
 
-> **交接时间**:2026-08-04 晚(执行中断,待续);2026-08-05 已续跑;2026-08-06 复用化完成
+> **交接时间**:2026-08-04 晚(执行中断,待续);2026-08-05 已续跑;2026-08-06 复用化完成 + 可发现性设计/计划完成
 > **经验教训回顾**:[2026-08-06-ebook-ingestion-lessons.md](./2026-08-06-ebook-ingestion-lessons.md)(17 条,含 worktree 隔离失效、空格拆词 bug、监控盲区等)
+
+---
+
+## 2026-08-06 晚:知识库可发现性功能(设计+计划完成,⚠️ 实现未开始)
+
+**背景**:知识库扩到 10 本(1437 源页 + 510 场景页 + 4600+ 概念/实体/教训页),但 `/lite/` 空状态只显示 `projects.meta.json` 里 3 条手写 starters,用户不知道能问什么。
+
+**已提交(未推送,`ahead 2`)**:设计 spec `docs/superpowers/specs/2026-08-06-kb-discoverability-design.md`(commit `1c91ecd`)+ 实现计划 `docs/superpowers/plans/2026-08-06-kb-discoverability.md`(commit `339ad2b`)。
+
+**方案要点**(已获用户批准):
+- 呈现面:`/lite/` 空状态(不动 Rust server)
+- 年龄导航:阶段制 7 桶(备孕→学龄/青春期)
+- 主题卡:手工骨架(`discover_topics.json`)+ 从 wiki 自动填问题
+- 质量徽标:每主题/年龄段跑服务器检索命中率 → good/medium/weak
+- 数据:`overlay/static/lite/discover.json`(生成器产物,gitignore,随部署同步)
+
+**实现计划 7 个任务(全未开始)**:
+1. `generate_discover.py` 核心纯函数(年龄分桶/主题归类/问题派生)+ 单测
+2. 质量徽标 `compute_quality`(复用 `rag_eval.search_wiki`)+ `discover_topics.json`
+3. 真实项目生成 discover.json + 质量(需 server :8080 + token;`--project` 传**项目名** + `--project-id` 可显式)
+4. `/lite/` 前端(app.js `renderEmptyState` 改造,无 discover 回退旧 starters)
+5. 前端冒烟(渲染/发消息/回退;注意 `/lite/` 由 `upstream/dist` 还是 `overlay/static/lite` 服务,若是前者需先 `build-web.sh`)
+6. 刷新流程 + runbook 加第 11 步
+7. 集成验收 + 回归
+
+**续跑入口**:`docs/superpowers/plans/2026-08-06-kb-discoverability.md` 7 个任务;关键上下文(前端 fetch 模式、场景页 frontmatter、server 启动)都写在计划「执行前必读」里。
 
 ---
 
