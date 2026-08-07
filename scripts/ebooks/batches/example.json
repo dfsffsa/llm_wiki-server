@@ -1,0 +1,16 @@
+{
+  "name": "example-batch",
+  "sourceDir": "/mnt/c/Users/Lenovo/Downloads/电子书",
+  "project": "ParentingBooks",
+  "outBase": ".tools/ebooks",
+  "maxChars": 2500,
+  "books": [
+    {
+      "dir": "1454-法伯睡眠宝典",
+      "epub": "法伯睡眠宝典.epub",
+      "book": "法伯睡眠宝典",
+      "source": "法伯睡眠宝典",
+      "headingRe": "^第[0-9]+章　"
+    }
+  ]
+}
