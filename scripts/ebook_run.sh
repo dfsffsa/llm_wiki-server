@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 电子书批量入库编排(配置驱动)。
-# 用法:
+# 用法(子命令必须显式指定):
 #   ./scripts/ebook_run.sh -c <batch.json> split|detect|check|fix|promote|pipeline [BOOK...]
 # 配置模板: scripts/ebooks/batches/example.json
 set -euo pipefail
@@ -14,9 +14,14 @@ while [[ $# -gt 0 ]]; do
     *) break ;;
   esac
 done
-cmd="${1:-split}"
+cmd="${1:-}"
 shift || true
 selected=("$@")
+
+if [[ -z "$cmd" ]]; then
+  echo "usage: $0 -c <batch.json> split|detect|check|fix|promote|pipeline [BOOK...]" >&2
+  exit 2
+fi
 
 if [[ -z "$CONFIG" ]]; then
   echo "error: 需要 -c <batch.json>(模板见 scripts/ebooks/batches/example.json)" >&2
