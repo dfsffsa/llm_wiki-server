@@ -37,8 +37,16 @@ fi
 [[ -f "$CONFIG" ]] || { echo "error: config not found: $CONFIG" >&2; exit 1; }
 
 # 读取配置(props: sourceDir outBase maxChars project)
-IFS=$'\t' read -r SOURCE_DIR OUT_BASE MAX_CHARS PROJECT <<< "$(python3 "$ROOT/scripts/ebook_config.py" props "$CONFIG")"
+PROPS="$(python3 "$ROOT/scripts/ebook_config.py" props "$CONFIG")"
+IFS=$'\t' read -r SOURCE_DIR OUT_BASE MAX_CHARS PROJECT <<< "$PROPS"
+if [[ "$OUT_BASE" != /* ]]; then
+  OUT_BASE="$ROOT/$OUT_BASE"
+fi
 PROJECT="${LLM_WIKI_PROJECT:-$PROJECT}"
+if [[ "$PROJECT" == */* ]] || [[ "$PROJECT" == *..* ]]; then
+  echo "error: invalid project name: $PROJECT" >&2
+  exit 1
+fi
 if [[ -z "$PROJECT" ]]; then
   echo "error: 未指定 project(配置里或 LLM_WIKI_PROJECT env)" >&2
   exit 1
@@ -78,7 +86,8 @@ do_check() {
   python3 "$ROOT/scripts/ebook_check.py" \
     --chunks "$OUT_BASE/$book/chunks" \
     --config "$ROOT/overlay/config/llm.judge.a.json" \
-    --cache "$OUT_BASE/$book/check-cache.json" "${fix_args[@]}"
+    --cache "$OUT_BASE/$book/check-cache.json" \
+    --report "$OUT_BASE/$book/report.md" "${fix_args[@]}"
 }
 
 do_promote() {
@@ -106,6 +115,8 @@ while IFS=$'\t' read -r book dir epub source hre; do
     fix)     do_check "$book" --fix ;;
     promote) do_promote "$book" ;;
     pipeline)
+      # 注意:pipeline 是 fail-fast —— 任一步失败(如 split)会因 set -e 中止整个脚本;
+      # 可对失败的书单独重跑某个子命令续跑。
       do_split "$book" "$dir" "$epub" "$source" "$hre"
       do_check "$book"
       do_check "$book" --fix
