@@ -51,6 +51,13 @@ class TestValidate(unittest.TestCase):
         with self.assertRaises(ValueError):
             ebook_config.validate(ebook_config.load(p))
 
+    def test_non_dict_book_entry(self):
+        d = tempfile.mkdtemp()
+        p = write_config(d, {"name": "t", "sourceDir": "/d", "books": ["not-a-dict"]})
+        with self.assertRaises(ValueError) as ctx:
+            ebook_config.validate(ebook_config.load(p))
+        self.assertIn("books[0] must be an object", str(ctx.exception))
+
     def test_bad_json(self):
         d = tempfile.mkdtemp()
         p = os.path.join(d, "bad.json")

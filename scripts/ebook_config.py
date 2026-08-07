@@ -73,9 +73,12 @@ def main():
         print(books_tsv(cfg))
     elif cmd == "props":
         print(props_tsv(cfg))
-    else:
+    elif cmd == "load":
         print(f"ok: name={cfg['name']} books={len(cfg['books'])} "
               f"sourceDir={cfg['sourceDir']}")
+    else:
+        print(f"error: unknown command '{cmd}' (expected: load|props|books)", file=sys.stderr)
+        sys.exit(2)
 
 
 if __name__ == "__main__":
