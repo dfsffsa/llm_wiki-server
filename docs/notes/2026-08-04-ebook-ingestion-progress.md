@@ -1,7 +1,31 @@
 # 电子书批量入库 — 进度交接(2026-08-04)
 
-> **交接时间**:2026-08-04 晚(执行中断,待续);2026-08-05 已续跑
+> **交接时间**:2026-08-04 晚(执行中断,待续);2026-08-05 已续跑;2026-08-06 复用化完成
 > **经验教训回顾**:[2026-08-06-ebook-ingestion-lessons.md](./2026-08-06-ebook-ingestion-lessons.md)(17 条,含 worktree 隔离失效、空格拆词 bug、监控盲区等)
+
+---
+
+## 2026-08-06 复用化完成(配置驱动 + runbook)
+
+首次入库跑通后,把「电子书 → 切分 → 检查 → 落地」固化为**配置驱动可复用流程**,全部提交在 `main` 并已推送:
+
+| 组件 | 说明 |
+|------|------|
+| `scripts/ebook_config.py` | batch JSON 加载/校验(props/books 输出 TSV,含 dir/epub 路径守卫) |
+| `scripts/ebook_run.sh` | 配置驱动编排(`-c <batch.json>`,子命令 split/detect/check/fix/promote/pipeline,子命令必填,outBase 相对 ROOT) |
+| `scripts/ebook_detect.py` | 章节标题正则启发式探测(6 候选 + 样本,人工确认) |
+| `scripts/ebooks/batches/example.json` | 配置模板(仓库内) |
+| `overlay/eval/generate_test_cases.py` | 固定种子洗牌,跨书用例覆盖 |
+| `docs/新批次电子书入库.md` | **新批次 runbook**(10 步 + 踩坑速查) |
+
+设计:`docs/superpowers/specs/2026-08-06-ebook-batch-reuse-design.md`;计划:`docs/superpowers/plans/2026-08-06-ebook-batch-reuse.md`。
+全部 7 任务(R1–R7)经 implementer + 规格 + 质量 + 最终整体评审;**158 测试全过**(scripts 45 + eval 113);R7 集成冒烟用 example.json 在法伯真实书跑通 split/check/promote。
+**下次新增一批电子书:照 `docs/新批次电子书入库.md` 走 10 步即可**(建配置 → detect 填正则 → split → check → fix → promote → ingest → 用例 → eval)。
+
+**遗留待办(用户可后续处理)**:
+- 人工复核清单 `llm_wiki-server/.tools/ebooks/MANUAL_REVIEW.md`(首次批次 100 项)待过目
+- 跨书测试用例仍只覆盖养育女孩(修复已就绪,需按新批次重新生成)
+- embedding 未启用(DashScope key 缺失),检索为关键词模式
 > **设计 spec**:`docs/superpowers/specs/2026-08-04-ebook-batch-ingestion-design.md`
 > **实现计划**:`docs/superpowers/plans/2026-08-04-ebook-batch-ingestion.md`(11 任务)
 > **执行方式**:subagent-driven-development(每任务 implementer + 规格评审 + 质量评审)
