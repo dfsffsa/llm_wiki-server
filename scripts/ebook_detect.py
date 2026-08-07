@@ -7,7 +7,6 @@
 输出候选正则 + 命中样本,供人工确认后填入批次配置 headingRe。
 """
 import argparse
-import os
 import re
 import subprocess
 

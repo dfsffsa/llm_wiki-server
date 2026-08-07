@@ -36,6 +36,10 @@ def validate(cfg):
             for k in REQUIRED_BOOK:
                 if k not in b:
                     errors.append(f"books[{i}] missing field: {k}")
+            for k in ("dir", "epub"):
+                v = b.get(k, "")
+                if ".." in v or "/" in v or "\\" in v:
+                    errors.append(f"books[{i}] {k} must be a plain name (no path separators or ..): {v!r}")
     if errors:
         raise ValueError("; ".join(errors))
     return cfg
